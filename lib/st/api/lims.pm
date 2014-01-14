@@ -11,7 +11,6 @@ use English qw(-no_match_vars);
 use Moose;
 use MooseX::StrictConstructor;
 use MooseX::Aliases;
-use MooseX::ClassAttribute;
 use Readonly;
 use List::MoreUtils qw/none/;
 
@@ -161,14 +160,55 @@ for my$m ( @DELEGATED_METHODS ){
 
 =head2 inline_index_end
 
-inlined index end, class method 
+index end
 
 =cut
-class_has 'inline_index_end' => (isa => 'Int',
-                                 is => 'ro',
-                                 required => 0,
-                                 default => $INLINE_INDEX_END,
-                                );
+
+has 'inline_index_end' => (isa => 'Maybe[Int]',
+                           is => 'ro',
+                           lazy_build => 1,
+                          );
+
+sub _build_inline_index_end {
+  my $self = shift;
+  my @x = _parse_sample_description($self->_sample_description);
+  return $x[2];
+}
+
+has 'inline_index_start' => (isa => 'Maybe[Int]',
+                             is => 'ro',
+                             lazy_build => 1,
+                            );
+
+sub _build_inline_index_start {
+  my $self = shift;
+  my @x = _parse_sample_description($self->_sample_description);
+  return $x[1];
+}
+
+has 'inline_index_exists' => (isa => 'Bool',
+                              is => 'ro',
+                              lazy_build => 1,
+                             );
+
+sub _build_inline_index_exists {
+  my $self = shift;
+  return _tag_sequence_from_sample_description($self->_sample_description) ? 1 : 0;
+}
+
+has '_sample_description' => (isa => 'Maybe[Str]',
+                              is => 'ro',
+                              lazy_build => 1,
+                             );
+
+sub _build__sample_description {
+  my $self = shift;
+  return $self->sample_description if ($self->sample_description);
+  foreach my $c ($self->children) {
+    return $c->sample_description if ($c->sample_description);
+  }
+  return;
+}
 
 =head2 path
 
@@ -696,11 +736,20 @@ sub _derived_library_type {
 
 sub _tag_sequence_from_sample_description {
   my $desc = shift;
-  my $tag;
-  if ($desc && (($desc =~ m/base\ indexing\ sequence/ismx) && ($desc =~ m/enriched\ mRNA/ismx))){
+  my @x = _parse_sample_description($desc);
+  return $x[0];
+}
+
+sub _parse_sample_description {
+  my $desc = shift;
+  my $tag=undef;
+  my $start=undef;
+  my $end=undef;
+  if ($desc && (($desc =~ m/base\ indexing\ sequence/ismx) && ($desc =~ m/enriched\ mRNA/ismx))) {
     ($tag) = $desc =~ /\(([ACGT]+)\)/smx;
+    ($start, $end) = $desc =~ /bases\ (\d+)\ to\ (\d+)\ of\ read\ 1/smx;
   }
-  return $tag;
+  return ($tag, $start, $end);
 }
 
 =head2 library_types
@@ -732,6 +781,15 @@ sub library_types {
   }
   my @t = sort keys %{$lt_hash};
   return @t;
+}
+
+=head2 driver_method_list
+
+A sorted list of methods that should be implemented by a driver
+
+=cut
+sub driver_method_list {
+  return @DELEGATED_METHODS;
 }
 
 =head2 method_list
@@ -790,8 +848,6 @@ __END__
 =item Moose
 
 =item MooseX::Aliases
-
-=item MooseX::ClassAttribute
 
 =item MooseX::StrictConstructor
 
