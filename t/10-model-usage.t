@@ -16,14 +16,18 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 14928 
 
 use_ok('npg::model::usage');
 
-my $util = t::util->new({
-			 fixtures => 1,
-			});
+my $util = t::util->new(
+    {
+        fixtures => 1,
+    }
+);
 
 {
-  my $usage = npg::model::usage->new({
-				      util => $util,
-				     });
-  isa_ok($usage, 'npg::model::usage');
-  is_deeply($usage->current_repositories(), [], 'current_repositories');
+    my $usage = npg::model::usage->new(
+        {
+            util => $util,
+        }
+    );
+    isa_ok( $usage, 'npg::model::usage' );
+    is_deeply( $usage->current_repositories(), [], 'current_repositories' );
 }

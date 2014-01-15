@@ -16,23 +16,23 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 use_ok('npg::model::instrument_designation');
 
-my $util = t::util->new({fixtures => 1});
+my $util = t::util->new( { fixtures => 1 } );
 
 {
-  my $instr_des = npg::model::instrument_designation->new();
-  isa_ok( $instr_des, 'npg::model::instrument_designation' );
+    my $instr_des = npg::model::instrument_designation->new();
+    isa_ok( $instr_des, 'npg::model::instrument_designation' );
 }
 
 {
-    my $id = npg::model::instrument_designation->
-        new( {
-               util                      => $util,
-               id_instrument_designation => 3,
-             }
+    my $id = npg::model::instrument_designation->new(
+        {
+            util                      => $util,
+            id_instrument_designation => 3,
+        }
     );
 
-    is( $id->id_instrument(), '34', 'retrieve correct id_instrument' );
-    is( $id->id_designation(), '3', 'retrieve correct id_designation' );
+    is( $id->id_instrument(),  '34', 'retrieve correct id_instrument' );
+    is( $id->id_designation(), '3',  'retrieve correct id_designation' );
 }
 
 1;

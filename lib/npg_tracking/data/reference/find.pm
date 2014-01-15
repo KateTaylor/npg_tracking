@@ -69,12 +69,11 @@ a list of samples.
 
 =cut
 
-
-Readonly::Scalar our $ALIGNER          => q[bwa];
-Readonly::Scalar our $STRAIN           => q[default];
-Readonly::Scalar our $SUBSET           => q[all];
-Readonly::Scalar our $PHIX             => q[PhiX];
-Readonly::Array  our @REQUIRED_ACCESSORS  => qw/id_run position tag_index/;
+Readonly::Scalar our $ALIGNER           => q[bwa];
+Readonly::Scalar our $STRAIN            => q[default];
+Readonly::Scalar our $SUBSET            => q[all];
+Readonly::Scalar our $PHIX              => q[PhiX];
+Readonly::Array our @REQUIRED_ACCESSORS => qw/id_run position tag_index/;
 
 =head2 reference_genome
 
@@ -82,32 +81,37 @@ Reference genome string in the format 'organism (strain)' as set in LIMS.
 See npg_tracking::data::reference::list::short_report
 
 =cut
-has 'reference_genome'  => (isa             => 'Maybe[Str]',
-                            is              => 'ro',
-                            required        => 0,
-                           );
+
+has 'reference_genome' => (
+  isa      => 'Maybe[Str]',
+  is       => 'ro',
+  required => 0,
+);
 
 =head2 species
 
 Species name
 
 =cut
-has 'species'  => (isa             => 'Maybe[Str]',
-                   is              => 'ro',
-                   required        => 0,
-                   writer          => '_set_species',
-                   lazy_build      => 1,
-                  );
+
+has 'species' => (
+  isa        => 'Maybe[Str]',
+  is         => 'ro',
+  required   => 0,
+  writer     => '_set_species',
+  lazy_build => 1,
+);
+
 sub _build_species {
   my $self = shift;
 
   my @a = $self->_parse_reference_genome;
   if (@a) {
-    $self->_set_strain($a[1]);
+    $self->_set_strain( $a[1] );
     return $a[0];
   }
 
-  if ($self->for_spike || $self->lims->is_control) {
+  if ( $self->for_spike || $self->lims->is_control ) {
     return $PHIX;
   }
 
@@ -119,17 +123,20 @@ sub _build_species {
 Strain, defaults to the default strain in the repository
 
 =cut
-has 'strain'=>    (isa             => 'Str',
-                   is              => 'ro',
-                   required        => 0,
-                   writer          => '_set_strain',
-                   lazy_build      => 1,
-                  );
+
+has 'strain' => (
+  isa        => 'Str',
+  is         => 'ro',
+  required   => 0,
+  writer     => '_set_strain',
+  lazy_build => 1,
+);
+
 sub _build_strain {
   my $self = shift;
-  my @a = $self->_parse_reference_genome;
+  my @a    = $self->_parse_reference_genome;
   if (@a) {
-    $self->_set_species($a[0]);
+    $self->_set_species( $a[0] );
     return $a[1];
   }
   return $STRAIN;
@@ -140,33 +147,39 @@ sub _build_strain {
 Subset (i.e., chromosome), defaults to all
 
 =cut
-has 'subset'=>    (isa             => 'Str',
-                   is              => 'ro',
-                   required        => 0,
-                   default         => $SUBSET,
-                  );
+
+has 'subset' => (
+  isa      => 'Str',
+  is       => 'ro',
+  required => 0,
+  default  => $SUBSET,
+);
 
 =head2 aligner
 
 Aligner name, defaults to bwa
 
 =cut
-has 'aligner'  => (isa             => 'Str',
-                   is              => 'ro',
-                   required        => 0,
-                   default         => $ALIGNER,
-                  );
+
+has 'aligner' => (
+  isa      => 'Str',
+  is       => 'ro',
+  required => 0,
+  default  => $ALIGNER,
+);
 
 =head2 messages
 
 An npg_tracking::util::messages object to log the messages
 
 =cut
-has 'messages' => (isa          => 'npg_tracking::util::messages',
-                   is           => 'ro',
-                   required     => 0,
-                   default      => sub { npg_tracking::util::messages->new(); },
-                  );
+
+has 'messages' => (
+  isa      => 'npg_tracking::util::messages',
+  is       => 'ro',
+  required => 0,
+  default  => sub { npg_tracking::util::messages->new(); },
+);
 
 =head2 for_spike
 
@@ -174,39 +187,48 @@ A boolean flag inndicating whethe rth ereference is needed
 for a spike rather than for the main content of the lane
 
 =cut
-has 'for_spike'  => (isa             => 'Bool',
-                     is              => 'ro',
-                     required        => 0,
-                     default         => 0,
-                    );
+
+has 'for_spike' => (
+  isa      => 'Bool',
+  is       => 'ro',
+  required => 0,
+  default  => 0,
+);
 
 =head2 lims
 
 An object providing access to the LIM system
 
 =cut
-has 'lims'      => (isa             => 'st::api::lims',
-                    is              => 'ro',
-                    required        => 0,
-                    lazy_build      => 1,
-                   );
+
+has 'lims' => (
+  isa        => 'st::api::lims',
+  is         => 'ro',
+  required   => 0,
+  lazy_build => 1,
+);
+
 sub _build_lims {
   my $self = shift;
 
   foreach my $method (@REQUIRED_ACCESSORS) {
-    if (!$self->can($method)) {
+    if ( !$self->can($method) ) {
       croak qq[Need '$method' accessor to access lims data];
     }
   }
-  return st::api::lims->new(id_run => $self->id_run, position => $self->position, tag_index => $self->tag_index);
+  return st::api::lims->new(
+    id_run    => $self->id_run,
+    position  => $self->position,
+    tag_index => $self->tag_index
+  );
 }
 
 sub _abs_ref_path {
   my $path = shift;
-  (my $name) = $path =~ /\/([^\/]+)$/smx;
+  ( my $name ) = $path =~ /\/([^\/]+)$/smx;
   $path =~ s/$name$//smx;
   ##no critic (CodeLayout::ProhibitParensWithBuiltins)
-  return join(q[/], abs_path($path), $name);
+  return join( q[/], abs_path($path), $name );
 }
 
 =head2 refs
@@ -218,42 +240,51 @@ Examine the messages attribute after calling this function.
 The object consuming this role should have id_run and position fields defined.
 
 =cut
+
 sub refs {
   my $self = shift;
 
-  my @refs = ();
+  my @refs     = ();
   my $ref_hash = {};
 
-  if ($self->reference_genome && $self->reference_genome eq $npg_tracking::data::reference::list::NO_ALIGNMENT_OPTION) {
-    $self->messages->push($self->reference_genome);
+  if ( $self->reference_genome
+    && $self->reference_genome eq
+    $npg_tracking::data::reference::list::NO_ALIGNMENT_OPTION )
+  {
+    $self->messages->push( $self->reference_genome );
     return \@refs;
   }
 
-  if ($self->species) {
-    push @refs, $self->_get_reference_path($self->species, $self->strain);
-  } else {
+  if ( $self->species ) {
+    push @refs, $self->_get_reference_path( $self->species, $self->strain );
+  }
+  else {
 
     my $spiked_phix_index = $MINUS_ONE;
-    if ($self->lims->is_pool && !$self->tag_index && $self->lims->spiked_phix_tag_index) {
+    if ( $self->lims->is_pool
+      && !$self->tag_index
+      && $self->lims->spiked_phix_tag_index )
+    {
       $spiked_phix_index = $self->lims->spiked_phix_tag_index;
     }
 
     my @alims = $self->lims->associated_lims;
-    if (!@alims) {
-      @alims = ($self->lims);
+    if ( !@alims ) {
+      @alims = ( $self->lims );
     }
     foreach my $lims (@alims) {
-      if ($spiked_phix_index >= 0 && $spiked_phix_index == $lims->tag_index) {
+      if ( $spiked_phix_index >= 0 && $spiked_phix_index == $lims->tag_index )
+      {
         next;
       }
       my $path = $self->lims2ref($lims);
       if ($path) {
-        $ref_hash->{_abs_ref_path($path)} = 1;
+        $ref_hash->{ _abs_ref_path($path) } = 1;
       }
     }
     @refs = keys %{$ref_hash};
   }
-  @refs = map {_abs_ref_path($_)} @refs;
+  @refs = map { _abs_ref_path($_) } @refs;
   return \@refs;
 }
 
@@ -263,111 +294,122 @@ Returns true if only one reference has been found.
 Returns false if no references found or multiple references found.
 
 =cut
+
 sub single_ref_found {
 
   my $self = shift;
-  carp 'This method is depricated. Please use the refs method and evaluate the size of the returned array.';
+  carp
+      'This method is depricated. Please use the refs method and evaluate the size of the returned array.';
 
   my @refs;
   eval {
-    @refs = @{$self->refs()};
+    @refs = @{ $self->refs() };
     1;
   } or do {
     return 0;
   };
-  if (!@refs || scalar @refs > 1) { return 0; }
+  if ( !@refs || scalar @refs > 1 ) { return 0; }
   return 1;
 }
-
 
 =head2 reset_strain
 
 Reset the strain value to default.
 
 =cut
+
 sub reset_strain {
   my $self = shift;
   $self->_set_strain($STRAIN);
   return;
 }
 
-
 =head2 ref_info
 
 An npg_tracking::data::reference::info object or undef
 
 =cut
+
 sub ref_info {
   my $self = shift;
 
   my $refs = $self->refs();
 
-  if (scalar @{$refs} == 1) {
+  if ( scalar @{$refs} == 1 ) {
 
     my $refpath = $refs->[0];
-    my $ref = npg_tracking::data::reference::info->new(aligner => $self->aligner, ref_path => $refpath);
+    my $ref     = npg_tracking::data::reference::info->new(
+      aligner  => $self->aligner,
+      ref_path => $refpath
+    );
     my $opts_in = $ref->ref_path . q[.options];
-    if (-e $opts_in) {
+    if ( -e $opts_in ) {
       ## no critic (RequireBriefOpen)
-      open my $fh, q[<], $opts_in or croak qq[Cannot open $opts_in for reading: $ERRNO];
+      open my $fh, q[<], $opts_in
+          or croak qq[Cannot open $opts_in for reading: $ERRNO];
       my $found = q{};
-      while (my $line = <$fh>) {
-        if ($line ne qq[\n] && $line !~ /^\#/smx) {
+      while ( my $line = <$fh> ) {
+        if ( $line ne qq[\n] && $line !~ /^\#/smx ) {
           $line =~ s/^\s+//sxm;
-	       $line =~ s/\s+$//sxm;
-	       $found = $line;
-	       last;
-	     }
+          $line =~ s/\s+$//sxm;
+          $found = $line;
+          last;
+        }
       }
       close $fh or croak qq[Cannot close $opts_in : $ERRNO];
       ## use critic
 
-	   $ref->aligner_options($found);
+      $ref->aligner_options($found);
 
-    }else{
-       $ref->aligner_options($NPG_DEFAULT_ALIGNER_OPTION);
+    }
+    else {
+      $ref->aligner_options($NPG_DEFAULT_ALIGNER_OPTION);
     }
     return $ref;
-  }elsif(scalar @{$refs} > 1) {
+  }
+  elsif ( scalar @{$refs} > 1 ) {
 
-     carp 'More than one reference found: '. (join q[;], @{$refs});
-     return;
+    carp 'More than one reference found: ' . ( join q[;], @{$refs} );
+    return;
   }
 
   carp 'No reference found';
   return;
 }
 
-
 =head2 _get_reference_path
 
 Returns a path to a binary reference (with a prefix of the reference itself). The organism should be one of the listed in our repository.
 
 =cut
+
 sub _get_reference_path {
 
-  my ($self, $organism, $strain) = @_;
+  my ( $self, $organism, $strain ) = @_;
 
-  if (!$organism) {
-      croak q[Organism should be defined in arguments to _get_reference_path()];
+  if ( !$organism ) {
+    croak q[Organism should be defined in arguments to _get_reference_path()];
   }
 
   $strain = $strain || $self->strain;
 
   # check that the directory for the chosen aligner exists
-  my $base_dir = catfile($self->ref_repository, $organism, $strain, $self->subset);
-  my $dir = catfile($base_dir, $self->aligner);
+  my $base_dir
+      = catfile( $self->ref_repository, $organism, $strain, $self->subset );
+  my $dir = catfile( $base_dir, $self->aligner );
 
-  if (!-e $dir) {
+  if ( !-e $dir ) {
     ##no critic (ProhibitInterpolationOfLiterals)
-    my $message = sprintf "Binary %s reference for %s, %s, %s does not exist; path tried %s",
-			  $self->aligner, $organism, $strain, $self->subset, $dir;
+    my $message
+        = sprintf
+        "Binary %s reference for %s, %s, %s does not exist; path tried %s",
+        $self->aligner, $organism, $strain, $self->subset, $dir;
     ##use critic
     croak $message;
   }
 
   # read the fasta directory and get the file name with the reference
-  return catfile($dir, $self->ref_file_prefix($base_dir));
+  return catfile( $dir, $self->ref_file_prefix($base_dir) );
 }
 
 =head2 lims2ref
@@ -376,36 +418,42 @@ Returns a path to a binary reference (with a prefix of the reference itself) for
 Undefined value returned if the search has failed
 
 =cut
-sub lims2ref {
-  my ($self, $lims) = @_;
 
-  my $ref_path = q[];
+sub lims2ref {
+  my ( $self, $lims ) = @_;
+
+  my $ref_path      = q[];
   my $preset_genome = $lims->reference_genome;
-  my $no_alignment_option = $npg_tracking::data::reference::list::NO_ALIGNMENT_OPTION;
-  my $no_alignment = $preset_genome && ($preset_genome eq $no_alignment_option) ? 1 : 0;
-  if($no_alignment) {
+  my $no_alignment_option
+      = $npg_tracking::data::reference::list::NO_ALIGNMENT_OPTION;
+  my $no_alignment
+      = $preset_genome && ( $preset_genome eq $no_alignment_option ) ? 1 : 0;
+  if ($no_alignment) {
     $self->messages->push($no_alignment_option);
-  } else {
+  }
+  else {
     if ($preset_genome) {
       $ref_path = $self->_preset_ref2ref_path($preset_genome);
     }
-    if (!$ref_path) {
+    if ( !$ref_path ) {
       my $taxon_id = $lims->organism_taxon_id;
       if ($taxon_id) {
         my $description = $self->taxonid2species($taxon_id);
-        if ($description->{species})  {
-	  my $strain =  $description->{strain} ?  $description->{strain} : q[];
-	  $ref_path = $self->_get_reference_path($description->{species}, $strain);
+        if ( $description->{species} ) {
+          my $strain = $description->{strain} ? $description->{strain} : q[];
+          $ref_path = $self->_get_reference_path( $description->{species},
+            $strain );
         }
-        if (!$ref_path) {
-	  $self->messages->push(qq[no reference for taxon id $taxon_id]);
+        if ( !$ref_path ) {
+          $self->messages->push(qq[no reference for taxon id $taxon_id]);
         }
-      } else {
-        foreach my $name (($lims->library_name, $lims->sample_name)) {
-	  if ($name && $name =~ /phix/ismx ) {
-	    $ref_path = $self->_get_reference_path($PHIX);
-	    last;
-	  }
+      }
+      else {
+        foreach my $name ( ( $lims->library_name, $lims->sample_name ) ) {
+          if ( $name && $name =~ /phix/ismx ) {
+            $ref_path = $self->_get_reference_path($PHIX);
+            last;
+          }
         }
       }
     }
@@ -415,11 +463,11 @@ sub lims2ref {
 }
 
 sub _parse_reference_genome {
-  my ($self, $reference_genome) = @_;
+  my ( $self, $reference_genome ) = @_;
   $reference_genome ||= $self->reference_genome;
   if ($reference_genome) {
-    my @a = $reference_genome =~/ (\S+) \s+ [(] (\S+) [)] /smx;
-    if (scalar @a >= 2 && $a[0] && $a[1]) {
+    my @a = $reference_genome =~ / (\S+) \s+ [(] (\S+) [)] /smx;
+    if ( scalar @a >= 2 && $a[0] && $a[1] ) {
       return @a;
     }
   }
@@ -427,17 +475,18 @@ sub _parse_reference_genome {
 }
 
 sub _preset_ref2ref_path {
-  my ($self, $ref) = @_;
+  my ( $self, $ref ) = @_;
 
-  if (!$ref) {
-      croak q[Reference genome is not defined or empty];
+  if ( !$ref ) {
+    croak q[Reference genome is not defined or empty];
   }
 
   my $ref_path = q[];
-  my ($species, $strain) = $self->_parse_reference_genome($ref);
-  if ($species && $strain) {
-    $ref_path = $self->_get_reference_path($species, $strain);
-  } else {
+  my ( $species, $strain ) = $self->_parse_reference_genome($ref);
+  if ( $species && $strain ) {
+    $ref_path = $self->_get_reference_path( $species, $strain );
+  }
+  else {
     $self->messages->push(qq[Incorrect reference genome format $ref]);
   }
   return $ref_path;

@@ -30,42 +30,45 @@ Readonly::Scalar our $IS_GOOD_PASS   => 1;
 Readonly::Scalar our $IS_GOOD_FAIL   => 0;
 Readonly::Scalar our $IS_GOOD_UNSURE => 2;
 
-Readonly::Scalar our $MEGABASES      => 1_000_000;
+Readonly::Scalar our $MEGABASES => 1_000_000;
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a([qw(run)]);
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a( [qw(run)] );
 __PACKAGE__->has_many('run_lane_annotation');
 __PACKAGE__->has_many_through('annotation|run_lane_annotation');
 
 sub fields {
   return qw(id_run_lane
-            id_run
-            tile_count
-            tracks
-            position);
+      id_run
+      tile_count
+      tracks
+      position);
 }
 
 sub init {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  if ( ! $self->{id_run_lane}
-       && $self->{id_run}
-       && $self->{position} ) {
+  if (!$self->{id_run_lane}
+    && $self->{id_run}
+    && $self->{position} )
+  {
 
     my $query = q(SELECT id_run_lane
                   FROM   run_lane
                   WHERE  id_run = ?
                   AND    position = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->{id_run}, $self->{position});
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {}, $self->{id_run},
+        $self->{position} );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_run_lane'} = $ref->[0]->[0];
     }
   }
@@ -81,13 +84,14 @@ sub recent_run_lanes {
                  WHERE  rl.id_run    = rs.id_run
                  AND    rs.iscurrent = 1
                  AND    rs.date      > DATE_SUB(NOW(), INTERVAL 14 DAY));
-  return $self->gen_getarray($pkg, $query);
+  return $self->gen_getarray( $pkg, $query );
 }
 
 sub tags {
   my $self = shift;
-  if(!$self->{tags}) {
-    my $query = q{SELECT tf.frequency, t.tag, t.id_tag, trl.id_user, DATE(trl.date) AS date
+  if ( !$self->{tags} ) {
+    my $query
+        = q{SELECT tf.frequency, t.tag, t.id_tag, trl.id_user, DATE(trl.date) AS date
                   FROM   tag_frequency tf, tag t, tag_run_lane trl, entity_type e
                   WHERE  trl.id_run_lane = ?
                   AND    t.id_tag  = trl.id_tag
@@ -95,46 +99,54 @@ sub tags {
                   AND    tf.id_entity_type = e.id_entity_type
                   AND    e.description = ?
                   ORDER BY t.tag};
-    $self->{tags} = $self->gen_getarray('npg::model::tag', $query, $self->id_run_lane(), $self->model_type());
+    $self->{tags} = $self->gen_getarray( 'npg::model::tag', $query,
+      $self->id_run_lane(), $self->model_type() );
   }
   return $self->{tags};
 }
 
 sub save_tags {
-  my ($self, $tags_to_save, $requestor) = @_;
-  my $util        = $self->util();
-  my $dbh         = $util->dbh();
-  my $date        = $dbh->selectall_arrayref(q{SELECT DATE(NOW())}, {})->[0]->[0];
-  my $entity_type = npg::model::entity_type->new({description => $self->model_type(), util => $util});
-  my $tr_state    = $util->transactions();
+  my ( $self, $tags_to_save, $requestor ) = @_;
+  my $util = $self->util();
+  my $dbh  = $util->dbh();
+  my $date = $dbh->selectall_arrayref( q{SELECT DATE(NOW())}, {} )->[0]->[0];
+  my $entity_type = npg::model::entity_type->new(
+    { description => $self->model_type(), util => $util } );
+  my $tr_state = $util->transactions();
   $util->transactions(0);
   eval {
-    for my $tag (@{$tags_to_save}) {
-      $tag = npg::model::tag->new({
-				   tag  => $tag,
-				   util => $util,
-				  });
+    for my $tag ( @{$tags_to_save} ) {
+      $tag = npg::model::tag->new(
+        { tag  => $tag,
+          util => $util,
+        }
+      );
 
-      if (!$tag->id_tag()) {
+      if ( !$tag->id_tag() ) {
         $tag->create();
       }
 
-      my $tag_run_lane = npg::model::tag_run_lane->new({
-							util         => $util,
-							id_tag       => $tag->id_tag(),
-							id_run_lane  => $self->id_run_lane(),
-						       });
+      my $tag_run_lane = npg::model::tag_run_lane->new(
+        { util        => $util,
+          id_tag      => $tag->id_tag(),
+          id_run_lane => $self->id_run_lane(),
+        }
+      );
       $tag_run_lane->date($date);
-      $tag_run_lane->id_user($requestor->id_user());
+      $tag_run_lane->id_user( $requestor->id_user() );
       $tag_run_lane->create();
 
-      my $tag_freq = 'npg::model::tag_frequency'->new({
-						       id_tag => $tag->id_tag(),
-						       id_entity_type => $entity_type->id_entity_type,
-						       util => $util,
-						      });
+      my $tag_freq = 'npg::model::tag_frequency'->new(
+        { id_tag         => $tag->id_tag(),
+          id_entity_type => $entity_type->id_entity_type,
+          util           => $util,
+        }
+      );
 
-      my $freq = $dbh->selectall_arrayref(q{SELECT COUNT(id_tag) FROM tag_run_lane WHERE id_tag = ?}, {}, $tag->id_tag())->[0]->[0];
+      my $freq
+          = $dbh->selectall_arrayref(
+        q{SELECT COUNT(id_tag) FROM tag_run_lane WHERE id_tag = ?},
+        {}, $tag->id_tag() )->[0]->[0];
       $tag_freq->frequency($freq);
       $tag_freq->save();
     }
@@ -143,7 +155,9 @@ sub save_tags {
   } or do {
     $util->transactions($tr_state);
     $tr_state and $dbh->rollback();
-    croak $EVAL_ERROR . q{<br />rolled back attempt to save info for the tags for run_lane } . $self->id_run_lane();
+    croak $EVAL_ERROR
+        . q{<br />rolled back attempt to save info for the tags for run_lane }
+        . $self->id_run_lane();
   };
 
   $util->transactions($tr_state);
@@ -151,33 +165,39 @@ sub save_tags {
   return;
 }
 
-
 sub remove_tags {
-  my ($self, $tags_to_remove, $requestor) = @_;
+  my ( $self, $tags_to_remove, $requestor ) = @_;
   my $util        = $self->util();
   my $dbh         = $util->dbh();
-  my $entity_type = npg::model::entity_type->new({description => $self->model_type(), util => $util});
-  my $tr_state    = $util->transactions();
+  my $entity_type = npg::model::entity_type->new(
+    { description => $self->model_type(), util => $util } );
+  my $tr_state = $util->transactions();
   $util->transactions(0);
 
   eval {
-    for my $tag (@{$tags_to_remove}) {
-      $tag = npg::model::tag->new({
-				   tag  => $tag,
-				   util => $util,
-				  });
-      my $tag_run_lane = npg::model::tag_run_lane->new({
-							id_tag      => $tag->id_tag(),
-							id_run_lane => $self->id_run_lane(),
-							util        => $util,
-						       });
+    for my $tag ( @{$tags_to_remove} ) {
+      $tag = npg::model::tag->new(
+        { tag  => $tag,
+          util => $util,
+        }
+      );
+      my $tag_run_lane = npg::model::tag_run_lane->new(
+        { id_tag      => $tag->id_tag(),
+          id_run_lane => $self->id_run_lane(),
+          util        => $util,
+        }
+      );
       $tag_run_lane->delete();
-      my $tag_freq = 'npg::model::tag_frequency'->new({
-						       id_tag         => $tag->id_tag(),
-						       id_entity_type => $entity_type->id_entity_type,
-						       util           => $util,
-						      });
-      my $freq = $dbh->selectall_arrayref(q{SELECT COUNT(id_tag) FROM tag_run_lane WHERE id_tag = ?}, {}, $tag->id_tag())->[0]->[0];
+      my $tag_freq = 'npg::model::tag_frequency'->new(
+        { id_tag         => $tag->id_tag(),
+          id_entity_type => $entity_type->id_entity_type,
+          util           => $util,
+        }
+      );
+      my $freq
+          = $dbh->selectall_arrayref(
+        q{SELECT COUNT(id_tag) FROM tag_run_lane WHERE id_tag = ?},
+        {}, $tag->id_tag() )->[0]->[0];
       $tag_freq->frequency($freq);
       $tag_freq->save();
     }
@@ -186,7 +206,9 @@ sub remove_tags {
   } or do {
     $util->transactions($tr_state);
     $tr_state and $dbh->rollback();
-    croak $EVAL_ERROR . q{<br />rolled back attempt to delete info for the tags for run lane } . $self->id_run_lane();
+    croak $EVAL_ERROR
+        . q{<br />rolled back attempt to delete info for the tags for run lane }
+        . $self->id_run_lane();
   };
 
   $util->transactions($tr_state);

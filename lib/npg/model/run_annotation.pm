@@ -20,49 +20,51 @@ use npg::model::instrument_annotation;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 14928 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a([qw(run annotation)]);
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a( [qw(run annotation)] );
 
 sub fields {
   return qw(id_run_annotation
-            id_run
-            id_annotation
-            run_current_ok
-            current_cycle
-           );
+      id_run
+      id_annotation
+      run_current_ok
+      current_cycle
+  );
 }
 
 sub _lane_annotation_create {
-  my ( $self ) = @_;
-  my $util = $self->util();
-  my $cgi  = $util->cgi();
-  my @lanes = $cgi->param( q{annotate_lanes} );
+  my ($self) = @_;
+  my $util   = $self->util();
+  my $cgi    = $util->cgi();
+  my @lanes  = $cgi->param(q{annotate_lanes});
 
-  if ( ! scalar @lanes ) {
+  if ( !scalar @lanes ) {
     croak 'No lanes provided';
   }
 
-  my $id_run = $cgi->param( q{id_run} );
-  my $tr_state   = $util->transactions();
+  my $id_run   = $cgi->param(q{id_run});
+  my $tr_state = $util->transactions();
 
   my $annotation = $self->annotation();
   $util->transactions(0);
 
-  if ( ! $annotation->id_annotation() ) {
+  if ( !$annotation->id_annotation() ) {
     $annotation->create();
   }
 
-  foreach my $position ( @lanes ) {
-    my $id_run_lane = npg::model::run_lane->new( {
-      util => $util,
-      id_run => $id_run,
-      position => $position,
-    } )->id_run_lane();
-    npg::model::run_lane_annotation->new( {
-      util => $util,
-      id_run_lane => $id_run_lane,
-      annotation => $annotation,
-    } )->create();
+  foreach my $position (@lanes) {
+    my $id_run_lane = npg::model::run_lane->new(
+      { util     => $util,
+        id_run   => $id_run,
+        position => $position,
+      }
+    )->id_run_lane();
+    npg::model::run_lane_annotation->new(
+      { util        => $util,
+        id_run_lane => $id_run_lane,
+        annotation  => $annotation,
+      }
+    )->create();
   }
 
   ##########
@@ -77,39 +79,39 @@ sub _lane_annotation_create {
 }
 
 sub create {
-  my $self       = shift;
-  my $util       = $self->util();
-  my $cgi = $util->cgi();
-  if ( $cgi->param( q{switch_to_lanes} ) ) {
+  my $self = shift;
+  my $util = $self->util();
+  my $cgi  = $util->cgi();
+  if ( $cgi->param(q{switch_to_lanes}) ) {
     return $self->_lane_annotation_create();
   }
-
 
   my $annotation = $self->annotation();
   my $tr_state   = $util->transactions();
 
-  if(defined $self->current_cycle() && $self->current_cycle() eq q{}){
-     $self->current_cycle(undef);
+  if ( defined $self->current_cycle() && $self->current_cycle() eq q{} ) {
+    $self->current_cycle(undef);
   }
 
-  my $run_ok  = defined $cgi->param( q{run_current_ok} ) ? $cgi->param( q{run_current_ok} )
-              :                                            undef
-              ;
+  my $run_ok
+      = defined $cgi->param(q{run_current_ok})
+      ? $cgi->param(q{run_current_ok})
+      : undef;
 
-  $self->run_current_ok( $run_ok );
+  $self->run_current_ok($run_ok);
 
   $util->transactions(0);
 
-  if(!$annotation->id_annotation()) {
+  if ( !$annotation->id_annotation() ) {
     $annotation->create();
   }
 
-  if ( $cgi->param( q{multiple_runs} ) ) {
-    $self->_multiple_run_annotation_create( $annotation );
-  } else {
+  if ( $cgi->param(q{multiple_runs}) ) {
+    $self->_multiple_run_annotation_create($annotation);
+  }
+  else {
     $self->_single_run_annotation_create( { annotation => $annotation } );
   }
-
 
   #########
   # re-enable transactions for final create
@@ -124,34 +126,37 @@ sub create {
 sub _multiple_run_annotation_create {
   my ( $self, $annotation ) = @_;
 
-  my $util = $self->util();
-  my $cgi  = $util->cgi();
-  my @run_ids = $cgi->param( 'run_ids' );
+  my $util    = $self->util();
+  my $cgi     = $util->cgi();
+  my @run_ids = $cgi->param('run_ids');
 
   my %seen_instrument;
 
-  foreach my $id_run ( @run_ids ) {
+  foreach my $id_run (@run_ids) {
     my $args = { annotation => $annotation };
-    my $run = npg::model::run->new( {
-      util => $util,
-      id_run => $id_run,
-    } );
-    if ( $cgi->param( 'include_instruments' ) ) {
+    my $run = npg::model::run->new(
+      { util   => $util,
+        id_run => $id_run,
+      }
+    );
+    if ( $cgi->param('include_instruments') ) {
 
       my $id_instrument = $run->id_instrument();
+
       # make sure we only link annotation to an instrument once
-      if ( ! $seen_instrument{ $id_instrument } ) {
+      if ( !$seen_instrument{$id_instrument} ) {
         $args->{id_instrument} = $id_instrument;
-        $seen_instrument{ $id_instrument }++;
+        $seen_instrument{$id_instrument}++;
       }
     }
 
-    npg::model::run_annotation->new( {
-      util => $util,
-      id_run => $id_run,
-      run_current_ok => $self->run_current_ok(),
-      current_cycle => $run->actual_cycle_count(),
-    } )->_single_run_annotation_create( $args );
+    npg::model::run_annotation->new(
+      { util           => $util,
+        id_run         => $id_run,
+        run_current_ok => $self->run_current_ok(),
+        current_cycle  => $run->actual_cycle_count(),
+      }
+    )->_single_run_annotation_create($args);
   }
 
   return 1;
@@ -162,49 +167,55 @@ sub _single_run_annotation_create {
   my ( $self, $arg_refs ) = @_;
 
   my $annotation = $arg_refs->{annotation};
-  my $count = 1;
+  my $count      = 1;
 
-  my $description = $annotation->user->username() . q{ annotated run } . $self->run->name() . qq{\n};
+  my $description
+      = $annotation->user->username()
+      . q{ annotated run }
+      . $self->run->name() . qq{\n};
 
   if ( $arg_refs->{current_cycle} ) {
     $self->current_cycle( $arg_refs->{current_cycle} );
   }
 
-  if ( $self->current_cycle() ){
-    $description .= q{Current Cycle: }. $self->current_cycle() . qq{\n};
+  if ( $self->current_cycle() ) {
+    $description .= q{Current Cycle: } . $self->current_cycle() . qq{\n};
   }
 
-  if( defined $self->run_current_ok() ){
-     $description .= 'Currently Run Ok: ';
-     if( $self->run_current_ok() ){
-        $description .= 'Yes';
-     } else {
-        $description .= 'No';
-     }
-     $description .= "\n";
+  if ( defined $self->run_current_ok() ) {
+    $description .= 'Currently Run Ok: ';
+    if ( $self->run_current_ok() ) {
+      $description .= 'Yes';
+    }
+    else {
+      $description .= 'No';
+    }
+    $description .= "\n";
   }
 
   if ( $annotation->comment() ) {
-     $description .= $annotation->comment();
+    $description .= $annotation->comment();
   }
 
   $self->{id_annotation} = $annotation->id_annotation();
-  # we create this row here, so that the event table can receive the correct info
-  # Yes, we do want SUPER, as we would otherwise end up in a loop
+
+# we create this row here, so that the event table can receive the correct info
+# Yes, we do want SUPER, as we would otherwise end up in a loop
   $self->SUPER::create();
 
-  my $event = npg::model::event->new({
-    util                    => $self->util(),
-    entity_type_description => 'run_annotation',
-    event_type_description  => 'annotation',
-    entity_id               => $self->id_run_annotation(),
-    description             => $description,
-  });
-  $event->create({run => $self->id_run()});
+  my $event = npg::model::event->new(
+    { util                    => $self->util(),
+      entity_type_description => 'run_annotation',
+      event_type_description  => 'annotation',
+      entity_id               => $self->id_run_annotation(),
+      description             => $description,
+    }
+  );
+  $event->create( { run => $self->id_run() } );
 
   ##########
   # add the annotation to the instrument if checked to do so
-  $self->_save_annotation_to_instrument( $arg_refs );
+  $self->_save_annotation_to_instrument($arg_refs);
 
   return 1;
 }
@@ -212,15 +223,17 @@ sub _single_run_annotation_create {
 sub _save_annotation_to_instrument {
   my ( $self, $arg_refs ) = @_;
   my $annotation = $arg_refs->{annotation};
-  my $util = $self->util();
-  my $id_instrument = $arg_refs->{id_instrument} || $util->cgi->param('include_instrument');
-  if ( $id_instrument ) {
-    my $inst_annotation = npg::model::instrument_annotation-> new({
-      util          => $util,
-      id_instrument => $id_instrument,
-      id_annotation => $annotation->id_annotation(),
-      from_run_anno => 1,
-    });
+  my $util       = $self->util();
+  my $id_instrument
+      = $arg_refs->{id_instrument} || $util->cgi->param('include_instrument');
+  if ($id_instrument) {
+    my $inst_annotation = npg::model::instrument_annotation->new(
+      { util          => $util,
+        id_instrument => $id_instrument,
+        id_annotation => $annotation->id_annotation(),
+        from_run_anno => 1,
+      }
+    );
     $inst_annotation->create();
   }
 

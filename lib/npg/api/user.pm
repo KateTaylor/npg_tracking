@@ -15,7 +15,7 @@ use npg::api::usergroup;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_user username);
@@ -25,9 +25,8 @@ sub usergroups {
   my $self       = shift;
   my $usergroups = $self->read->getElementsByTagName('usergroups')->[0];
 
-  return [map {
-    $self->new_from_xml('npg::api::usergroup', $_);
-  } $usergroups->getElementsByTagName('usergroup')];
+  return [ map { $self->new_from_xml( 'npg::api::usergroup', $_ ); }
+        $usergroups->getElementsByTagName('usergroup') ];
 }
 
 1;

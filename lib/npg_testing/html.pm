@@ -34,7 +34,6 @@ A collection of test routines for html
 
 =cut
 
-
 ## no critic (ProhibitExplicitISA)
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(html_tidy_ok);
@@ -44,24 +43,28 @@ our @EXPORT_OK = qw(html_tidy_ok);
 Test utilising HTML::Tidy
 
 =cut
+
 sub html_tidy_ok {
-    my $html_string = shift;
-    my $tidy = HTML::Tidy->new( {} );
-    my $is_tidy = 1;
-    $tidy->parse(q[], $html_string);
-    if (scalar $tidy->messages() > 0) {
-        $is_tidy = 0;
-        carp (join qq[\n], q[HTML::Tidy messages:], $tidy->messages());
-        ## no critic (ProhibitStringySplit)
-        my @lines = split qq[\n], $html_string;
-        ## use critic
-        my $count = 0;
-        my @counted_lines = ();
-        foreach my $line (@lines) { $count++; push @counted_lines, "$count: $line"; }
-        carp  (join qq[\n], @counted_lines);
+  my $html_string = shift;
+  my $tidy        = HTML::Tidy->new( {} );
+  my $is_tidy     = 1;
+  $tidy->parse( q[], $html_string );
+  if ( scalar $tidy->messages() > 0 ) {
+    $is_tidy = 0;
+    carp( join qq[\n], q[HTML::Tidy messages:], $tidy->messages() );
+    ## no critic (ProhibitStringySplit)
+    my @lines = split qq[\n], $html_string;
+    ## use critic
+    my $count         = 0;
+    my @counted_lines = ();
+    foreach my $line (@lines) {
+      $count++;
+      push @counted_lines, "$count: $line";
     }
-    $tidy->clear_messages();
-    return $is_tidy;
+    carp( join qq[\n], @counted_lines );
+  }
+  $tidy->clear_messages();
+  return $is_tidy;
 }
 
 1;

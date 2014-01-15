@@ -20,7 +20,12 @@ with qw{npg::email::roles::instrument};
 
 Readonly::Scalar my $TEMPLATE => 'instrument_annotation.tt2';
 
-has q{_entity_check} => ( isa => q{Str}, init_arg => undef, is => q{ro}, default => q{npg_tracking::Schema::Result::InstrumentAnnotation} );
+has q{_entity_check} => (
+  isa      => q{Str},
+  init_arg => undef,
+  is       => q{ro},
+  default  => q{npg_tracking::Schema::Result::InstrumentAnnotation},
+);
 
 sub _build_template {
   my ($self) = @_;
@@ -67,10 +72,12 @@ sub run {
 
   $self->compose_email();
   $self->send_email(
-    {
-      body => $self->next_email(),
-      to   => $self->watchers( q{engineers} ),
-      subject => q{Instrument } . $self->name() . q{ has been annotated by } . $self->user(),
+    { body    => $self->next_email(),
+      to      => $self->watchers(q{engineers}),
+      subject => q{Instrument }
+          . $self->name()
+          . q{ has been annotated by }
+          . $self->user(),
     }
   );
 
@@ -94,15 +101,15 @@ sub compose_email {
 
   $template_obj->process(
     $self->template(),
-    {
-        instrument  => $self->name(),
-        dev         => $self->dev(),
-        annotation  => $self->event_row->description(),
+    { instrument => $self->name(),
+      dev        => $self->dev(),
+      annotation => $self->event_row->description(),
     },
-  ) or do {
+      )
+      or do {
     croak sprintf '%s error: %s',
         $template_obj->error->type(), $template_obj->error->info();
-  };
+      };
 
   return $template_obj;
 }
@@ -118,14 +125,16 @@ sub understands {
   my ( $class, $data ) = @_;
 
   if (
-      (    $data->{event_row}
-        && $data->{event_row}->event_type->description() eq q{annotation}
-        && $data->{event_row}->event_type->entity_type->description() eq q{instrument_annotation} )
-         ||
-      (    $data->{entity_type} eq q{instrument_annotation}
-        && $data->{event_type}  eq q{annotation} )
-     ) {
-    return $class->new( $data );
+    (    $data->{event_row}
+      && $data->{event_row}->event_type->description() eq q{annotation}
+      && $data->{event_row}->event_type->entity_type->description() eq
+      q{instrument_annotation}
+    )
+    || ( $data->{entity_type} eq q{instrument_annotation}
+      && $data->{event_type} eq q{annotation} )
+      )
+  {
+    return $class->new($data);
   }
   return;
 }

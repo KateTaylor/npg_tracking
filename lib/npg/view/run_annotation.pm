@@ -18,15 +18,18 @@ use npg::model::run_annotation;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 13585 $ =~ /(\d+)/smx; $r; };
 
 sub authorised {
-  my $self = shift;
-  my $util   = $self->util();
-  my $action = $self->action();
-  my $aspect = $self->aspect();
+  my $self      = shift;
+  my $util      = $self->util();
+  my $action    = $self->action();
+  my $aspect    = $self->aspect();
   my $requestor = $util->requestor();
 
-  if ( $aspect eq 'create_multiple_run_annotations'
-      &&
-     ( $requestor->is_member_of('loaders') || $requestor->is_member_of('annotators') ) ) {
+  if (
+    $aspect eq 'create_multiple_run_annotations'
+    && ( $requestor->is_member_of('loaders')
+      || $requestor->is_member_of('annotators') )
+      )
+  {
     return 1;
   }
 
@@ -42,7 +45,7 @@ sub add_ajax {
 }
 
 sub create_multiple_run_annotations {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $model = $self->model();
 
   $model->create();

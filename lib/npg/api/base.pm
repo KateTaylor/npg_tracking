@@ -19,7 +19,7 @@ use Readonly;
 Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15277 $ =~ /(\d+)/mxs; $r; };
 
 sub new {
-  my ($class, $ref) = @_;
+  my ( $class, $ref ) = @_;
   $ref ||= {};
   bless $ref, $class;
   $ref->init();
@@ -27,30 +27,31 @@ sub new {
 }
 
 sub new_from_xml {
-  my ($self, $pkg, $xmlfrag, $util) = @_;
+  my ( $self, $pkg, $xmlfrag, $util ) = @_;
   my $obj = $pkg->new();
 
-  if(ref $self && !$util) {
-    $obj->util($self->util());
+  if ( ref $self && !$util ) {
+    $obj->util( $self->util() );
   }
 
-  if($util) {
+  if ($util) {
     $obj->util($util);
   }
 
-  if($xmlfrag) {
-    for my $f ($obj->fields()) {
+  if ($xmlfrag) {
+    for my $f ( $obj->fields() ) {
       $obj->{$f} = $xmlfrag->getAttribute($f);
     }
   }
 
-  for my $pk ($self->primary_key, $obj->primary_key) {
-    if(!$obj->{$pk}) {
+  for my $pk ( $self->primary_key, $obj->primary_key ) {
+    if ( !$obj->{$pk} ) {
       eval {
-      $obj->$pk($self->{$pk});
-      1;
+        $obj->$pk( $self->{$pk} );
+        1;
       } or do {
-    # ignore
+
+        # ignore
       };
     }
   }
@@ -59,28 +60,28 @@ sub new_from_xml {
 }
 
 sub hasa {
-  my ($class, $attr) = @_;
-  no strict 'refs'; ## no critic (ProhibitNoStrict)
+  my ( $class, $attr ) = @_;
+  no strict 'refs';    ## no critic (ProhibitNoStrict)
 
-  if(ref $attr ne 'ARRAY') {
+  if ( ref $attr ne 'ARRAY' ) {
     $attr = [$attr];
   }
 
-  for my $single (@{$attr}) {
+  for my $single ( @{$attr} ) {
     my $pkg = $single;
-    if(ref $single eq 'HASH') {
+    if ( ref $single eq 'HASH' ) {
       ($pkg)    = values %{$single};
       ($single) = keys %{$single};
     }
     my $namespace = "${class}::$single";
-    if (defined &{$namespace}) {
+    if ( defined &{$namespace} ) {
       next;
     }
 
     *{$namespace} = sub {
       my $self = shift;
       my $el   = $self->read->getElementsByTagName($single)->[0];
-      return $self->new_from_xml("npg::api::$pkg", $el);
+      return $self->new_from_xml( "npg::api::$pkg", $el );
     };
   }
 
@@ -88,17 +89,17 @@ sub hasa {
 }
 
 sub hasmany {
-  my ($class, $attr) = @_;
-  no strict 'refs'; ## no critic (ProhibitNoStrict)
+  my ( $class, $attr ) = @_;
+  no strict 'refs';    ## no critic (ProhibitNoStrict)
 
-  if(ref $attr ne 'ARRAY') {
+  if ( ref $attr ne 'ARRAY' ) {
     $attr = [$attr];
   }
 
-  for my $single (@{$attr}) {
-    my $pkg    = $single;
+  for my $single ( @{$attr} ) {
+    my $pkg = $single;
 
-    if(ref $single eq 'HASH') {
+    if ( ref $single eq 'HASH' ) {
       ($pkg)    = values %{$single};
       ($single) = keys %{$single};
     }
@@ -106,16 +107,17 @@ sub hasmany {
     my $plural    = PL($single);
     my $namespace = "${class}::$plural";
 
-    if (defined &{$namespace}) {
+    if ( defined &{$namespace} ) {
       next;
     }
+
 #carp qq(Making $namespace for $class consuming <$plural/$single> and yielding npg::api::$pkg);
     *{$namespace} = sub {
       my $self = shift;
       my $el   = $self->read->getElementsByTagName($plural)->[0];
 
-      return [map { $self->new_from_xml("npg::api::$pkg", $_); }
-              $el->getElementsByTagName($single)];
+      return [ map { $self->new_from_xml( "npg::api::$pkg", $_ ); }
+            $el->getElementsByTagName($single) ];
 
     };
   }
@@ -123,15 +125,15 @@ sub hasmany {
   return;
 }
 
-sub init {}
+sub init { }
 
 sub util {
-  my ($self, $util) = @_;
-  if($util) {
+  my ( $self, $util ) = @_;
+  if ($util) {
     $self->{util} = $util;
   }
 
-  if(!$self->{util}) {
+  if ( !$self->{util} ) {
     $self->{util} = npg::api::util->new();
   }
 
@@ -149,9 +151,9 @@ sub flush {
 }
 
 sub get {
-  my ($self, $field) = @_;
+  my ( $self, $field ) = @_;
 
-  if(!exists $self->{$field}) {
+  if ( !exists $self->{$field} ) {
     $self->read();
   }
 
@@ -168,49 +170,52 @@ sub large_fields {
 
 sub primary_key {
   my $self = shift;
-  return ($self->fields())[0];
+  return ( $self->fields() )[0];
 }
 
 sub list {
-  my ($self, $filters) = @_;
+  my ( $self, $filters ) = @_;
   my $util       = $self->util();
-  my ($obj_type) = (ref $self) =~ /([^:]+)$/smx;
+  my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
   my $obj_uri    = sprintf '%s/%s', $util->base_uri(), $obj_type;
 
-  if($filters) {
+  if ($filters) {
     $obj_uri .= $filters;
   }
-  return $util->parser->parse_string($util->get($obj_uri, []));
+  return $util->parser->parse_string( $util->get( $obj_uri, [] ) );
 }
 
-sub read { ## no critic (ProhibitBuiltinHomonyms)
+sub read {    ## no critic (ProhibitBuiltinHomonyms)
   my $self = shift;
 
-  if(!$self->{read_dom}) {
+  if ( !$self->{read_dom} ) {
     my $util       = $self->util();
-    my ($obj_type) = (ref $self) =~ /([^:]+)$/smx;
+    my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
     my $obj_pk     = $self->primary_key();
     my $obj_pk_val = $self->{$obj_pk};
 
-    if ($obj_type eq 'user') {
+    if ( $obj_type eq 'user' ) {
       $obj_pk_val = $self->username();
     }
 
-    if(!defined $obj_pk_val) {
+    if ( !defined $obj_pk_val ) {
       return;
     }
 
-    my $obj_uri  = sprintf '%s/%s/%s', $util->base_uri(), $obj_type, $obj_pk_val;
-    my $content = $util->get($obj_uri, []);
-    eval {
-      $self->{read_dom} = $util->parser->parse_string($content);
-    } or do {
-      $self->{read_dom} = $util->parser->parse_string(q{<?xml version="1.0" encoding="utf-8"?><error>There was an error</error>});
-    };
+    my $obj_uri = sprintf '%s/%s/%s', $util->base_uri(), $obj_type,
+        $obj_pk_val;
+    my $content = $util->get( $obj_uri, [] );
+    eval { $self->{read_dom} = $util->parser->parse_string($content); }
+        or do {
+      $self->{read_dom}
+          = $util->parser->parse_string(
+        q{<?xml version="1.0" encoding="utf-8"?><error>There was an error</error>}
+          );
+        };
 
     my $root = $self->{read_dom}->getDocumentElement();
 
-    for my $field ($self->fields()) {
+    for my $field ( $self->fields() ) {
       $self->{$field} ||= $root->getAttribute($field);
     }
   }
@@ -219,14 +224,15 @@ sub read { ## no critic (ProhibitBuiltinHomonyms)
 }
 
 sub create {
-  my ($self,$xml) = @_;
-  my $util        = $self->util();
-  my ($obj_type)  = (ref $self) =~ /([^:]+)$/smx;
-  my $obj_pk      = $self->primary_key();
-  my $obj_pk_val  = $self->$obj_pk();
+  my ( $self, $xml ) = @_;
+  my $util       = $self->util();
+  my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
+  my $obj_pk     = $self->primary_key();
+  my $obj_pk_val = $self->$obj_pk();
 
-  if($obj_pk_val) {
-    croak qq(Cannot create a $obj_type with an existing $obj_pk ($obj_pk_val));
+  if ($obj_pk_val) {
+    croak
+        qq(Cannot create a $obj_type with an existing $obj_pk ($obj_pk_val));
   }
 
   my $obj_uri = sprintf '%s/%s/', $util->base_uri(), $obj_type;
@@ -236,25 +242,28 @@ sub create {
 
   my $large_fields = { map { $_ => undef } $self->large_fields() };
   my @small_fields = grep { !exists $large_fields->{$_} } $self->fields();
-  my $payload      = ['Content_Type' => 'form-data',
-                      'Content'      => [
-                                          'pipeline' => 1,
-                                          (map { $_ => $self->{$_} || q() } @small_fields),
-                                          (map { $_ => [
-                                                         undef,
-                                                         $_,
-                                                         'Content_Type'   => 'binary/octet-stream',
-                                                         'Content_Length' => length ($self->{$_}||q()),
-                                                         'Content'        => $self->{$_}||q(),
-                                                       ]
-                                               } keys %{$large_fields}),
-                                        ],
-                     ];
-  my $content =  $util->post($obj_uri, $payload);
+  my $payload = [
+    'Content_Type' => 'form-data',
+    'Content'      => [
+      'pipeline' => 1,
+      ( map { $_ => $self->{$_} || q() } @small_fields ),
+      ( map {
+          $_ => [
+            undef,
+            $_,
+            'Content_Type'   => 'binary/octet-stream',
+            'Content_Length' => length( $self->{$_} || q() ),
+            'Content'        => $self->{$_} || q(),
+              ]
+        } keys %{$large_fields}
+      ),
+    ],
+  ];
+  my $content = $util->post( $obj_uri, $payload );
   $self->{read_dom} = $util->parser->parse_string($content);
   my $root = $self->{read_dom}->getDocumentElement();
 
-  for my $field ($self->fields()) {
+  for my $field ( $self->fields() ) {
     $self->{$field} = $root->getAttribute($field);
   }
 
@@ -264,11 +273,11 @@ sub create {
 sub update {
   my $self       = shift;
   my $util       = $self->util();
-  my ($obj_type) = (ref $self) =~ /([^:]+)$/smx;
+  my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
   my $obj_pk     = $self->primary_key();
   my $obj_pk_val = $self->$obj_pk();
 
-  if(!$obj_pk_val) {
+  if ( !$obj_pk_val ) {
     croak qq(Cannot update a $obj_type without an existing $obj_pk);
   }
 
@@ -276,27 +285,31 @@ sub update {
 
   my $large_fields = { map { $_ => undef } $self->large_fields() };
   my @small_fields = grep { !exists $large_fields->{$_} } $self->fields();
-  my $payload      = ['Content_Type' => 'form-data',
-                      'Content'      => [
-                                          'pipeline' => 1,
-                                          (map  { $_ => $self->{$_} || q() }
-                                          grep { exists $self->{$_} }
-                                          @small_fields),
-                                          (map { $_ => [
-                                                         undef,
-                                                         $_,
-                                                         'Content_Type'   => 'binary/octet-stream',
-                                                         'Content_Length' => length ($self->{$_}||q()),
-                                                         'Content'        => $self->{$_}||q(),
-                                                       ]
-                                               } grep { exists $self->{$_} }
-                                          keys %{$large_fields}),
-                                        ],
-                     ];
-  $self->{read_dom} = $util->parser->parse_string($util->post($obj_uri, $payload));
+  my $payload = [
+    'Content_Type' => 'form-data',
+    'Content'      => [
+      'pipeline' => 1,
+      ( map { $_ => $self->{$_} || q() }
+        grep { exists $self->{$_} } @small_fields
+      ),
+      ( map {
+          $_ => [
+            undef,
+            $_,
+            'Content_Type'   => 'binary/octet-stream',
+            'Content_Length' => length( $self->{$_} || q() ),
+            'Content'        => $self->{$_} || q(),
+              ]
+            } grep { exists $self->{$_} }
+            keys %{$large_fields}
+      ),
+    ],
+  ];
+  $self->{read_dom}
+      = $util->parser->parse_string( $util->post( $obj_uri, $payload ) );
   my $root = $self->{read_dom}->getDocumentElement();
 
-  for my $field ($self->fields()) {
+  for my $field ( $self->fields() ) {
     $self->{$field} = $root->getAttribute($field);
   }
 

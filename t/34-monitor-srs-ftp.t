@@ -12,7 +12,6 @@
 #sh: -c: line 0: `Test::FTP::Server::Server=HASH(0xa3242b8)'
 #           ...come from IO::All::FTP
 
-
 use strict;
 use warnings;
 
@@ -21,7 +20,7 @@ use English qw(-no_match_vars);
 use File::chdir;
 use File::Copy;
 use Perl6::Slurp;
-use IPC::System::Simple; #needed for Fatalised/autodying system()
+use IPC::System::Simple;    #needed for Fatalised/autodying system()
 use autodie qw(:all);
 
 use Test::More tests => 28;
@@ -36,38 +35,34 @@ use t::dbic_util;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 11585 $ =~ /(\d+)/msx; $r; };
 Readonly::Scalar my $PORT => 11_223;
 
-
 use_ok('Monitor::SRS::FTP');
 
 my $schema = t::dbic_util->new->test_schema();
 my $test;
 
-
 $test = Monitor::SRS::FTP->new(
-            ident    => 3_000_000_000,
-            ftp_port => $PORT,
-            _schema  => $schema,
+    ident    => 3_000_000_000,
+    ftp_port => $PORT,
+    _schema  => $schema,
 );
 
 throws_ok { $test->ftp_root() } qr/No[ ]database[ ]entry[ ]found/msx,
-          'Croak without a matching db row';
+  'Croak without a matching db row';
 
 lives_ok {
-            $test = Monitor::SRS::FTP->new(
-                        ident    => 3,
-                        ftp_port => $PORT,
-                        _schema  => $schema,
-            )
-         }
-         'Object creation ok';
-
+    $test = Monitor::SRS::FTP->new(
+        ident    => 3,
+        ftp_port => $PORT,
+        _schema  => $schema,
+    );
+}
+'Object creation ok';
 
 is(
     $test->ftp_root(),
     'ftp://ftp:srpipe@' . "IL1win:$PORT/",
     'Correct ftp address'
 );
-
 
 # Test our own custom all_dirs() method.
 my $ftp_dir_string1 = <<'END';
@@ -84,14 +79,13 @@ my $ftp_dir_string1 = <<'END';
 END
 
 my @expect_these_dirs1 = qw( Config Data   ReadPrep1 EventScripts
-                             Images Queued Processed );
+  Images Queued Processed );
 
 cmp_deeply(
     [@expect_these_dirs1],
     bag( $test->all_dirs($ftp_dir_string1) ),
     'Identify ftp subdirectories in listings - 1'
 );
-
 
 my $ftp_dir_string2 = <<'END';
 total 446152
@@ -122,15 +116,14 @@ drwxrwsr-x  3 rta    solexa      4096 2010-07-05 13:44 ReadPrep2
 drwxrwsr-x 10 rta    solexa        94 2010-07-01 21:00 Thumbnail_Images
 END
 
-my @expect_these_dirs2 = qw( Config  ReadPrep1 EventScripts     Data 
-                             InterOp ReadPrep2 Thumbnail_Images );
+my @expect_these_dirs2 = qw( Config  ReadPrep1 EventScripts     Data
+  InterOp ReadPrep2 Thumbnail_Images );
 
 cmp_deeply(
     [@expect_these_dirs2],
     bag( $test->all_dirs($ftp_dir_string2) ),
     'Identify ftp subdirectories in listings - 2'
 );
-
 
 is( $test->db_entry->latest_contact(), undef, 'Machine never contacted' );
 lives_ok { $test->update_latest_contact() } 'Update contact timestamp';
@@ -140,11 +133,12 @@ like(
     'Check stored value'
 );
 
-
 SKIP: {
 
-    eval { require t::ftp_util;
-           1; };
+    eval {
+        require t::ftp_util;
+        1;
+    };
 
     ## no critic (ControlStructures::ProhibitPostfixControls)
     skip 'Test::FTP::Server needed for FTP tests', 19 if $EVAL_ERROR;
@@ -152,33 +146,31 @@ SKIP: {
 
     # Normal folder validation requires a db lookup. That's tested elsewhere
     # so let's use an unfussy mock-up.
-    my $module = Test::MockModule->new('npg_tracking::illumina::run::folder::validation');
+    my $module =
+      Test::MockModule->new('npg_tracking::illumina::run::folder::validation');
     $module->mock(
         'check',
         sub {
             return ( $_[0]->{run_folder} =~ m/\d+_(?:IL|HS)\d+_\d+/msx )
-                   ? 1
-                   : 0;
-            }
+              ? 1
+              : 0;
+        }
     );
 
     my $ftp = t::ftp_util->new(
-                user => 'ftp',
-                pass => 'srpipe',
-                root => $CWD . '/t/data/gaii/ftp',
-                port => $PORT,
+        user => 'ftp',
+        pass => 'srpipe',
+        root => $CWD . '/t/data/gaii/ftp',
+        port => $PORT,
     );
 
-
     my $pid = $ftp->start();
-
 
     $test->ftp_root( 'ftp://no:such@' . "address:$PORT/" );
 
     throws_ok { $test->get_normal_run_paths() }
-              qr/^Nothing at all found/ms,
-              'Croak on empty listing';
-
+    qr/^Nothing at all found/ms,
+      'Croak on empty listing';
 
     my $ftp_root = 'ftp://ftp:srpipe@' . "localhost:$PORT/";
     $test->ftp_root($ftp_root);
@@ -188,39 +180,40 @@ SKIP: {
     cmp_deeply(
         [ $test->get_normal_run_paths() ],
         [
-          $ftp_root . 'Runs/100611_IL2_0022',
-          $ftp_root . 'Runs/100628_IL2_04929',
-          $ftp_root . 'Runs/100914_HS3_05281_A_205MBABXX',
+            $ftp_root . 'Runs/100611_IL2_0022',
+            $ftp_root . 'Runs/100628_IL2_04929',
+            $ftp_root . 'Runs/100914_HS3_05281_A_205MBABXX',
         ],
         'List regular run folders'
     );
 
+    my $test_root = $ftp_root . 'Runs/';
 
-    my $test_root = $ftp_root .'Runs/';
-
-    lives_and { is( $test->is_run_completed( $test_root . '100628_IL2_04929' ),  1,
-        'Run complete' ) } 'Run complete';
-    lives_and { is( $test->is_run_completed( $test_root . '100611_IL2_0022' ), 0,
-        'Run not complete' ) } 'Run not complete';
+    lives_and {
+        is( $test->is_run_completed( $test_root . '100628_IL2_04929' ),
+            1, 'Run complete' );
+    }
+    'Run complete';
+    lives_and {
+        is( $test->is_run_completed( $test_root . '100611_IL2_0022' ),
+            0, 'Run not complete' );
+    }
+    'Run not complete';
 
     throws_ok { $test->is_run_completed() }
-              qr/Run[ ]folder[ ]not[ ]supplied/msx,
-              'Croak if no argument supplied';
+    qr/Run[ ]folder[ ]not[ ]supplied/msx,
+      'Croak if no argument supplied';
 
     warning_like { $test->is_run_completed( $test_root . 'gibberish' ) }
-                 { carped => qr/^Could[ ]not[ ]read[ ]ftp:/msx },
-                 'Carp if run folder is empty/not readable';
+    { carped => qr/^Could[ ]not[ ]read[ ]ftp:/msx },
+      'Carp if run folder is empty/not readable';
 
-
-    is( $test->is_rta( $test_root . '100611_IL2_0022' ), 1,
-        'Run is rta' );
-    is( $test->is_rta( $test_root . '100628_IL2_04929' ), 0,
-        'Run is not rta' );
-    is( $test->is_rta( $test_root . 'this_is_not_a_run' ), undef,
-        'Cannot determine if run is rta' );
+    is( $test->is_rta( $test_root . '100611_IL2_0022' ),  1, 'Run is rta' );
+    is( $test->is_rta( $test_root . '100628_IL2_04929' ), 0, 'Run is not rta' );
+    is( $test->is_rta( $test_root . 'this_is_not_a_run' ),
+        undef, 'Cannot determine if run is rta' );
     throws_ok { $test->is_rta() } qr/Run[ ]folder[ ]not[ ]supplied/msx,
-              'Insist on run folder argument';
-
+      'Insist on run folder argument';
 
     my $ages_ago = q{2000-01-12 13:34:43};
     $test->db_entry->latest_contact($ages_ago);
@@ -234,35 +227,31 @@ SKIP: {
     close $event_fh;
 
     ## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
-    is( $test->get_latest_cycle($complete_run_path), 27,
-        'Latest cycle is 27' );
-
+    is( $test->get_latest_cycle($complete_run_path), 27, 'Latest cycle is 27' );
 
     my $update_log = slurp 't/data/gaii/Events.Update';
     open $event_fh, q{>>}, $mock_event_log;
     print {$event_fh} $update_log or croak $OS_ERROR;
     close $event_fh;
 
-    is( $test->get_latest_cycle($complete_run_path), 28,
-        'Time passes and it\'s 28' );
+    is( $test->get_latest_cycle($complete_run_path),
+        28, 'Time passes and it\'s 28' );
 
     ## use critic
     unlink $mock_event_log;
 
-    isnt( $test->db_entry->latest_contact(), $ages_ago,
-          'latest_contact field has been updated' );
-
+    isnt( $test->db_entry->latest_contact(),
+        $ages_ago, 'latest_contact field has been updated' );
 
     $ftp->stop($pid);
-
 
     # Hiseq tests
 
     $ftp = t::ftp_util->new(
-                user => 'ftp',
-                pass => 'srpipe',
-                root => $CWD . '/t/data/hiseq/ftp/',
-                port => $PORT,
+        user => 'ftp',
+        pass => 'srpipe',
+        root => $CWD . '/t/data/hiseq/ftp/',
+        port => $PORT,
     );
 
     $pid = $ftp->start();
@@ -270,34 +259,40 @@ SKIP: {
 
     $test->ftp_root($ftp_root);
 
-    ok ( $test->can_contact( 'Runs_D/', 'Runs_XZCV/' ) ne q{},
-         'Can contact Hiseq ftp host' );
+    ok( $test->can_contact( 'Runs_D/', 'Runs_XZCV/' ) ne q{},
+        'Can contact Hiseq ftp host' );
 
-    my $prefer_test = $test->ftp_root() . 
-        'Runs_E/100914_HS3_05281_A_205MBABXX';
+    my $prefer_test = $test->ftp_root() . 'Runs_E/100914_HS3_05281_A_205MBABXX';
 
-    is( $test->get_latest_cycle($prefer_test), 152,
-        'Parse StatusUpdate.xml when present' );
+    is( $test->get_latest_cycle($prefer_test),
+        152, 'Parse StatusUpdate.xml when present' );
 
     my $temp_base = 't/data/hiseq/ftp/Runs_E/100914_HS3_05281_A_205MBABXX';
 
     mkdir $temp_base . '/Processed/L001/C155.1';
 
-    is( $test->get_latest_cycle($prefer_test), 155,
-        'Look in \'Processed\' directory for cycle count' );
+    is( $test->get_latest_cycle($prefer_test),
+        155, 'Look in \'Processed\' directory for cycle count' );
 
-    move( $temp_base . '/Processed/L001/C155.1',
-          $temp_base . '/Images/L001/C157.1'
+    move(
+        $temp_base . '/Processed/L001/C155.1',
+        $temp_base . '/Images/L001/C157.1'
     ) || croak $OS_ERROR;
 
-    lives_and { is( $test->get_latest_cycle($prefer_test), 157,
-        'Look in \'Images\' directory for cycle count' ) } 'Look in \'Images\' directory for cycle count';
+    lives_and {
+        is( $test->get_latest_cycle($prefer_test),
+            157, 'Look in \'Images\' directory for cycle count' );
+    }
+    'Look in \'Images\' directory for cycle count';
 
     rmdir $temp_base . '/Images/L001/C157.1';
 
-    lives_and { is( $test->is_run_completed($prefer_test), 1,
-        'Note ImageAnalysis_Netcopy_complete_Read2.txt when present' )} 'Note ImageAnalysis_Netcopy_complete_Read2.txt when present';
-    
+    lives_and {
+        is( $test->is_run_completed($prefer_test),
+            1, 'Note ImageAnalysis_Netcopy_complete_Read2.txt when present' );
+    }
+    'Note ImageAnalysis_Netcopy_complete_Read2.txt when present';
+
     $ftp->stop($pid);
 }
 

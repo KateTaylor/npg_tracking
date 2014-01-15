@@ -27,11 +27,14 @@ my $test;
 my $dummy_cbot = 'cBot1';
 my $dummy_url  = "http://$dummy_cbot.internal.sanger.ac.uk/GetRunList";
 
-my $user_agent = t::useragent->new( { is_success => 1,
-                                      mock       => {
-                          $dummy_url => q{t/data/cbot/cBot1/GetRunList.xml},
-                                                    },
-                                  } );
+my $user_agent = t::useragent->new(
+    {
+        is_success => 1,
+        mock       => {
+            $dummy_url => q{t/data/cbot/cBot1/GetRunList.xml},
+        },
+    }
+);
 
 use_ok('Monitor::Cbot::RunList');
 
@@ -63,6 +66,5 @@ like(
 
     'Run info looks reasonable'
 );
-
 
 1;

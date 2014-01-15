@@ -23,39 +23,51 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 # using fixtures to import data
 #
 
-my $util  = t::util->new({
-			  fixtures => 1,
-			 });
+my $util = t::util->new(
+    {
+        fixtures => 1,
+    }
+);
 {
-  my $model = npg::model::run_lane_annotation->new({
-						    util => $util,
-						    id_run_lane_annotation => 1,
-						   });
+    my $model = npg::model::run_lane_annotation->new(
+        {
+            util                   => $util,
+            id_run_lane_annotation => 1,
+        }
+    );
 
-  isa_ok($model, 'npg::model::run_lane_annotation', '$model');
-  my @fields = $model->fields();
-  is($fields[0], 'id_run_lane_annotation', 'first field is id_run_lane_annotation - the primarykey');
-  my $run_lane = $model->run_lane();
-  isa_ok($run_lane, 'npg::model::run_lane', '$run_lane');
-  is($run_lane->id_run_lane(), $model->id_run_lane(), 'fetched correct run_lane');
-  my $annotation = $model->annotation();
-  isa_ok($annotation, 'npg::model::annotation', '$annotation');
-  is($annotation->id_annotation(), $model->id_annotation(), 'fetched correct annotation');
+    isa_ok( $model, 'npg::model::run_lane_annotation', '$model' );
+    my @fields = $model->fields();
+    is( $fields[0], 'id_run_lane_annotation',
+        'first field is id_run_lane_annotation - the primarykey' );
+    my $run_lane = $model->run_lane();
+    isa_ok( $run_lane, 'npg::model::run_lane', '$run_lane' );
+    is( $run_lane->id_run_lane(),
+        $model->id_run_lane(), 'fetched correct run_lane' );
+    my $annotation = $model->annotation();
+    isa_ok( $annotation, 'npg::model::annotation', '$annotation' );
+    is(
+        $annotation->id_annotation(),
+        $model->id_annotation(),
+        'fetched correct annotation'
+    );
 }
 
 {
-  my $annotext = 'This is a library annotation for a run lane';
+    my $annotext = 'This is a library annotation for a run lane';
 
-  my $model = npg::model::run_lane_annotation->new({
-						    util        => $util,
-						    id_run_lane => 9,
-						   });
-  $util->requestor('joe_annotator');
-  $model->annotation->comment($annotext);
-  $model->annotation->id_user($util->requestor->id_user());
+    my $model = npg::model::run_lane_annotation->new(
+        {
+            util        => $util,
+            id_run_lane => 9,
+        }
+    );
+    $util->requestor('joe_annotator');
+    $model->annotation->comment($annotext);
+    $model->annotation->id_user( $util->requestor->id_user() );
 
-  eval { $model->create(); };
-  is($EVAL_ERROR, q{}, 'no croak on create');
+    eval { $model->create(); };
+    is( $EVAL_ERROR, q{}, 'no croak on create' );
 }
 
 1;

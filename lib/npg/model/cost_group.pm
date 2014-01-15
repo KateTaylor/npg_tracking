@@ -16,34 +16,35 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 use npg::model::cost_code;
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_all();
-__PACKAGE__->has_many([qw{cost_code}]);
+__PACKAGE__->has_many( [qw{cost_code}] );
 
 sub fields {
   return qw{
-    id_cost_group
-    name
+      id_cost_group
+      name
   };
 }
 
 sub init {
   my $self = shift;
 
-  if ( ! $self->{id_cost_group} && $self->{name} ) {
+  if ( !$self->{id_cost_group} && $self->{name} ) {
     my $query = q(SELECT id_cost_group
                   FROM   cost_group
                   WHERE  name = ?);
-    my $ref   = [];
+    my $ref = [];
 
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->name());
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {}, $self->name() );
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{id_cost_group} = $ref->[0]->[0];
     }
   }
@@ -52,12 +53,12 @@ sub init {
 }
 
 sub group_codes {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
   my $codes;
-  @{ $codes } = @{ $self->cost_codes() };
+  @{$codes} = @{ $self->cost_codes() };
 
-  foreach my $code ( @{ $codes } ) {
+  foreach my $code ( @{$codes} ) {
     $code = $code->cost_code();
   }
 

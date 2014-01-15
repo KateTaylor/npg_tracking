@@ -20,7 +20,8 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 __PACKAGE__->mk_accessors(qw(id_run_annotation id_run username));
 
 sub fields {
-  return qw(id_run_annotation id_annotation id_user date comment attachment_name attachment id_run username);
+  return
+      qw(id_run_annotation id_annotation id_user date comment attachment_name attachment id_run username);
 }
 
 1;

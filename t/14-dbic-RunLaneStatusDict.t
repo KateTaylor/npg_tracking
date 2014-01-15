@@ -15,21 +15,17 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 14155 
 
 Readonly::Scalar my $ABSURD_ID => 100_000_000;
 
-
 use_ok('npg_tracking::Schema::Result::RunLaneStatusDict');
-
 
 my $schema = t::dbic_util->new->test_schema();
 my $test;
 
 lives_ok { $test = $schema->resultset('RunLaneStatusDict')->new( {} ) }
-         'Create test object';
-
+'Create test object';
 
 throws_ok { $test->check_row_validity() }
-          qr/Argument required/ms,
-          'Exception thrown for no argument supplied';
-
+qr/Argument required/ms,
+  'Exception thrown for no argument supplied';
 
 is( $test->check_row_validity('lane exploded'), undef, 'Invalid description' );
 is( $test->check_row_validity($ABSURD_ID),      undef, 'Invalid id' );
@@ -43,8 +39,6 @@ is(
 );
 is( $row->id_run_lane_status_dict(), 1, '...and the correct row' );
 
-
-
 $row = $test->check_row_validity(2);
 
 is(
@@ -57,6 +51,5 @@ is( $row->description(), 'analysis complete', '...and the correct row' );
 my $row2 = $test->_insist_on_valid_row(2);
 
 cmp_deeply( $row, $row2, 'Internal method returns same row' );
-
 
 1;

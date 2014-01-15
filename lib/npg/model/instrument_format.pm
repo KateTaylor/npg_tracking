@@ -17,77 +17,76 @@ use npg::model::manufacturer;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 14897 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_a(q[manufacturer]);
 __PACKAGE__->has_many(q[instrument]);
 __PACKAGE__->has_all();
 
 sub fields {
   return qw(id_instrument_format
-            id_manufacturer
-            model
-            iscurrent
-            default_tiles
-            default_columns
-            days_between_washes
-            runs_between_washes
-           );
+      id_manufacturer
+      model
+      iscurrent
+      default_tiles
+      default_columns
+      days_between_washes
+      runs_between_washes
+  );
 }
 
 sub init {
   my $self = shift;
 
-  if($self->{'model'} &&
-     !$self->{'id_instrument_format'}) {
+  if ( $self->{'model'}
+    && !$self->{'id_instrument_format'} )
+  {
     my $query = q(SELECT id_instrument_format
                   FROM   instrument_format
                   WHERE  model = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->model());
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {},
+        $self->model() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_instrument_format'} = $ref->[0]->[0];
     }
   }
   return 1;
 }
 
-
-
-
 sub current_instrument_formats {
   my $self = shift;
 
-  if(!$self->{'current_instrument_formats'}) {
+  if ( !$self->{'current_instrument_formats'} ) {
     my $pkg   = 'npg::model::instrument_format';
     my $query = qq(SELECT @{[join q(, ), $pkg->fields()]}
                    FROM   @{[$pkg->table()]}
                    WHERE  iscurrent = 1);
-    $self->{'current_instrument_formats'} =  $self->gen_getarray($pkg,
-								 $query);
+    $self->{'current_instrument_formats'}
+        = $self->gen_getarray( $pkg, $query );
   }
 
   return $self->{'current_instrument_formats'};
 }
 
 sub current_instruments {
-  my $self  = shift;
+  my $self = shift;
 
-  if(!$self->{'current_instruments'}) {
+  if ( !$self->{'current_instruments'} ) {
     my $pkg   = 'npg::model::instrument';
     my $query = qq(SELECT @{[join q(, ), $pkg->fields()]}
                    FROM   @{[$pkg->table()]}
                    WHERE  id_instrument_format = ?
                    AND    iscurrent            = 1);
-    $self->{'current_instruments'} =  $self->gen_getarray($pkg,
-							  $query,
-							  $self->id_instrument_format());
+    $self->{'current_instruments'}
+        = $self->gen_getarray( $pkg, $query, $self->id_instrument_format() );
   }
 
   return $self->{'current_instruments'};
@@ -100,8 +99,9 @@ sub instrument_count {
                 WHERE  id_instrument_format = ?);
   my $ref = [];
   eval {
-    $ref = $self->util->dbh->selectall_arrayref($query, {},
-						$self->id_instrument_format());
+    $ref
+        = $self->util->dbh->selectall_arrayref( $query, {},
+      $self->id_instrument_format() );
   } or do {
     carp $EVAL_ERROR;
     return;
@@ -111,33 +111,35 @@ sub instrument_count {
 }
 
 sub is_used_sequencer_type {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  my $seq_type = $self->model() eq q{HiSeq} ? q{HiSeq}
-               : $self->model() eq q{HK}    ? q{GAII}
-               : $self->model() eq q{MiSeq} ? q{MiSeq}
-               : undef;
+  my $seq_type
+      = $self->model() eq q{HiSeq} ? q{HiSeq}
+      : $self->model() eq q{HK}    ? q{GAII}
+      : $self->model() eq q{MiSeq} ? q{MiSeq}
+      :                              undef;
 
   return $seq_type;
 }
 
 sub _obtain_numerical_name_part {
-  my ( $self, $name ) = @_;
-  my ($letters, $numbers) = $name =~ /\A([A-Z]+)(\d+)\z/ixms;
+  my ( $self,    $name )    = @_;
+  my ( $letters, $numbers ) = $name =~ /\A([A-Z]+)(\d+)\z/ixms;
   return $numbers;
 }
 
 sub current_instruments_by_format {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  if ( ! $self->{current_instruments_by_format} ) {
+  if ( !$self->{current_instruments_by_format} ) {
     my $href = {};
     foreach my $format ( @{ $self->current_instrument_formats() } ) {
       my $model = $format->model();
       $model = $model eq q{HK} ? q{GA-II} : $model;
-      my @ordered = map  { $_->[0] }
-                    sort { $a->[1] <=> $b->[1] }
-                    map  { [ $_, $self->_obtain_numerical_name_part( $_->name() ) ] } @{ $format->current_instruments() };
+      my @ordered = map { $_->[0] }
+          sort { $a->[1] <=> $b->[1] }
+          map { [ $_, $self->_obtain_numerical_name_part( $_->name() ) ] }
+          @{ $format->current_instruments() };
       if ( scalar @ordered ) {
         $href->{$model} = \@ordered;
       }

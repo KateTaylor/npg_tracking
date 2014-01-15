@@ -16,34 +16,36 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 use npg::model::cost_group;
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_all();
 __PACKAGE__->has_a('cost_group');
 
 sub fields {
   return qw{
-    id_cost_code
-    cost_code
-    id_cost_group
+      id_cost_code
+      cost_code
+      id_cost_group
   };
 }
 
 sub init {
   my $self = shift;
 
-  if ( ! $self->{id_cost_code} && $self->{cost_code} ) {
+  if ( !$self->{id_cost_code} && $self->{cost_code} ) {
     my $query = q(SELECT id_cost_code
                   FROM   cost_code
                   WHERE  cost_code = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->cost_code());
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {},
+        $self->cost_code() );
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{id_cost_code} = $ref->[0]->[0];
     }
   }
@@ -52,7 +54,7 @@ sub init {
 }
 
 sub groupname {
-  my ( $self ) = @_;
+  my ($self) = @_;
   return $self->cost_group()->name();
 }
 

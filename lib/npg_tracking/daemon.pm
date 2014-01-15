@@ -16,7 +16,8 @@ use FindBin qw($Bin);
 use Cwd qw/abs_path/;
 
 ## no critic (RequireInterpolationOfMetachars)
-Readonly::Scalar my $DEFAULT_COMMAND => q{perl -e '$|=1;while(1){print "daemon running\n";sleep5;}'};
+Readonly::Scalar my $DEFAULT_COMMAND =>
+    q{perl -e '$|=1;while(1){print "daemon running\n";sleep5;}'};
 ## use critic
 
 =head1 NAME
@@ -39,10 +40,12 @@ an arbitrary script as a daemon on a remote server.
 A array ref of lib paths to use in the PERL5LIB
 
 =cut
-has 'libs'        =>  (isa             => 'Maybe[ArrayRef]',
-                       is              => 'ro',
-                       required        => 0,
-                      );
+
+has 'libs' => (
+  isa      => 'Maybe[ArrayRef]',
+  is       => 'ro',
+  required => 0,
+);
 
 =head2 env_vars
 
@@ -50,13 +53,16 @@ A hash reference with arbitrary environment variables and their values
 which should be passed to the script running as a daemon
 
 =cut
-has 'env_vars'    =>  (isa             => 'Maybe[HashRef]',
-                       is              => 'ro',
-                       required        => 0,
-                       lazy_build      => 1,
-                      );
+
+has 'env_vars' => (
+  isa        => 'Maybe[HashRef]',
+  is         => 'ro',
+  required   => 0,
+  lazy_build => 1,
+);
+
 sub _build_env_vars {
-    return;
+  return;
 }
 
 =head2 hosts
@@ -64,11 +70,14 @@ sub _build_env_vars {
 A reference to a list of hosts.
 
 =cut
-has 'hosts' =>        (isa             => 'ArrayRef',
-                       is              => 'ro',
-                       required        => 0,
-                       lazy_build      => 1,
-                      );
+
+has 'hosts' => (
+  isa        => 'ArrayRef',
+  is         => 'ro',
+  required   => 0,
+  lazy_build => 1,
+);
+
 sub _build_hosts {
   return [hostname];
 }
@@ -78,25 +87,29 @@ sub _build_hosts {
 timestamp, is used in the name of the log file
 
 =cut
-has 'timestamp' =>    (isa             => 'Str',
-                       is              => 'ro',
-                       default         => sub {strftime '%Y%m%d-%H%M%S', localtime time},
-                      );
+
+has 'timestamp' => (
+  isa     => 'Str',
+  is      => 'ro',
+  default => sub { strftime '%Y%m%d-%H%M%S', localtime time },
+);
 
 =head2 log_dir
 
 Directory where the log file is created, defaults to 'logs' parallel to the current bin
 
 =cut
-has 'log_dir'   =>    (isa             => 'Str',
-                       is              => 'ro',
-                       default         => sub {abs_path "$Bin/../logs"},
-                      );
+
+has 'log_dir' => (
+  isa     => 'Str',
+  is      => 'ro',
+  default => sub { abs_path "$Bin/../logs" },
+);
 
 sub _class_name {
-    my $self = shift;
-    my ($ref) = (ref $self) =~ /(\w*)$/smx;
-    return $ref;
+  my $self = shift;
+  my ($ref) = ( ref $self ) =~ /(\w*)$/smx;
+  return $ref;
 }
 
 =head2 start
@@ -104,28 +117,36 @@ sub _class_name {
 Command to start a script, as a string.
 
 =cut
-sub start {
-    my ($self, $host) = @_;
-    $host ||= hostname;
-    my $perl5lib = q[];
-    if (defined $self->libs) {
-        $perl5lib = join q[:], @{$self->libs};
-    }
-    my $action = q[daemon -i -r -a 10 -n ] . $self->daemon_name;
-    if ($perl5lib) {
-        $action .= qq[ --env=\"PERL5LIB=$perl5lib\"];
-    }
-    if ($self->env_vars) {
-        ##no critic (Variables::ProhibitUnusedVariables)
-        while ((my $var, my $value) = each %{$self->env_vars}) {
-            $action .= qq[ --env=\"$var=$value\"];
-        }
-        ##use critic
-    }
 
-    my $script_call = $self->command($host);
-    my $log_path_prefix = join q[/], $self->log_dir, $self->daemon_name;
-    return $action . q[ --umask 002 -A 10 -L 10 -M 10 -o ] . $log_path_prefix . qq[-$host] . q[-]. $self->timestamp() . q[.log ] . qq[-- $script_call];
+sub start {
+  my ( $self, $host ) = @_;
+  $host ||= hostname;
+  my $perl5lib = q[];
+  if ( defined $self->libs ) {
+    $perl5lib = join q[:], @{ $self->libs };
+  }
+  my $action = q[daemon -i -r -a 10 -n ] . $self->daemon_name;
+  if ($perl5lib) {
+    $action .= qq[ --env=\"PERL5LIB=$perl5lib\"];
+  }
+  if ( $self->env_vars ) {
+    ##no critic (Variables::ProhibitUnusedVariables)
+    while ( ( my $var, my $value ) = each %{ $self->env_vars } ) {
+      $action .= qq[ --env=\"$var=$value\"];
+    }
+    ##use critic
+  }
+
+  my $script_call = $self->command($host);
+  my $log_path_prefix = join q[/], $self->log_dir, $self->daemon_name;
+  return
+        $action
+      . q[ --umask 002 -A 10 -L 10 -M 10 -o ]
+      . $log_path_prefix
+      . qq[-$host] . q[-]
+      . $self->timestamp()
+      . q[.log ]
+      . qq[-- $script_call];
 }
 
 =head2 ping
@@ -133,9 +154,13 @@ sub start {
 Command to ping a running script, as a string.
 
 =cut
+
 sub ping {
-    my $self = shift;
-    return q[daemon --running -n ] . $self->daemon_name . q[ && echo -n 'ok' || echo -n 'not ok'];
+  my $self = shift;
+  return
+        q[daemon --running -n ]
+      . $self->daemon_name
+      . q[ && echo -n 'ok' || echo -n 'not ok'];
 }
 
 =head2 stop
@@ -143,9 +168,10 @@ sub ping {
 Command to stop a running script, as a string.
 
 =cut
+
 sub stop {
-    my $self = shift;
-    return q[daemon --stop -n ] .$self->daemon_name;
+  my $self = shift;
+  return q[daemon --stop -n ] . $self->daemon_name;
 }
 
 =head2 command
@@ -154,8 +180,9 @@ Command to run. By default a perl one-liner printing a string to standard out ev
 To be overwritten by inheriting class.
 
 =cut
+
 sub command {
-    return $DEFAULT_COMMAND;
+  return $DEFAULT_COMMAND;
 }
 
 =head2 daemon_name
@@ -163,11 +190,11 @@ sub command {
 Default value of the daemon name - class name.
 
 =cut
-sub daemon_name {
-    my $self = shift;
-    return $self->_class_name;
-}
 
+sub daemon_name {
+  my $self = shift;
+  return $self->_class_name;
+}
 
 no Moose;
 

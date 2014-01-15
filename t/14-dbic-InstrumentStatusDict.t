@@ -29,34 +29,33 @@ Readonly::Scalar my $ABSURD_ID => 100_000_000;
 
 use_ok('npg_tracking::Schema::Result::InstrumentStatusDict');
 
-
 my $schema = t::dbic_util->new->test_schema();
 my $test;
-
 
 #
 # Basic set up.
 #
 
-
 lives_ok {
-            $test = $schema->resultset('InstrumentStatusDict')->new( { } )
-         }
-         'Create test object';
+    $test = $schema->resultset('InstrumentStatusDict')->new( {} );
+}
+'Create test object';
 
-isa_ok( $test, 'npg_tracking::Schema::Result::InstrumentStatusDict',
-        'Correct class' );
+isa_ok(
+    $test,
+    'npg_tracking::Schema::Result::InstrumentStatusDict',
+    'Correct class'
+);
 
 throws_ok { $test->check_row_validity() }
-          qr/Argument required/ms,
-          'Exception thrown for no argument supplied';
-
+qr/Argument required/ms,
+  'Exception thrown for no argument supplied';
 
 is( $test->check_row_validity('run exploded'), undef, 'Invalid description' );
 is( $test->check_row_validity($ABSURD_ID),     undef, 'Invalid id' );
 
-throws_ok {$test->check_row_validity('planned maintenance')}
-  qr/Instrument status \"planned maintenance\" is not current/,
+throws_ok { $test->check_row_validity('planned maintenance') }
+qr/Instrument status \"planned maintenance\" is not current/,
   'non-current row is invalid';
 
 my $row = $test->check_row_validity('down for service');
@@ -66,8 +65,6 @@ is(
     'Valid description...'
 );
 is( $row->id_instrument_status_dict(), 10, '...and the correct row' );
-
-
 
 $row = $test->check_row_validity(1);
 
@@ -82,27 +79,23 @@ my $row2 = $test->_insist_on_valid_row(1);
 
 cmp_deeply( $row, $row2, 'Internal method returns same row' );
 
-
 {
-    my $broken_db_test =
-        Test::MockModule->new('DBIx::Class::ResultSet');
+    my $broken_db_test = Test::MockModule->new('DBIx::Class::ResultSet');
 
     $broken_db_test->mock( count => sub { return 2; } );
 
     $test = $schema->resultset('InstrumentStatusDict')->new( {} );
 
     throws_ok { $test->check_row_validity(1) }
-              qr/Panic![ ]Multiple[ ]instrument_status_dict[ ]rows[ ]found/msx,
-              'Exception thrown for multiple db matches';
+    qr/Panic![ ]Multiple[ ]instrument_status_dict[ ]rows[ ]found/msx,
+      'Exception thrown for multiple db matches';
 
     $broken_db_test->mock( count => sub { return 0; } );
     is( $test->check_row_validity(1), undef, 'Return undef for no matches' );
 
     throws_ok { $test->_insist_on_valid_row(1) }
-              qr/Invalid[ ]identifier:[ ]1/msx,
-              'Internal validator croaks as it\'s supposed to';
+    qr/Invalid[ ]identifier:[ ]1/msx,
+      'Internal validator croaks as it\'s supposed to';
 }
-
-
 
 1;

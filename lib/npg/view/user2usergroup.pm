@@ -17,21 +17,23 @@ use npg::model::usergroup;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
 sub authorised {
-  my ($self, @args) = @_;
-  my $model         = $self->model();
-  my $requestor     = $self->util->requestor();
-  my $action        = $self->action();
-  my $aspect        = $self->aspect();
-  my $req_id_user   = $requestor->id_user();
-  my $mod_id_user   = $model->id_user();
+  my ( $self, @args ) = @_;
+  my $model       = $self->model();
+  my $requestor   = $self->util->requestor();
+  my $action      = $self->action();
+  my $aspect      = $self->aspect();
+  my $req_id_user = $requestor->id_user();
+  my $mod_id_user = $model->id_user();
 
-  if($action eq 'create' && $req_id_user) {
-    my $public = npg::model::user->new({
-					util     => $self->util(),
-					username => 'public',
-				       });
-    if(defined $req_id_user &&
-       $req_id_user != $public->id_user()) {
+  if ( $action eq 'create' && $req_id_user ) {
+    my $public = npg::model::user->new(
+      { util     => $self->util(),
+        username => 'public',
+      }
+    );
+    if ( defined $req_id_user
+      && $req_id_user != $public->id_user() )
+    {
       #########
       # You can only create memberships if you're not public
       #
@@ -39,12 +41,14 @@ sub authorised {
     }
   }
 
-  if($req_id_user && $mod_id_user &&
-     $req_id_user == $mod_id_user) {
+  if ( $req_id_user
+    && $mod_id_user
+    && $req_id_user == $mod_id_user )
+  {
     #########
     # You can only update or delete memberships if they're yours
     #
-    if($action =~ /^update|delete$/smx) {
+    if ( $action =~ /^update|delete$/smx ) {
       return 1;
     }
   }
@@ -53,30 +57,32 @@ sub authorised {
 }
 
 sub create {
-  my ($self, @args)   = @_;
-  my $util            = $self->util();
-  my $cgi             = $util->cgi();
-  my $model           = $self->model();
-  $model->{'id_user'} = $util->requestor->id_user(); # enforce id_user for logged in user
+  my ( $self, @args ) = @_;
+  my $util  = $self->util();
+  my $cgi   = $util->cgi();
+  my $model = $self->model();
+  $model->{'id_user'}
+      = $util->requestor->id_user();    # enforce id_user for logged in user
 
   my $id_usergroup = $cgi->param('id_usergroup');
 
-  if(!$id_usergroup) {
+  if ( !$id_usergroup ) {
     croak q(No group specified);
   }
 
-  my $usergroup = npg::model::usergroup->new({
-					      util         => $util,
-					      id_usergroup => $id_usergroup,
-					     });
-  if(!$usergroup->is_public()) {
+  my $usergroup = npg::model::usergroup->new(
+    { util         => $util,
+      id_usergroup => $id_usergroup,
+    }
+  );
+  if ( !$usergroup->is_public() ) {
     croak $usergroup->groupname() . q( is not open for subscription);
   }
   return $self->SUPER::create(@args);
 }
 
-sub delete { ## no critic (ProhibitBuiltinHomonyms)
-  my ($self, @args) = @_;
+sub delete {    ## no critic (ProhibitBuiltinHomonyms)
+  my ( $self, @args ) = @_;
   my $model = $self->model();
   #########
   # cache usergroup so we can display what's been unsubscribed-from

@@ -33,30 +33,31 @@ A collection of functions to test the availability of internal Sanger sites
 
 =cut
 
-Readonly::Scalar our $LWP_TIMEOUT       => 60;
-Readonly::Scalar our $MAX_NUM_ATTEMPTS  => 2;
+Readonly::Scalar our $LWP_TIMEOUT      => 60;
+Readonly::Scalar our $MAX_NUM_ATTEMPTS => 2;
 
 ## no critic (ProhibitExplicitISA)
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(npg_is_accessible);
 
 sub _attempt_request {
-    my ($request, $ua) = @_;
+  my ( $request, $ua ) = @_;
 
-    my $response;
-    eval {
-        $response = $ua->request($request);
-        1;
-    } or do {
-        carp $EVAL_ERROR;
-        return 0;
-    };
-    if ($response->is_success) {
-        return 1;
-    } else {
-        carp $response->status_line();
-    }
+  my $response;
+  eval {
+    $response = $ua->request($request);
+    1;
+  } or do {
+    carp $EVAL_ERROR;
     return 0;
+  };
+  if ( $response->is_success ) {
+    return 1;
+  }
+  else {
+    carp $response->status_line();
+  }
+  return 0;
 }
 
 =head2 npg_is_accessible
@@ -64,23 +65,24 @@ sub _attempt_request {
 Tests whether it is possible to access NPG home page
 
 =cut
+
 sub npg_is_accessible {
-    my $url = shift;
+  my $url = shift;
 
-    $url ||= $npg::api::util::LIVE_BASE_URI;
-    my $request =  GET $url;
-    my $ua = LWP::UserAgent->new();
-    $ua->agent("npg_testing::intweb $VERSION");
-    $ua->timeout($LWP_TIMEOUT);
-    $ua->env_proxy();
+  $url ||= $npg::api::util::LIVE_BASE_URI;
+  my $request = GET $url;
+  my $ua      = LWP::UserAgent->new();
+  $ua->agent("npg_testing::intweb $VERSION");
+  $ua->timeout($LWP_TIMEOUT);
+  $ua->env_proxy();
 
-    my $count = 0;
-    my $result = 0;
-    while ($count < $MAX_NUM_ATTEMPTS && !$result) {
-        $result = _attempt_request($request, $ua);
-        $count++;
-    }
-    return $result;
+  my $count  = 0;
+  my $result = 0;
+  while ( $count < $MAX_NUM_ATTEMPTS && !$result ) {
+    $result = _attempt_request( $request, $ua );
+    $count++;
+  }
+  return $result;
 }
 
 1;

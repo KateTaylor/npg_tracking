@@ -29,7 +29,7 @@ else {
 
   my $std_error_str;
   foreach my $file ( sort @files ) {
-    is(Perl::Tidy::perltidy( argv => "-i=2 -b $file", stderr => \$std_error_str,), 0, "file $file tidied");
+    is(Perl::Tidy::perltidy( argv => "-pbp -nst -i=2 -b $file", stderr => \$std_error_str,), 0, "file $file tidied");
   }
 
   done_testing( scalar @files );

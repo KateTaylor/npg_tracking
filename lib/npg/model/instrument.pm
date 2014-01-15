@@ -30,13 +30,15 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16477 
 Readonly::Scalar our $HISEQ_INSTR_MODEL => 'HiSeq';
 Readonly::Scalar our $MISEQ_INSTR_MODEL => 'MiSeq';
 Readonly::Scalar our $CBOT_INSTR_MODEL  => 'cBot';
-Readonly::Array  our @FC_SLOT_TAGS    => qw/fc_slotA fc_slotB/;
+Readonly::Array our @FC_SLOT_TAGS       => qw/fc_slotA fc_slotB/;
 
-Readonly::Array  our @CURRENT_RUNS    => ('run pending', 'run in progress', 'run on hold', 'run complete');
-Readonly::Array  our @BLOCKING_RUNS   => ('run pending', 'run in progress', 'run on hold');
+Readonly::Array our @CURRENT_RUNS =>
+    ( 'run pending', 'run in progress', 'run on hold', 'run complete' );
+Readonly::Array our @BLOCKING_RUNS =>
+    ( 'run pending', 'run in progress', 'run on hold' );
 
 Readonly::Hash my %STATUS_CHANGE_AUTO => {
-  'up' => 'wash required',
+  'up'                  => 'wash required',
   'wash performed'      => 'up',
   'planned maintenance' => 'down for repair',
   'planned repair'      => 'down for repair',
@@ -45,63 +47,89 @@ Readonly::Hash my %STATUS_CHANGE_AUTO => {
 
 Readonly::Hash my %STATUS_GRAPH => {
 
-  'up' => ['planned service', 'planned repair', 'down for repair', 'wash required', 'wash in progress'],
+  'up' => [
+    'planned service',
+    'planned repair',
+    'down for repair',
+    'wash required',
+    'wash in progress'
+  ],
 
-  'request approval' => ['up', 'down for repair', 'down for service', 'planned repair', 'planned service'],
+  'request approval' => [
+    'up',
+    'down for repair',
+    'down for service',
+    'planned repair',
+    'planned service'
+  ],
 
-  'wash required'  => ['wash in progress', 'wash performed', 'planned repair', 'planned service', 'down for repair'],
-  'wash in progress'   => ['wash performed', 'planned repair', 'planned service', 'down for repair'],
-  'wash performed' => ['up', 'wash required', 'down for repair'],
+  'wash required' => [
+    'wash in progress',
+    'wash performed',
+    'planned repair',
+    'planned service',
+    'down for repair'
+  ],
+  'wash in progress' => [
+    'wash performed',
+    'planned repair',
+    'planned service',
+    'down for repair'
+  ],
+  'wash performed' => [ 'up', 'wash required', 'down for repair' ],
 
   'planned maintenance' => ['down for repair'],
   'planned repair'      => ['down for repair'],
-  'planned service'     => ['down for service', 'planned repair', 'down for repair'],
+  'planned service' =>
+      [ 'down for service', 'planned repair', 'down for repair' ],
 
   'down'             => ['request approval'],
   'down for repair'  => ['request approval'],
-  'down for service' => ['request approval', 'down for repair'],
+  'down for service' => [ 'request approval', 'down for repair' ],
 };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_a('instrument_format');
-__PACKAGE__->has_many(['instrument_mod']);
+__PACKAGE__->has_many( ['instrument_mod'] );
 __PACKAGE__->has_many_through('annotation|instrument_annotation');
 __PACKAGE__->has_many_through('designation|instrument_designation');
 __PACKAGE__->has_all();
 
 sub fields {
   return qw(id_instrument
-            name
-            external_name
-            id_instrument_format
-            serial
-            iscurrent
-            ipaddr
-            instrument_comp
-            mirroring_host
-            staging_dir
-            latest_contact
-            percent_complete);
+      name
+      external_name
+      id_instrument_format
+      serial
+      iscurrent
+      ipaddr
+      instrument_comp
+      mirroring_host
+      staging_dir
+      latest_contact
+      percent_complete);
 }
 
 sub init {
   my $self = shift;
 
-  if($self->{'name'} &&
-     !$self->{'id_instrument'}) {
+  if ( $self->{'name'}
+    && !$self->{'id_instrument'} )
+  {
     my $query = q(SELECT id_instrument
                   FROM   instrument
                   WHERE  name = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->name());
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {}, $self->name() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_instrument'} = $ref->[0]->[0];
     }
   }
@@ -109,59 +137,64 @@ sub init {
 }
 
 sub instrument_by_instrument_comp {
-  my ($self, $instrument_comp) = @_;
+  my ( $self, $instrument_comp ) = @_;
 
-  if($instrument_comp){
-      return (grep {$_->instrument_comp() && $_->instrument_comp() eq $instrument_comp } @{$self->instruments()})[0];
+  if ($instrument_comp) {
+    return (
+      grep {
+               $_->instrument_comp()
+            && $_->instrument_comp() eq $instrument_comp
+      } @{ $self->instruments() }
+    )[0];
   }
 
   return;
 }
 
 sub current_instruments {
-  my $self  = shift;
+  my $self = shift;
 
-  if(!$self->{current_instruments}) {
+  if ( !$self->{current_instruments} ) {
     my $pkg   = ref $self;
     my $query = qq(SELECT @{[join q(, ), $self->fields()]}
                    FROM   @{[$self->table()]}
                    WHERE  iscurrent = 1
                    ORDER BY id_instrument);
-    $self->{current_instruments} = $self->gen_getarray($pkg, $query);
+    $self->{current_instruments} = $self->gen_getarray( $pkg, $query );
   }
 
   return $self->{current_instruments};
 }
 
 sub current_run {
-  my $self  = shift;
+  my $self = shift;
   return $self->current_runs->[0];
 }
 
 sub current_runs {
-  my $self  = shift;
-  if(!$self->{current_runs}) {
-    $self->{current_runs} = $self->runs_with_status(\@CURRENT_RUNS);
+  my $self = shift;
+  if ( !$self->{current_runs} ) {
+    $self->{current_runs} = $self->runs_with_status( \@CURRENT_RUNS );
   }
   return $self->{current_runs};
 }
 
 sub blocking_runs {
-  my $self  = shift;
-  if(!$self->{blocking_runs}) {
-    $self->{blocking_runs} = $self->runs_with_status(\@BLOCKING_RUNS);
+  my $self = shift;
+  if ( !$self->{blocking_runs} ) {
+    $self->{blocking_runs} = $self->runs_with_status( \@BLOCKING_RUNS );
   }
   return $self->{blocking_runs};
 }
 
 sub runs_with_status {
-  my ($self, $run_statuses) = @_;
+  my ( $self, $run_statuses ) = @_;
 
-  if (!defined $run_statuses) {
+  if ( !defined $run_statuses ) {
     croak q[Reference to an array of run statuses should be given];
   }
 
-  my $statuses = join q(, ), map { "'$_'" } @{$run_statuses};
+  my $statuses = join q(, ), map {"'$_'"} @{$run_statuses};
 
   my $pkg   = 'npg::model::run';
   my $query = qq(SELECT @{[join q(, ), map { "r.$_" } $pkg->fields()]}
@@ -175,7 +208,7 @@ sub runs_with_status {
                    AND    rsd.description IN ($statuses)
                    ORDER BY date DESC
                   );
-  return $self->gen_getarray($pkg,$query,$self->id_instrument());
+  return $self->gen_getarray( $pkg, $query, $self->id_instrument() );
 }
 
 sub model {
@@ -194,9 +227,9 @@ sub manufacturer {
 }
 
 sub runs {
-  my ($self, $params) = @_;
+  my ( $self, $params ) = @_;
 
-  if($self->{runs}) {
+  if ( $self->{runs} ) {
     return $self->{runs};
   }
 
@@ -204,9 +237,9 @@ sub runs {
 
   my $pkg    = 'npg::model::run';
   my $query  = q[];
-  my @params = ($self->id_instrument());
+  my @params = ( $self->id_instrument() );
 
-  if($params->{id_run_status_dict}) {
+  if ( $params->{id_run_status_dict} ) {
     $query = qq[SELECT @{[join q[, ], map { "r.$_" } $pkg->fields()]}
                 FROM   @{[$pkg->table()]} r,
                        run_status rs
@@ -217,35 +250,35 @@ sub runs {
                 ORDER BY rs.date DESC];
     push @params, $params->{id_run_status_dict};
 
-  } else {
+  }
+  else {
     $query = qq[SELECT @{[join q[, ], $pkg->fields()]}
                 FROM   @{[$pkg->table()]}
                 WHERE  id_instrument = ?
                 ORDER BY id_run DESC];
   }
 
-  if($params->{len} || $params->{start}) {
-    $query = $self->util->driver->bounded_select($query,
-						 $params->{len},
-						 $params->{start});
+  if ( $params->{len} || $params->{start} ) {
+    $query = $self->util->driver->bounded_select( $query, $params->{len},
+      $params->{start} );
   }
 
-  return $self->gen_getarray($pkg, $query, @params);
+  return $self->gen_getarray( $pkg, $query, @params );
 }
 
 sub count_runs {
-  my ($self, $params) = @_;
+  my ( $self, $params ) = @_;
 
-  if(defined $self->{count_runs}) {
+  if ( defined $self->{count_runs} ) {
     return $self->{count_runs};
   }
 
-  $params  ||= {};
+  $params ||= {};
   my $pkg    = 'npg::model::run';
   my $query  = q[];
-  my @params = ($self->id_instrument());
+  my @params = ( $self->id_instrument() );
 
-  if($params->{id_run_status_dict}) {
+  if ( $params->{id_run_status_dict} ) {
     $query = qq[SELECT COUNT(*)
                 FROM   @{[$pkg->table()]} r,
                        run_status rs
@@ -255,15 +288,17 @@ sub count_runs {
                 AND id_run_status_dict = ?];
     push @params, $params->{id_run_status_dict};
 
-  } else {
+  }
+  else {
     $query = qq[SELECT COUNT(*)
                 FROM   @{[$pkg->table()]}
                 WHERE  id_instrument = ?];
   }
 
-  my $ref = $self->util->dbh->selectall_arrayref($query, {}, @params);
-  if(defined $ref->[0] &&
-     defined $ref->[0]->[0]) {
+  my $ref = $self->util->dbh->selectall_arrayref( $query, {}, @params );
+  if ( defined $ref->[0]
+    && defined $ref->[0]->[0] )
+  {
     return $ref->[0]->[0];
   }
 
@@ -281,24 +316,26 @@ sub instrument_statuses {
                    WHERE  rs.id_instrument             = ?
                    AND    rs.id_instrument_status_dict = rsd.id_instrument_status_dict
                    ORDER BY rs.id_instrument_status DESC);
-  $self->{'instrument_statuses'} = $self->gen_getarray($pkg, $query, $self->id_instrument());
+  $self->{'instrument_statuses'}
+      = $self->gen_getarray( $pkg, $query, $self->id_instrument() );
   return $self->{'instrument_statuses'};
 }
 
 sub current_instrument_mods {
   my $self = shift;
-  if(!$self->{current_instrument_mods}) {
+  if ( !$self->{current_instrument_mods} ) {
     my $dbh = $self->util->dbh();
-    my $query = q(SELECT im.id_instrument, im.date_added, im.date_removed, im.id_user, im.iscurrent, im.id_instrument_mod, im.id_instrument_mod_dict, imd.description, imd.revision
+    my $query
+        = q(SELECT im.id_instrument, im.date_added, im.date_removed, im.id_user, im.iscurrent, im.id_instrument_mod, im.id_instrument_mod_dict, imd.description, imd.revision
                   FROM   instrument_mod im, instrument_mod_dict imd
                   WHERE  im.id_instrument = ?
                   AND    im.id_instrument_mod_dict = imd.id_instrument_mod_dict
                   AND    im.iscurrent = 1
                   ORDER BY imd.description);
     my $sth = $dbh->prepare($query);
-    $sth->execute($self->id_instrument());
-    while (my $href = $sth->fetchrow_hashref()) {
-      my $description = lc$href->{description};
+    $sth->execute( $self->id_instrument() );
+    while ( my $href = $sth->fetchrow_hashref() ) {
+      my $description = lc $href->{description};
       $description =~ s/\s/_/gxms;
       $self->{current_instrument_mods}->{$description} = $href;
     }
@@ -316,23 +353,22 @@ sub current_instrument_status {
                    AND    iscurrent     = 1
                    ORDER BY date DESC
                    LIMIT 1);
-  $self->{'current_instrument_status'} = $self->gen_getarray($pkg, $query, $self->id_instrument())->[0];
+  $self->{'current_instrument_status'}
+      = $self->gen_getarray( $pkg, $query, $self->id_instrument() )->[0];
   return $self->{'current_instrument_status'};
 }
 
 sub utilisation {
-  my ($self, $type) = @_;
-  my $root_is = npg::model::instrument_status->new({
-						    util => $self->util(),
-						   });
+  my ( $self, $type ) = @_;
+  my $root_is
+      = npg::model::instrument_status->new( { util => $self->util(), } );
   return $root_is->utilisation($type);
 }
-
 
 sub latest_instrument_annotation {
   my $self = shift;
 
-  if(!$self->{latest_instrument_annotation}) {
+  if ( !$self->{latest_instrument_annotation} ) {
     my $pkg   = 'npg::model::instrument_annotation';
     my $query = q[SELECT id_instrument_annotation
                   FROM   instrument_annotation ia,
@@ -344,8 +380,12 @@ sub latest_instrument_annotation {
                                                  annotation a
                                           WHERE  id_instrument    = ?
                                           AND    ia.id_annotation = a.id_annotation)];
-    my $ref = $self->gen_getarray($pkg, $query, $self->id_instrument(), $self->id_instrument());
-    if(scalar @{$ref}) {
+    my $ref = $self->gen_getarray(
+      $pkg, $query,
+      $self->id_instrument(),
+      $self->id_instrument()
+    );
+    if ( scalar @{$ref} ) {
       $self->{latest_instrument_annotation} = $ref->[0];
     }
   }
@@ -356,9 +396,9 @@ sub latest_instrument_annotation {
 sub latest_annotation {
   my $self = shift;
 
-  if(!$self->{latest_annotation}) {
+  if ( !$self->{latest_annotation} ) {
     my $ia = $self->latest_instrument_annotation();
-    if(!$ia) {
+    if ( !$ia ) {
       return;
     }
     $self->{latest_annotation} = $ia->annotation();
@@ -369,28 +409,32 @@ sub latest_annotation {
 
 sub does_sequencing {
   my $self = shift;
-  return ($self->instrument_format->model && $self->instrument_format->model ne $CBOT_INSTR_MODEL);
+  return ( $self->instrument_format->model
+        && $self->instrument_format->model ne $CBOT_INSTR_MODEL );
 }
 
 sub is_hiseq_instrument {
   my $self = shift;
-  return ($self->instrument_format->model && $self->instrument_format->model eq $HISEQ_INSTR_MODEL);
+  return ( $self->instrument_format->model
+        && $self->instrument_format->model eq $HISEQ_INSTR_MODEL );
 }
 
 sub is_cbot_instrument {
   my $self = shift;
-  return ($self->instrument_format->model && $self->instrument_format->model eq $CBOT_INSTR_MODEL);
+  return ( $self->instrument_format->model
+        && $self->instrument_format->model eq $CBOT_INSTR_MODEL );
 }
 
 sub is_miseq_instrument {
   my $self = shift;
-  return ($self->instrument_format->model && $self->instrument_format->model eq $MISEQ_INSTR_MODEL);
+  return ( $self->instrument_format->model
+        && $self->instrument_format->model eq $MISEQ_INSTR_MODEL );
 }
 
 sub current_run_by_id {
-  my ($self, $id_run) = @_;
-  foreach my $run (@{$self->current_runs}) {
-    if ($run->id_run == $id_run) {
+  my ( $self, $id_run ) = @_;
+  foreach my $run ( @{ $self->current_runs } ) {
+    if ( $run->id_run == $id_run ) {
       return $run;
     }
   }
@@ -398,29 +442,29 @@ sub current_run_by_id {
 }
 
 sub _fc_slots2runs {
-  my ($self, $runs_type) = @_;
+  my ( $self, $runs_type ) = @_;
 
-  if (!$self->is_hiseq_instrument) { return; }
+  if ( !$self->is_hiseq_instrument ) { return; }
 
-  if (!defined $runs_type) {
+  if ( !defined $runs_type ) {
     croak q[runs type should be defined];
   }
-  if ($runs_type !~ /current|blocking/smx) {
+  if ( $runs_type !~ /current|blocking/smx ) {
     croak qq[Unknown run category $runs_type];
   }
 
   my $method = $runs_type . q[_runs];
-  my $slots = {};
+  my $slots  = {};
   foreach my $slot (@FC_SLOT_TAGS) {
-      $slots->{$slot} = [];
+    $slots->{$slot} = [];
   }
 
-  foreach my $run (@{$self->$method}) {
-    foreach my $tag (@{$run->tags}) {
+  foreach my $run ( @{ $self->$method } ) {
+    foreach my $tag ( @{ $run->tags } ) {
       my $tag_value = $tag->tag;
-      my @fcells =  grep { /^$tag_value$/smx } @FC_SLOT_TAGS;
+      my @fcells = grep {/^$tag_value$/smx} @FC_SLOT_TAGS;
       if (@fcells) {
-	push @{$slots->{$fcells[0]}}, $run->id_run;
+        push @{ $slots->{ $fcells[0] } }, $run->id_run;
       }
     }
   }
@@ -440,83 +484,96 @@ sub fc_slots2blocking_runs {
 
 sub is_idle {
   my $self = shift;
-  return @{$self->current_runs} ? 0 : 1;
+  return @{ $self->current_runs } ? 0 : 1;
 }
 
 sub status_to_change_to {
-  my ($self, $run_status) = @_;
+  my ( $self, $run_status ) = @_;
 
   my $cis = $self->current_instrument_status();
-  if (!$cis ) { return; }
+  if ( !$cis ) { return; }
   my $current = $cis->instrument_status_dict()->description();
-  if (!exists $STATUS_CHANGE_AUTO{$current}) {
+  if ( !exists $STATUS_CHANGE_AUTO{$current} ) {
     return;
   }
   my $next_auto = $STATUS_CHANGE_AUTO{$current};
 
-  if ($self->does_sequencing) {
-    if ( $self->is_idle() &&
-      ($current eq 'planned maintenance' ||
-       $current eq 'planned repair' ||
-       $current eq 'planned service')) {
-        return $next_auto;
-    }
-
-    if ($current eq 'wash performed' ||
-       ($current eq 'up' && $run_status &&
-          ( $run_status eq 'run cancelled' ||
-            $run_status eq 'run stopped early' ||
-            $run_status eq 'run complete'
-          ))
-        ) {
+  if ( $self->does_sequencing ) {
+    if (
+      $self->is_idle()
+      && ( $current eq 'planned maintenance'
+        || $current eq 'planned repair'
+        || $current eq 'planned service' )
+        )
+    {
       return $next_auto;
     }
-  } elsif ($self->is_cbot_instrument && $current eq 'wash performed') {
+
+    if (
+      $current eq 'wash performed'
+      || (
+           $current eq 'up'
+        && $run_status
+        && ( $run_status eq 'run cancelled'
+          || $run_status eq 'run stopped early'
+          || $run_status eq 'run complete' )
+      )
+        )
+    {
+      return $next_auto;
+    }
+  }
+  elsif ( $self->is_cbot_instrument && $current eq 'wash performed' ) {
     return $next_auto;
   }
   return;
 }
 
 sub status_reset {
-  my ($self, $new_status) = @_;
+  my ( $self, $new_status ) = @_;
 
-  if (!$new_status) {
+  if ( !$new_status ) {
     croak q[Status to change to should be defined];
   }
 
   my $id = $self->id_instrument();
 
   eval {
-    my $user = npg::model::user->new({
-      util     => $self->util,
-      username => 'pipeline',
-    });
+    my $user = npg::model::user->new(
+      { util     => $self->util,
+        username => 'pipeline',
+      }
+    );
 
-    my $new_status_obj = npg::model::instrument_status_dict->new({
-      util        => $self->util,
-      description => $new_status,
-    });
+    my $new_status_obj = npg::model::instrument_status_dict->new(
+      { util        => $self->util,
+        description => $new_status,
+      }
+    );
 
-    npg::model::instrument_status->new({
-      util                      => $self->util(),
-      id_instrument             => $id,
-      id_instrument_status_dict => $new_status_obj->id_instrument_status_dict(),
-      id_user                   => $user->id_user(),
-      comment                   => 'automatic status update',
-    })->create();
+    npg::model::instrument_status->new(
+      { util          => $self->util(),
+        id_instrument => $id,
+        id_instrument_status_dict =>
+            $new_status_obj->id_instrument_status_dict(),
+        id_user => $user->id_user(),
+        comment => 'automatic status update',
+      }
+    )->create();
 
   } or do {
-    croak qq[Unable to move instrument ID=$id status to $new_status: $EVAL_ERROR];
+    croak
+        qq[Unable to move instrument ID=$id status to $new_status: $EVAL_ERROR];
   };
 
   return 1;
 }
 
 sub autochange_status_if_needed {
-  my ($self, $run_status) = @_;
+  my ( $self, $run_status ) = @_;
 
-  if ($self->does_sequencing) {
-    if (!$run_status) {
+  if ( $self->does_sequencing ) {
+    if ( !$run_status ) {
       croak 'Run status needed';
     }
     my $new_instr_status = $self->status_to_change_to($run_status);
@@ -533,35 +590,43 @@ sub autochange_status_if_needed {
 }
 
 sub possible_next_statuses4status {
-  my ($self, $status) = @_;
+  my ( $self, $status ) = @_;
 
   $status ||= $self;
-  if (!$status || ref $status) {
+  if ( !$status || ref $status ) {
     croak 'Current status should be given';
   }
-  if (!exists $STATUS_GRAPH{$status}) {
+  if ( !exists $STATUS_GRAPH{$status} ) {
     croak "Status '$status' is nor registered in the status graph";
   }
-  if (!$STATUS_GRAPH{$status} || !@{$STATUS_GRAPH{$status}}) {
+  if ( !$STATUS_GRAPH{$status} || !@{ $STATUS_GRAPH{$status} } ) {
     croak "No dependencies for status '$status' in the status graph";
   }
   return $STATUS_GRAPH{$status};
 }
 
-
 sub possible_next_statuses {
   my $self = shift;
 
   my $next_statuses = {};
-  my $cis = $self->current_instrument_status();
+  my $cis           = $self->current_instrument_status();
   if ($cis) {
     my $dict_hash = {};
-    foreach my $dict_entry (@{$cis->instrument_status_dict->instrument_status_dicts()}) {
-      $dict_hash->{$dict_entry->description()} = $dict_entry->id_instrument_status_dict();
+    foreach my $dict_entry (
+      @{ $cis->instrument_status_dict->instrument_status_dicts() } )
+    {
+      $dict_hash->{ $dict_entry->description() }
+          = $dict_entry->id_instrument_status_dict();
     }
     my $count = 1;
-    foreach my $nxt ( @{$self->possible_next_statuses4status($cis->instrument_status_dict->description())}) {
-      $next_statuses->{$count} = {$nxt => $dict_hash->{$nxt},};
+    foreach my $nxt (
+      @{$self->possible_next_statuses4status(
+          $cis->instrument_status_dict->description()
+        )
+      }
+        )
+    {
+      $next_statuses->{$count} = { $nxt => $dict_hash->{$nxt}, };
       $count++;
     }
   }

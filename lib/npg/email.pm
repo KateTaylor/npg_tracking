@@ -18,9 +18,10 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 use npg::util::mailer;
 use npg_tracking::Schema;
 
-Readonly::Scalar our $DEFAULT_RECIPIENT_HOST    => q{@}.q{sanger.ac.uk};
-Readonly::Scalar our $DEFAULT_FROM              => q{srpipe}.$DEFAULT_RECIPIENT_HOST;
-Readonly::Scalar our $DEFAULT_TEMPLATE_LOCATION => q{data/npg_tracking_email/templates};
+Readonly::Scalar our $DEFAULT_RECIPIENT_HOST => q{@} . q{sanger.ac.uk};
+Readonly::Scalar our $DEFAULT_FROM => q{srpipe} . $DEFAULT_RECIPIENT_HOST;
+Readonly::Scalar our $DEFAULT_TEMPLATE_LOCATION =>
+    q{data/npg_tracking_email/templates};
 
 =head1 NAME
 
@@ -55,24 +56,26 @@ generic email send method
 =cut
 
 sub send_email {
-  my ($self, $arg_refs) = @_;
+  my ( $self, $arg_refs ) = @_;
 
   eval {
-    npg::util::mailer->new({
-      to => $arg_refs->{to},
-      from => $arg_refs->{from} || $DEFAULT_FROM,
-      subject => $arg_refs->{subject},
-      body => $arg_refs->{body},
-      cc => $arg_refs->{cc},
-    })->mail();
+    npg::util::mailer->new(
+      { to      => $arg_refs->{to},
+        from    => $arg_refs->{from} || $DEFAULT_FROM,
+        subject => $arg_refs->{subject},
+        body    => $arg_refs->{body},
+        cc      => $arg_refs->{cc},
+      }
+    )->mail();
     1;
   } or do {
-    my $error = $EVAL_ERROR;
-    my @people = @{$arg_refs->{to}};
-    push @people, @{$arg_refs->{cc}};
+    my $error  = $EVAL_ERROR;
+    my @people = @{ $arg_refs->{to} };
+    push @people, @{ $arg_refs->{cc} };
     my $people_as_string = join q[, ], @people;
     $people_as_string ||= q[UNKNOWN];
-    croak qq{Failed to send '$arg_refs->{subject}' to $people_as_string \n\t$error};
+    croak
+        qq{Failed to send '$arg_refs->{subject}' to $people_as_string \n\t$error};
   };
 
   return 1;
@@ -84,11 +87,13 @@ The location of the email_templates for npg tracking emails
 
 =cut
 
-has q{email_templates_location} => ( isa => q{Str},
-                                     is => q{ro},
-                                     default => $DEFAULT_TEMPLATE_LOCATION,
-                                     documentation => qq{location of email templates - Default $DEFAULT_TEMPLATE_LOCATION},
-                                   );
+has q{email_templates_location} => (
+  isa     => q{Str},
+  is      => q{ro},
+  default => $DEFAULT_TEMPLATE_LOCATION,
+  documentation =>
+      qq{location of email templates - Default $DEFAULT_TEMPLATE_LOCATION},
+);
 
 =head2 email_templates_object
 
@@ -96,15 +101,17 @@ returns a Template object which knows where the email templates are located (fro
 
 =cut
 
-has q{email_templates_object} => (isa => q{Template}, is => q{ro}, lazy_build => 1, init_arg => undef);
+has q{email_templates_object} =>
+    ( isa => q{Template}, is => q{ro}, lazy_build => 1, init_arg => undef );
 
 sub _build_email_templates_object {
   my ($self) = @_;
-  return Template->new({
-        INCLUDE_PATH => [ $self->email_templates_location(), ],
-        INTERPOLATE  => 1,
-        OUTPUT => $self->email_body_store(),
-    }) || die "$Template::ERROR\n";
+  return Template->new(
+    { INCLUDE_PATH => [ $self->email_templates_location(), ],
+      INTERPOLATE  => 1,
+      OUTPUT       => $self->email_body_store(),
+    }
+  ) || die "$Template::ERROR\n";
 }
 
 =head2 next_email
@@ -118,13 +125,13 @@ returns all current emails in the object
 =cut
 
 has q{email_body_store} => (
-  traits => ['Array'],
-  isa => q{ArrayRef[Str]},
-  is => q{ro},
+  traits   => ['Array'],
+  isa      => q{ArrayRef[Str]},
+  is       => q{ro},
   init_arg => undef,
-  lazy => 1,
-  default => sub { return []; },
-  handles => {
+  lazy     => 1,
+  default  => sub { return []; },
+  handles  => {
     all_emails => q{elements},
     next_email => q{shift},
   },
@@ -136,10 +143,14 @@ returns the default @x.y to be appended to any email recipients which do not alr
 
 =cut
 
-has q{default_recipient_host} => (isa => q{Str},
-                                  is => q{ro},
-                                  default => $DEFAULT_RECIPIENT_HOST,
-                                  documentation => q{the default @}.q{x.y to be appended to any email recipients which do not already have this specified - Default: } . $DEFAULT_RECIPIENT_HOST, );
+has q{default_recipient_host} => (
+  isa           => q{Str},
+  is            => q{ro},
+  default       => $DEFAULT_RECIPIENT_HOST,
+  documentation => q{the default @}
+      . q{x.y to be appended to any email recipients which do not already have this specified - Default: }
+      . $DEFAULT_RECIPIENT_HOST,
+);
 
 =head2 schema_connection
 
@@ -151,10 +162,12 @@ This can be set on construction of the object.
 
 =cut
 
-has 'schema_connection' => ( isa => q{npg_tracking::Schema},
-                             is => q{ro},
-                             lazy_build => 1,
-                           );
+has 'schema_connection' => (
+  isa        => q{npg_tracking::Schema},
+  is         => q{ro},
+  lazy_build => 1,
+);
+
 sub _build_schema_connection {
   my $self = shift;
   return npg_tracking::Schema->connect();

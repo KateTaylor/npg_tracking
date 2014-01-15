@@ -23,13 +23,13 @@ Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 12395 $ =
 
 Readonly::Scalar our $DEFAULT_INSTRUMENT_UPTIME_INTERVAL => 90;
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a([qw(instrument annotation)]);
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a( [qw(instrument annotation)] );
 
 sub fields {
   return qw(id_instrument_annotation
-            id_instrument
-            id_annotation);
+      id_instrument
+      id_annotation);
 }
 
 sub create {
@@ -42,7 +42,7 @@ sub create {
 
   ########
   # only try to create or update if it hasn't come from run_annotation create
-  if (!$self->{from_run_anno}) {
+  if ( !$self->{from_run_anno} ) {
     #########
     # create or update
     #
@@ -50,15 +50,20 @@ sub create {
   }
 
   $self->{id_annotation} = $annotation->id_annotation();
-  $self->SUPER::create(); # we create this row here, so that the event table can receive the correct info
+  $self->SUPER::create()
+      ; # we create this row here, so that the event table can receive the correct info
 
-  my $event = npg::model::event->new({
-				      util                    => $util,
-				      entity_type_description => 'instrument_annotation',
-				      event_type_description  => 'annotation',
-				      entity_id               => $self->id_instrument_annotation(),
-				      description             => $annotation->user->username() . q{ annotated instrument } . $self->instrument->name() . qq{\n} . $annotation->comment(),
-				     });
+  my $event = npg::model::event->new(
+    { util                    => $util,
+      entity_type_description => 'instrument_annotation',
+      event_type_description  => 'annotation',
+      entity_id               => $self->id_instrument_annotation(),
+      description             => $annotation->user->username()
+          . q{ annotated instrument }
+          . $self->instrument->name() . qq{\n}
+          . $annotation->comment(),
+    }
+  );
   $event->create();
 
   #########
@@ -73,7 +78,8 @@ sub create {
 
 sub annotations_by_instrument_over_default_uptime {
   my ( $self, $instrument_model ) = @_;
-  my $q = q{SELECT i.id_instrument AS id, i.name AS name, a.date AS date, a.comment AS comment, a.id_user as id_user
+  my $q
+      = q{SELECT i.id_instrument AS id, i.name AS name, a.date AS date, a.comment AS comment, a.id_user as id_user
             FROM instrument i,
             instrument_annotation ia,
             annotation a,
@@ -82,7 +88,7 @@ sub annotations_by_instrument_over_default_uptime {
             AND ia.id_annotation = a.id_annotation
             AND a.date > DATE_SUB(NOW(), INTERVAL ? DAY)
             };
-  if ( $instrument_model ) {
+  if ($instrument_model) {
     $q .= q{AND inst_f.model = ?
             AND inst_f.id_instrument_format = i.id_instrument_format
             };
@@ -91,83 +97,89 @@ sub annotations_by_instrument_over_default_uptime {
 
   my $dbh = $self->util->dbh();
   my $sth = $dbh->prepare($q);
-  if ( $instrument_model ) {
+  if ($instrument_model) {
     $sth->execute( $DEFAULT_INSTRUMENT_UPTIME_INTERVAL, $instrument_model );
-  } else {
+  }
+  else {
     $sth->execute($DEFAULT_INSTRUMENT_UPTIME_INTERVAL);
   }
 
   my $annotations = {};
 
-  while (my $href = $sth->fetchrow_hashref()) {
-    push @{$annotations->{$href->{name}}}, $href;
+  while ( my $href = $sth->fetchrow_hashref() ) {
+    push @{ $annotations->{ $href->{name} } }, $href;
   }
   return $annotations;
 }
 
 sub dates_of_annotations_over_default_uptime {
-  my ($self, $instrument_model) = @_;
-  my $annotations = $self->annotations_by_instrument_over_default_uptime( $instrument_model );
+  my ( $self, $instrument_model ) = @_;
+  my $annotations = $self->annotations_by_instrument_over_default_uptime(
+    $instrument_model);
 
   my $instruments;
-  if ( $instrument_model ) {
+  if ($instrument_model) {
 
-    $instruments = npg::model::instrument_format->new({
-      util => $self->util(),
-      model => $instrument_model,
-    })->current_instruments();
+    $instruments = npg::model::instrument_format->new(
+      { util  => $self->util(),
+        model => $instrument_model,
+      }
+    )->current_instruments();
 
-  } else {
-    $instruments = npg::model::instrument->new( {
-      util => $self->util(),
-    } )->current_instruments();
+  }
+  else {
+    $instruments = npg::model::instrument->new( { util => $self->util(), } )
+        ->current_instruments();
   }
 
-  my @insts = sort { $a->id_instrument() <=> $b->id_instrument() } @{ $instruments };
+  my @insts
+      = sort { $a->id_instrument() <=> $b->id_instrument() } @{$instruments};
 
-  my $dt = DateTime->now();
-  my $dt_less_ninety = DateTime->now()->subtract( days => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL );
+  my $dt             = DateTime->now();
+  my $dt_less_ninety = DateTime->now()
+      ->subtract( days => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL );
 
   my $max_num_annotations = 0;
 
-  foreach my $i (sort keys %{$annotations}) {
-    my $num_annotations = scalar @{$annotations->{$i}};
-    if ($num_annotations > $max_num_annotations) {
+  foreach my $i ( sort keys %{$annotations} ) {
+    my $num_annotations = scalar @{ $annotations->{$i} };
+    if ( $num_annotations > $max_num_annotations ) {
       $max_num_annotations = $num_annotations;
     }
   }
 
-  my $stripe = [];
+  my $stripe             = [];
   my $stripe_annotations = [];
-  for my $i (1..$max_num_annotations) {
-    push @{$stripe}, [];
+  for my $i ( 1 .. $max_num_annotations ) {
+    push @{$stripe},             [];
     push @{$stripe_annotations}, [];
   }
   my $stripe_index = 0;
   $instruments = [];
   foreach my $i (@insts) {
-    next if (!$i->iscurrent());
+    next if ( !$i->iscurrent() );
     push @{$instruments}, $i->name();
     my $stat_index = 0;
-    foreach my $array (@{$stripe}) {
-      my $date = $annotations->{$i->name()}->[$stat_index]->{date};
+    foreach my $array ( @{$stripe} ) {
+      my $date = $annotations->{ $i->name() }->[$stat_index]->{date};
       if ($date) {
         $date =~ s/[ ].*//gxms;
-        my ($y,$m,$d) = split /-/xms, $date;
-        my $temp_dt = DateTime->new({year => $y, month => $m, day => $d});
+        my ( $y, $m, $d ) = split /-/xms, $date;
+        my $temp_dt = DateTime->new( { year => $y, month => $m, day => $d } );
 
-        $date = $dt_less_ninety->delta_days( $temp_dt )->in_units(q{days});
+        $date = $dt_less_ninety->delta_days($temp_dt)->in_units(q{days});
       }
       $array->[$stripe_index] = $date || undef;
       $stat_index++;
     }
     $stat_index = 0;
-    foreach my $array (@{$stripe_annotations}) {
-      my $date = $annotations->{$i->name()}->[$stat_index]->{date};
-      my $comment = $annotations->{$i->name()}->[$stat_index]->{comment} || q{};
+    foreach my $array ( @{$stripe_annotations} ) {
+      my $date = $annotations->{ $i->name() }->[$stat_index]->{date};
+      my $comment
+          = $annotations->{ $i->name() }->[$stat_index]->{comment} || q{};
       my $info;
       if ($date) {
-        $info = $i->name().q{:}.$date.q{:}.$comment;
+        $info = $i->name() . q{:} . $date . q{:} . $comment;
       }
       $array->[$stripe_index] = $info || q{};
       $stat_index++;
@@ -175,11 +187,15 @@ sub dates_of_annotations_over_default_uptime {
     $stripe_index++;
   }
 
-  if ( ! scalar @{$stripe} ) {
+  if ( !scalar @{$stripe} ) {
     $stripe = undef;
   }
 
-  return {instruments => $instruments, data => $stripe, annotations => $stripe_annotations};
+  return {
+    instruments => $instruments,
+    data        => $stripe,
+    annotations => $stripe_annotations
+  };
 }
 
 1;

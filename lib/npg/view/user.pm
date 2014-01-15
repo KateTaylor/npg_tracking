@@ -12,17 +12,17 @@ use warnings;
 use base qw(npg::view);
 use npg::model::usergroup;
 use Carp;
-use Digest::SHA qw(sha256_hex);;
+use Digest::SHA qw(sha256_hex);
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15395 $ =~ /(\d+)/smx; $r; };
 
 sub new {
-  my ($class, @args) = @_;
+  my ( $class, @args ) = @_;
   my $self  = $class->SUPER::new(@args);
   my $model = $self->model();
   my $id    = $model->id_user();
 
-  if($id && $id !~ /^\d+$/smx) {
+  if ( $id && $id !~ /^\d+$/smx ) {
     $model->username($id);
     $model->id_user(0);
     $model->init();
@@ -40,30 +40,36 @@ sub authorised {
   #########
   # Allow a user to update his or her rfid_tag
   #
-  if( $action eq 'update' &&
-      $util->cgi->param( q{rfid_tag} ) ) {
+  if ( $action eq 'update'
+    && $util->cgi->param(q{rfid_tag}) )
+  {
     return 1;
   }
 
   return $self->SUPER::authorised();
 }
 
-sub read { ## no critic (ProhibitBuiltinHomonyms)
-  my ($self, @args) = @_;
+sub read {    ## no critic (ProhibitBuiltinHomonyms)
+  my ( $self, @args ) = @_;
   my $model = $self->model();
   my $util  = $self->util();
 
-  my $all_public = npg::model::usergroup->new({
-					       util => $util,
-					      })->public_usergroups();
+  my $all_public
+      = npg::model::usergroup->new( { util => $util, } )->public_usergroups();
   my $member_of = $model->usergroups();
-  my @not_in = ();
-  for my $group (@{$all_public}) {
-    if(!scalar grep { my $id_ug = $_->id_usergroup(); $id_ug && $id_ug == $group->id_usergroup() } @{$member_of}) {
+  my @not_in    = ();
+  for my $group ( @{$all_public} ) {
+    if (
+      !scalar grep {
+        my $id_ug = $_->id_usergroup();
+        $id_ug && $id_ug == $group->id_usergroup()
+      } @{$member_of}
+        )
+    {
       push @not_in, $group;
     }
   }
-  if(scalar @not_in) {
+  if ( scalar @not_in ) {
     $model->{'public_usergroups'} = \@not_in;
   }
 
@@ -71,12 +77,12 @@ sub read { ## no critic (ProhibitBuiltinHomonyms)
 }
 
 sub update {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $cgi = $self->util->cgi();
 
-  my $rfid_tag = $cgi->param( q{rfid_tag} );
+  my $rfid_tag = $cgi->param(q{rfid_tag});
   chomp $rfid_tag;
-  if ( ! $rfid_tag ) {
+  if ( !$rfid_tag ) {
     return $self->SUPER::update();
   }
 
@@ -84,31 +90,30 @@ sub update {
 
   # use the hash key here, since we don't want to make a call out to the
   # database and modify the sha in the column - bad things would happen!
-  $model->{rfid} = sha256_hex( $rfid_tag );
+  $model->{rfid} = sha256_hex($rfid_tag);
   $model->update();
   return 1;
 }
 
 sub list_rfid_check_ajax {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
   my $cgi = $self->util->cgi();
 
-  my $rfid_tag = $cgi->param( q{rfid_tag} );
+  my $rfid_tag = $cgi->param(q{rfid_tag});
 
   chomp $rfid_tag;
 
-  $self->{model} = npg::model::user->new({
-      util => $self->util(),
+  $self->{model} = npg::model::user->new(
+    { util => $self->util(),
       rfid => $rfid_tag,
-    });
+    }
+  );
 
   $self->model->read();
 
   return 1;
 }
-
-
 
 1;
 

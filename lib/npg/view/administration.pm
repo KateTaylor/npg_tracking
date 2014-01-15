@@ -24,14 +24,19 @@ use npg::model::user2usergroup;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 16269 $ =~ /(\d+)/smx; $r; };
 
 sub authorised {
-  my $self = shift;
-  my $util   = $self->util();
-  my $action = $self->action();
-  my $aspect = $self->aspect();
+  my $self      = shift;
+  my $util      = $self->util();
+  my $action    = $self->action();
+  my $aspect    = $self->aspect();
   my $requestor = $util->requestor();
 
-  if(($aspect eq 'create_instrument_mod' || $aspect eq 'create_instrument_status')
-      && $requestor->is_member_of('engineers')) {
+  if (
+    (    $aspect eq 'create_instrument_mod'
+      || $aspect eq 'create_instrument_status'
+    )
+    && $requestor->is_member_of('engineers')
+      )
+  {
     return 1;
   }
 
@@ -39,105 +44,111 @@ sub authorised {
 }
 
 sub create_instrument_mod {
-  my $self = shift;
-  my $util = $self->util();
-  my $cgi = $util->cgi();
-  my $description = $cgi->param('description');
+  my $self            = shift;
+  my $util            = $self->util();
+  my $cgi             = $util->cgi();
+  my $description     = $cgi->param('description');
   my $new_description = $cgi->param('new_description');
-  my $revision = $cgi->param('revision');
+  my $revision        = $cgi->param('revision');
   $description ||= $new_description;
-  if (!$description || !$revision) {
+  if ( !$description || !$revision ) {
     croak "description ($description) and/or revision ($revision) is missing";
   }
-  my $imd = npg::model::instrument_mod_dict->new({util => $util, description => $description, revision => $revision});
+  my $imd = npg::model::instrument_mod_dict->new(
+    { util => $util, description => $description, revision => $revision } );
   $imd->create();
   return;
 }
 
 sub create_instrument_status {
-  my $self = shift;
-  my $util = $self->util();
-  my $cgi = $util->cgi();
+  my $self        = shift;
+  my $util        = $self->util();
+  my $cgi         = $util->cgi();
   my $description = $cgi->param('description');
-  if (!$description) {
+  if ( !$description ) {
     croak 'No status given';
   }
   my $isd = npg::model::instrument_status_dict->new(
-    {util => $util, description => $description, iscurrent => 1,});
+    { util => $util, description => $description, iscurrent => 1, } );
   $isd->create();
   return;
 }
 
 sub create_user {
-  my $self = shift;
-  my $util = $self->util();
-  my $cgi = $util->cgi();
+  my $self     = shift;
+  my $util     = $self->util();
+  my $cgi      = $util->cgi();
   my $username = $cgi->param('username');
-  if (!$username) {
+  if ( !$username ) {
     croak 'No username given';
   }
-  my $user = npg::model::user->new({util => $util, username => $username});
+  my $user
+      = npg::model::user->new( { util => $util, username => $username } );
   $user->create();
   return;
 }
 
 sub create_usergroup {
-  my $self = shift;
-  my $util = $self->util();
-  my $cgi = $util->cgi();
-  my $groupname = $cgi->param('groupname');
+  my $self        = shift;
+  my $util        = $self->util();
+  my $cgi         = $util->cgi();
+  my $groupname   = $cgi->param('groupname');
   my $description = $cgi->param('description');
-  my $is_public = $cgi->param('is_public');
-  if (!$groupname || !$description) {
+  my $is_public   = $cgi->param('is_public');
+  if ( !$groupname || !$description ) {
     croak 'No groupname and/or group description given';
   }
-  my $usergroup = npg::model::usergroup->new({
-    util => $util,
-    groupname => $groupname,
-    description => $description,
-    is_public => $is_public
-  });
+  my $usergroup = npg::model::usergroup->new(
+    { util        => $util,
+      groupname   => $groupname,
+      description => $description,
+      is_public   => $is_public
+    }
+  );
   $usergroup->create();
   return;
 }
 
 sub create_entity_type {
-  my $self = shift;
-  my $util = $self->util();
-  my $cgi = $util->cgi();
+  my $self        = shift;
+  my $util        = $self->util();
+  my $cgi         = $util->cgi();
   my $description = $cgi->param('description');
-  my $iscurrent = $cgi->param('iscurrent');
-  if (!$description) {
+  my $iscurrent   = $cgi->param('iscurrent');
+  if ( !$description ) {
     croak 'No entity type given';
   }
-  my $et = npg::model::entity_type->new({util => $util, description => $description, iscurrent => $iscurrent});
+  my $et = npg::model::entity_type->new(
+    { util => $util, description => $description, iscurrent => $iscurrent } );
   $et->create();
   return;
 }
 
 sub create_run_status {
-  my $self = shift;
-  my $util = $self->util();
-  my $cgi = $util->cgi();
+  my $self        = shift;
+  my $util        = $self->util();
+  my $cgi         = $util->cgi();
   my $description = $cgi->param('description');
-  if (!$description) {
+  if ( !$description ) {
     croak 'No status given';
   }
-  my $rsd = npg::model::run_status_dict->new({util => $util, description => $description});
+  my $rsd = npg::model::run_status_dict->new(
+    { util => $util, description => $description } );
   $rsd->create();
   return;
 }
 
 sub create_user_to_usergroup {
-  my $self = shift;
-  my $util = $self->util();
-  my $cgi = $util->cgi();
-  my $id_user = $cgi->param('id_user');
+  my $self         = shift;
+  my $util         = $self->util();
+  my $cgi          = $util->cgi();
+  my $id_user      = $cgi->param('id_user');
   my $id_usergroup = $cgi->param('id_usergroup');
-  if (!$id_user || !$id_usergroup) {
+  if ( !$id_user || !$id_usergroup ) {
     croak 'No user and/or usergroup given';
   }
-  my $uug = npg::model::user2usergroup->new({util => $util, id_user => $id_user, id_usergroup => $id_usergroup});
+  my $uug = npg::model::user2usergroup->new(
+    { util => $util, id_user => $id_user, id_usergroup => $id_usergroup } );
   $uug->create();
   return;
 }

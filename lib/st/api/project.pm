@@ -16,26 +16,26 @@ use Readonly;
 
 use base qw(st::api::base);
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 13925 $ =~ /(\d+)/smx; $r; };
 
 sub live {
-    my $self = shift;
-    return $self->live_url()  . q{/projects};
+  my $self = shift;
+  return $self->live_url() . q{/projects};
 }
 
 sub dev {
-    my $self = shift;
-    return $self->dev_url()   . q{/projects};
+  my $self = shift;
+  return $self->dev_url() . q{/projects};
 }
 
 sub fields { return qw( id name ); }
 
 sub project_cost_code {
-  my $self     = shift;
+  my $self = shift;
   my $proceject_cost_codes = $self->get('Project cost code') || [];
-  return $proceject_cost_codes ->[0];
+  return $proceject_cost_codes->[0];
 }
 
 1;

@@ -17,45 +17,48 @@ use npg::model::instrument_status;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 16477 $ =~ /(\d+)/smx; $r; };
 
 Readonly::Hash our %SHORT_DESCRIPTIONS => {
-                  'down'             => 'down',
-                  'request approval' => 'requ',
-                  'up'               => 'up',
-                  'wash required'    => 'wash',
-                  'wash in progress'     => 'wash',
-                  'wash performed'   => 'wash',
-                  'planned maintenance'   => 'plan',
-                  'planned repair'   => 'pl_r',
-                  'planned service'  => 'pl_s',
-                  'down for repair'  => 'dn4r',
-                  'down for service' => 'dn4s',
-                                          };
+  'down'                => 'down',
+  'request approval'    => 'requ',
+  'up'                  => 'up',
+  'wash required'       => 'wash',
+  'wash in progress'    => 'wash',
+  'wash performed'      => 'wash',
+  'planned maintenance' => 'plan',
+  'planned repair'      => 'pl_r',
+  'planned service'     => 'pl_s',
+  'down for repair'     => 'dn4r',
+  'down for service'    => 'dn4s',
+};
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_instrument_status_dict
-            description
-            iscurrent);
+      description
+      iscurrent);
 }
 
 sub init {
   my $self = shift;
 
-  if($self->{'description'} &&
-     !$self->{'id_instrument_status_dict'}) {
+  if ( $self->{'description'}
+    && !$self->{'id_instrument_status_dict'} )
+  {
     my $query = q(SELECT id_instrument_status_dict
                   FROM   instrument_status_dict
                   WHERE  description = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->description());
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {},
+        $self->description() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_instrument_status_dict'} = $ref->[0]->[0];
     }
   }
@@ -69,7 +72,7 @@ sub instrument_status_dicts {
 
 sub instruments {
   my $self = shift;
-  if(!$self->{'instruments'}) {
+  if ( !$self->{'instruments'} ) {
     my $pkg   = 'npg::model::instrument';
     my $query = qq(SELECT @{[join q(, ), map { "i.$_ AS $_" } $pkg->fields()]}
                    FROM   @{[$pkg->table()]} i,
@@ -78,7 +81,8 @@ sub instruments {
                    AND    i_s.iscurrent     = 1
                    AND    i_s.id_instrument_status_dict = ?);
 
-    $self->{'instruments'} = $self->gen_getarray($pkg, $query, $self->id_instrument_status_dict());
+    $self->{'instruments'} = $self->gen_getarray( $pkg, $query,
+      $self->id_instrument_status_dict() );
   }
   return $self->{'instruments'};
 }

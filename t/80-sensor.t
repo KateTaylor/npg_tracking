@@ -11,14 +11,15 @@ use warnings;
 use Test::More tests => 6;
 use Test::Exception;
 use t::dbic_util;
+
 #use XML::Simple;
 
 use_ok('npg::sensors');
-my $schema =  t::dbic_util->new->test_schema();
+my $schema = t::dbic_util->new->test_schema();
 
 my $test = npg::sensors->new();
 isa_ok( $test, 'npg::sensors', 'Correct class' );
-$test = npg::sensors->new({schema => $schema});
+$test = npg::sensors->new( { schema => $schema } );
 isa_ok( $test, 'npg::sensors', 'Correct class' );
 
 #my $data = $test->load_data();

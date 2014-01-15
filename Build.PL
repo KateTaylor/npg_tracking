@@ -128,6 +128,7 @@ my $builder = $class->new(
                 'Test::Pod::Coverage'             => 0,
                 'Test::Perl::Critic'              => 0,
                 'Perl::Critic::Policy::Subroutines::ProhibitUnusedPrivateSubroutines' => 0,
+                'Perl::Tidy'                      =>0,
                 'Test::Trap'                      => '0.2.0',
                 'Test::Warn'                      => '0.11',
                 'DateTime::Format::SQLite'        => 0,

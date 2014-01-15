@@ -19,20 +19,23 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 {
   ## no critic (ProhibitUnusedVariables)
-  my %to_of       :ATTR( init_arg => q{to},       :get<to>,       :set<to>      );
-  my %from_of     :ATTR( init_arg => q{from},     :get<from>,     :set<from>    );
-  my %body_of     :ATTR( init_arg => q{body},     :get<body>,     :set<body>    );
-  my %subject_of  :ATTR( init_arg => q{subject},  :get<subject>,  :set<subject> );
+  my %to_of : ATTR( init_arg => q{to},       :get<to>,       :set<to>      );
+  my %from_of :
+      ATTR( init_arg => q{from},     :get<from>,     :set<from>    );
+  my %body_of :
+      ATTR( init_arg => q{body},     :get<body>,     :set<body>    );
+  my %subject_of :
+      ATTR( init_arg => q{subject},  :get<subject>,  :set<subject> );
   ## use critic
-  my %precendence_of  :ATTR( :get<precendence>, :set<precedence>  );
-  my %type_of         :ATTR( :get<type>,        :set<type>        );
-  my %cc_of           :ATTR( :get<cc>,          :set<cc>          );
-  my %bcc_of          :ATTR( :get<bcc>,         :set<bcc>         );
+  my %precendence_of : ATTR( :get<precendence>, :set<precedence>  );
+  my %type_of : ATTR( :get<type>,        :set<type>        );
+  my %cc_of : ATTR( :get<cc>,          :set<cc>          );
+  my %bcc_of : ATTR( :get<bcc>,         :set<bcc>         );
 
   sub BUILD {
-    my ($self, $ident, $arg_ref) = @_;
+    my ( $self, $ident, $arg_ref ) = @_;
     $precendence_of{$ident} = $arg_ref->{precedence} || q{list};
-    $type_of{$ident} = $arg_ref->{type} || q{text/plain};
+    $type_of{$ident}        = $arg_ref->{type}       || q{text/plain};
 
     my $cc = $arg_ref->{cc} || q{};
     $cc =~ s/[ ]/,/xms;
@@ -50,23 +53,23 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
   sub mail {
     my ($self) = @_;
 
-    if (ref$self->get_to() ne 'ARRAY') {
+    if ( ref $self->get_to() ne 'ARRAY' ) {
       my $to = $self->get_to();
       $to =~ s/[ ]/,/xms;
       my @temp = split /,/xms, $to;
-      $self->set_to(\@temp);
+      $self->set_to( \@temp );
     }
 
     my $msg = MIME::Lite->new(
-			  To            => (join q(, ), @{$self->get_to()}),
-			  From          => $self->get_from(),
-        Cc            => (join q(, ), @{$self->get_cc}),
-        Bcc           => (join q(, ), @{$self->get_bcc}),
-			  Subject       => $self->get_subject(),
-			  Type          => $self->get_type(),
-			  Data          => $self->get_body(),
-			  'Precedence:' => $self->get_precendence(),
-      );
+      To            => ( join q(, ), @{ $self->get_to() } ),
+      From          => $self->get_from(),
+      Cc            => ( join q(, ), @{ $self->get_cc } ),
+      Bcc           => ( join q(, ), @{ $self->get_bcc } ),
+      Subject       => $self->get_subject(),
+      Type          => $self->get_type(),
+      Data          => $self->get_body(),
+      'Precedence:' => $self->get_precendence(),
+    );
 
     eval {
       $msg->send();

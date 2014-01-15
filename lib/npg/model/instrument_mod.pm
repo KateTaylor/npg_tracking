@@ -19,16 +19,16 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 __PACKAGE__->has_a('instrument_mod_dict');
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_instrument_mod
-            id_instrument
-            id_instrument_mod_dict
-            date_added
-            date_removed
-            id_user
-            iscurrent);
+      id_instrument
+      id_instrument_mod_dict
+      date_added
+      date_removed
+      id_user
+      iscurrent);
 }
 
 sub user {
@@ -38,18 +38,20 @@ sub user {
 
 sub instrument {
   my $self = shift;
-  return npg::model::instrument->new({
-				      util          => $self->util(),
-				      id_instrument => $self->id_instrument(),
-				     });
+  return npg::model::instrument->new(
+    { util          => $self->util(),
+      id_instrument => $self->id_instrument(),
+    }
+  );
 }
 
 sub instrument_mod_dict {
   my $self = shift;
-  return npg::model::instrument_mod_dict->new({
-					       util => $self->util(),
-					       id_instrument_mod_dict => $self->id_instrument_mod_dict(),
-					      });
+  return npg::model::instrument_mod_dict->new(
+    { util                   => $self->util(),
+      id_instrument_mod_dict => $self->id_instrument_mod_dict(),
+    }
+  );
 }
 
 sub instruments {
@@ -60,7 +62,8 @@ sub instruments {
 
 sub instrument_mod_dicts {
   my $self = shift;
-  return npg::model::instrument_mod_dict->new({util => $self->util()})->instrument_mod_dicts();
+  return npg::model::instrument_mod_dict->new( { util => $self->util() } )
+      ->instrument_mod_dicts();
 }
 
 1;

@@ -11,73 +11,82 @@ use warnings;
 use List::MoreUtils qw/ uniq /;
 use Readonly;
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 8603 $ =~ /(\d+)/smx; $r; };
 
 sub live {
-    my $self = shift;
-    return $self->live_url()  . q{/studies};
+  my $self = shift;
+  return $self->live_url() . q{/studies};
 }
 
 sub dev {
-    my $self = shift;
-    return $self->dev_url()   . q{/studies};
+  my $self = shift;
+  return $self->dev_url() . q{/studies};
 }
 
 sub fields { return qw( id name ); }
 
 sub separate_y_chromosome_data {
   my $self = shift;
-  my $result = $self->get('Does this study require Y chromosome data to be separated from X and autosomal data before archival?') || [];
+  my $result
+      = $self->get(
+    'Does this study require Y chromosome data to be separated from X and autosomal data before archival?'
+      ) || [];
   $result = $result->[0] || q[];
-  return $result=~/yes|true|1/smix;
+  return $result =~ /yes|true|1/smix;
 }
 
 sub contains_nonconsented_xahuman {
   my $self = shift;
-  my $unconsented_xahuman = $self->get('Does this study require the removal of X chromosome and autosome sequence?') || [];
+  my $unconsented_xahuman
+      = $self->get(
+    'Does this study require the removal of X chromosome and autosome sequence?'
+      ) || [];
   $unconsented_xahuman = $unconsented_xahuman->[0] || q[];
   return lc($unconsented_xahuman) eq q(yes);
 }
 
 sub contains_nonconsented_human {
   my $self = shift;
-  my $unconsented_human = $self->get('Does this study contain samples that are contaminated with human DNA which must be removed prior to analysis?') || [];
+  my $unconsented_human
+      = $self->get(
+    'Does this study contain samples that are contaminated with human DNA which must be removed prior to analysis?'
+      ) || [];
   $unconsented_human = $unconsented_human->[0] || q[];
   return lc($unconsented_human) eq q(yes);
 }
-*contains_unconsented_human = \&contains_nonconsented_human; #backward compat
+*contains_unconsented_human = \&contains_nonconsented_human;  #backward compat
 
 sub _emails_within_tag {
-  my ($self,$type)=@_;
-  if(not defined $type){
-    $type=q{};
+  my ( $self, $type ) = @_;
+  if ( not defined $type ) {
+    $type = q{};
   }
-  my $ra=$self->{_emails}{$type};
-  if ($ra){
+  my $ra = $self->{_emails}{$type};
+  if ($ra) {
     return $ra;
   }
-  my $doc=$self->read();
-  my @nl = ($doc);
+  my $doc = $self->read();
+  my @nl  = ($doc);
   if ($type) {
     @nl = $doc->getElementsByTagName($type);
   }
-  my $results=[];
-  for my $n (@nl){
-    for my $e ($n->getElementsByTagName(q(email))){
+  my $results = [];
+  for my $n (@nl) {
+    for my $e ( $n->getElementsByTagName(q(email)) ) {
       my $email = $e->textContent();
-      if($email){
-        $email=~s/\a\s+//smx;
-        $email=~s/\s+\z//smx;
-	if($email){
-          push @{$results},$email;
-	}
+      if ($email) {
+        $email =~ s/\a\s+//smx;
+        $email =~ s/\s+\z//smx;
+        if ($email) {
+          push @{$results}, $email;
+        }
       }
     }
   }
   @{$results} = uniq sort @{$results};
-  $self->{_emails}{$type}=$results;
+  $self->{_emails}{$type} = $results;
   return $results;
 }
 
@@ -102,44 +111,44 @@ sub email_addresses_of_owners {
 }
 
 sub reference_genome {
-    my $self = shift;
-    $self->parse();
-    return $self->get(q[Reference Genome])->[0];
+  my $self = shift;
+  $self->parse();
+  return $self->get(q[Reference Genome])->[0];
 }
 
 sub alignments_in_bam {
-    my $self = shift;
-    my $r = $self->get('Alignments in BAM');
-    if( !defined $r || $r->[0] !~ m/false/smix ) {
-      return 1;
-    }
-    return;
+  my $self = shift;
+  my $r    = $self->get('Alignments in BAM');
+  if ( !defined $r || $r->[0] !~ m/false/smix ) {
+    return 1;
+  }
+  return;
 }
 
 sub accession_number {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $a_n = $self->get('ENA Study Accession Number') || [];
   return $a_n->[0];
 }
 
 sub title {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $title = $self->get('Title') || [];
   return $title->[0];
 }
 
 sub description {
-  my ( $self )  = @_;
+  my ($self) = @_;
   my $e = $self->get(q{Study description});
   my $d;
-  if (defined $e) {
+  if ( defined $e ) {
     $d = $e->[0];
   }
   return $d ? $d : undef;
 }
 
 sub data_access_group {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $group = $self->get('Data access group') || [];
   return $group->[0];
 }

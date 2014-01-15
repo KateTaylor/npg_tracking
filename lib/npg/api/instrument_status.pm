@@ -17,32 +17,34 @@ use Readonly;
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15277 $ =~ /(\d+)/mxs; $r; };
 
-__PACKAGE__->mk_accessors(fields(), 'name');
+__PACKAGE__->mk_accessors( fields(), 'name' );
 __PACKAGE__->hasa(qw(instrument));
 
 sub fields {
-  return qw(id_instrument_status id_instrument date id_instrument_status_dict id_user iscurrent description comment);
+  return
+      qw(id_instrument_status id_instrument date id_instrument_status_dict id_user iscurrent description comment);
 }
 
 sub uptimes {
   my ($self) = @_;
-  if (!$self->{uptimes}) {
+  if ( !$self->{uptimes} ) {
     my $util       = $self->util();
     my $pkg        = ref $self;
     my ($obj_type) = ($pkg) =~ /([^:]+)$/smx;
-    my $obj_uri    = sprintf '%s/%s/up/down.xml', $util->base_uri(), $obj_type;
+    my $obj_uri = sprintf '%s/%s/up/down.xml', $util->base_uri(), $obj_type;
 
-    my $xml_obj  = $util->parser->parse_string($util->get($obj_uri,[]));
+    my $xml_obj = $util->parser->parse_string( $util->get( $obj_uri, [] ) );
     my @instruments = $xml_obj->getElementsByTagName('instrument');
 
     foreach my $i (@instruments) {
       my $temp = { name => $i->getAttribute('name'), statuses => [] };
       my @statuses = $i->getElementsByTagName('status');
-      foreach my $s (@{$i->getElementsByTagName('instrument_status')}) {
-        push @{$temp->{statuses}}, {
-          date => $s->getAttribute('date'),
+      foreach my $s ( @{ $i->getElementsByTagName('instrument_status') } ) {
+        push @{ $temp->{statuses} },
+            {
+          date        => $s->getAttribute('date'),
           description => $s->getAttribute('description'),
-        };
+            };
       }
       $i = $temp;
     }

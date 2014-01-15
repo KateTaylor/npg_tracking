@@ -28,18 +28,18 @@ sub authorised {
   #########
   # Allow pipeline group access to the create_xml interface of instrument_mod
   #
-  if ($aspect eq 'create_xml' &&
-      $util->requestor->is_member_of('pipeline')) {
+  if ( $aspect eq 'create_xml'
+    && $util->requestor->is_member_of('pipeline') )
+  {
     return 1;
   }
 
   #########
   # Allow engineers group access to create and update instrument_mod
   #
-  if (($action eq 'create' ||
-       $action eq 'update' ||
-       $aspect eq 'add_ajax') &&
-      $util->requestor->is_member_of('engineers')) {
+  if ( ( $action eq 'create' || $action eq 'update' || $aspect eq 'add_ajax' )
+    && $util->requestor->is_member_of('engineers') )
+  {
     return 1;
   }
 
@@ -47,32 +47,32 @@ sub authorised {
 }
 
 sub add_ajax {
-  my $self                  = shift;
-  my $cgi                   = $self->util->cgi();
-  my $model                 = $self->model();
-  my $id_instrument         = $cgi->param('id_instrument');
+  my $self          = shift;
+  my $cgi           = $self->util->cgi();
+  my $model         = $self->model();
+  my $id_instrument = $cgi->param('id_instrument');
   $model->{'id_instrument'} = $id_instrument;
   return;
 }
 
 sub create {
-  my $self            = shift;
-  my $model           = $self->model();
-  my $requestor       = $self->util->requestor();
-  $model->id_user($requestor->id_user());
-  $model->date_added($model->dbh_datetime());
+  my $self      = shift;
+  my $model     = $self->model();
+  my $requestor = $self->util->requestor();
+  $model->id_user( $requestor->id_user() );
+  $model->date_added( $model->dbh_datetime() );
   return $self->SUPER::create();
 }
 
 sub update {
   my $self = shift;
-  my $cgi = $self->util->cgi();
-  if (!$cgi->param('remove')) {
+  my $cgi  = $self->util->cgi();
+  if ( !$cgi->param('remove') ) {
     croak 'removal not set';
   }
   my $model = $self->model();
   $model->read();
-  $model->date_removed($model->dbh_datetime());
+  $model->date_removed( $model->dbh_datetime() );
   $model->iscurrent(0);
   return $self->SUPER::update();
 }
@@ -80,39 +80,45 @@ sub update {
 sub update_mods {
   my $self = shift;
   my $util = $self->util();
-  my $cgi = $util->cgi();
-  $cgi->param('remove',1);
-  my $model = $self->model();
-  my @id_instruments = $cgi->param('id_instrument');
-  my $iscurrent = $cgi->param('iscurrent');
+  my $cgi  = $util->cgi();
+  $cgi->param( 'remove', 1 );
+  my $model                  = $self->model();
+  my @id_instruments         = $cgi->param('id_instrument');
+  my $iscurrent              = $cgi->param('iscurrent');
   my $id_instrument_mod_dict = $cgi->param('id_instrument_mod_dict');
-  my $id_user = $util->requestor->id_user();
-  my $tr_state = $util->transactions();
+  my $id_user                = $util->requestor->id_user();
+  my $tr_state               = $util->transactions();
   $util->transactions(0);
   my $date = $model->dbh_datetime();
 
   eval {
-    my $imd = npg::model::instrument_mod_dict->new({util => $util, id_instrument_mod_dict => $id_instrument_mod_dict});
+    my $imd
+        = npg::model::instrument_mod_dict->new(
+      { util => $util, id_instrument_mod_dict => $id_instrument_mod_dict } );
     my $im_description = $imd->description();
     foreach my $id_instrument (@id_instruments) {
-      my $ins = npg::model::instrument->new({util => $util, id_instrument => $id_instrument});
+      my $ins = npg::model::instrument->new(
+        { util => $util, id_instrument => $id_instrument } );
       my $mods = $ins->instrument_mods();
-      foreach my $mod (@{$mods}) {
-        if ($mod->instrument_mod_dict->description() eq $im_description && $mod->iscurrent()) {
+      foreach my $mod ( @{$mods} ) {
+        if ( $mod->instrument_mod_dict->description() eq $im_description
+          && $mod->iscurrent() )
+        {
           $mod->iscurrent(0);
           $mod->date_removed($date);
           $mod->update();
           last;
         }
       }
-      my $new_mod = npg::model::instrument_mod->new({
-						     util => $util,
-						     id_instrument => $id_instrument,
-						     id_instrument_mod_dict => $id_instrument_mod_dict,
-						     id_user    => $id_user,
-						     date_added => $date,
-						     iscurrent  => $iscurrent,
-						    });
+      my $new_mod = npg::model::instrument_mod->new(
+        { util                   => $util,
+          id_instrument          => $id_instrument,
+          id_instrument_mod_dict => $id_instrument_mod_dict,
+          id_user                => $id_user,
+          date_added             => $date,
+          iscurrent              => $iscurrent,
+        }
+      );
       $new_mod->create();
     }
     1;

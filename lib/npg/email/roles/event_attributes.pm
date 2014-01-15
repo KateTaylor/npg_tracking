@@ -56,9 +56,9 @@ has event_row => (
 
 sub _build_event_row {
   my ($self) = @_;
-  return $self->schema_connection->resultset('Event')->find( $self->id_event() );
+  return $self->schema_connection->resultset('Event')
+      ->find( $self->id_event() );
 }
-
 
 has 'id_event' => (
   isa        => 'Int',
@@ -71,7 +71,6 @@ sub _build_id_event {
   my ($self) = @_;
   return $self->event_row->id_event();
 }
-
 
 =head2 entity
 
@@ -91,8 +90,10 @@ sub _build_entity {
   my ($self) = @_;
 
   my $entity_obj = $self->event_row->entity_obj();
-  croak q{Constructor argument is not a } . $self->_entity_check() . q{ event}
-    if ref $entity_obj ne $self->_entity_check();
+  croak q{Constructor argument is not a }
+      . $self->_entity_check()
+      . q{ event}
+      if ref $entity_obj ne $self->_entity_check();
 
   return $entity_obj;
 }
@@ -108,9 +109,9 @@ defaults to events if you don't pass in a groupname
 =cut
 
 has q{_watchers} => (
-  is         => 'rw',
-  isa        => 'ArrayRef[Str]',
-  predicate  => q{_has_watchers},
+  is        => 'rw',
+  isa       => 'ArrayRef[Str]',
+  predicate => q{_has_watchers},
 );
 
 sub watchers {
@@ -126,22 +127,23 @@ sub watchers {
 
   # Prevent spam - but allow tests to pass. Set $USER for srpipe cronjobs.
   return [ $ENV{USER} . $host ]
-    if $self->dev !~ m/^ (?: test | live ) $/msx;
+      if $self->dev !~ m/^ (?: test | live ) $/msx;
 
   my $schema = $self->schema_connection();
 
-  my $event_group_id = $schema->resultset('Usergroup')->
-            find( { groupname => $groupname } )->id();
+  my $event_group_id
+      = $schema->resultset('Usergroup')->find( { groupname => $groupname } )
+      ->id();
 
-  my $user_rs = $schema->resultset('User')->search(
-          { 'user2usergroups.id_usergroup' => $event_group_id },
-          { join => 'user2usergroups' }
-  );
+  my $user_rs
+      = $schema->resultset('User')
+      ->search( { 'user2usergroups.id_usergroup' => $event_group_id },
+    { join => 'user2usergroups' } );
 
   my %recipients;
 
   ######
-  # create a list of the recipients that includes the originator, but ensure that they are unique
+# create a list of the recipients that includes the originator, but ensure that they are unique
   my @recievers;
   while ( my $row = $user_rs->next() ) {
     my $name = $row->username();
@@ -168,7 +170,7 @@ updates the event row notification_sent field
 =cut
 
 sub update_event_as_notified {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
   $self->event_row->notification_sent( strftime( '%F %T', localtime ) );
   $self->event_row->update();
@@ -185,7 +187,7 @@ The username of the person responsible for producing the event
 =cut
 
 sub user {
-  my ( $self ) = @_;
+  my ($self) = @_;
   return $self->event_row->user->username();
 }
 
@@ -194,7 +196,6 @@ has template => (
   isa        => 'Str',
   lazy_build => 1,
 );
-
 
 has dev => (
   is         => 'ro',
@@ -216,14 +217,14 @@ around BUILDARGS => sub {
   if ( defined $args->{event_row} && defined $args->{id_event} ) {
 
     croak "Mismatched event_row and id_event constructor arguments\n("
-         . __PACKAGE__ . " requires only one of these)\n\n"
-         if $args->{event_row}->id_event() != $args->{id_event};
+        . __PACKAGE__
+        . " requires only one of these)\n\n"
+        if $args->{event_row}->id_event() != $args->{id_event};
 
   }
 
   return $class->$orig($args);
 };
-
 
 1;
 __END__

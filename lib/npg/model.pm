@@ -23,53 +23,54 @@ Readonly::Scalar our $NINETY_DAYS => 90;
 sub uid {
   my $self  = shift;
   my $zdate = $self->zdate();
-  $zdate    =~ s/[^[:lower:]\d]//smigx;
-  $zdate   .= $self->{'_uid_sequence'}++;
+  $zdate =~ s/[^[:lower:]\d]//smigx;
+  $zdate .= $self->{'_uid_sequence'}++;
   return $zdate;
 }
 
 sub model_type {
   my $self = shift;
-  my ($obj_type)  = (ref $self) =~ /([^:]+)$/smx;
+  my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
   return $obj_type;
 }
 
 sub all_tags_assigned_to_type {
   my $self = shift;
-  if(!$self->{all_tags}) {
+  if ( !$self->{all_tags} ) {
     my $query = q{SELECT DISTINCT tf.frequency, t.tag, t.id_tag
                   FROM   tag_frequency tf, tag t, entity_type e
                   WHERE  tf.id_tag = t.id_tag
                   AND    tf.id_entity_type = e.id_entity_type
                   AND    e.description = ?
                   ORDER BY t.tag};
-    $self->{all_tags} = $self->gen_getarray('npg::model::tag', $query, $self->model_type());
+    $self->{all_tags} = $self->gen_getarray( 'npg::model::tag', $query,
+      $self->model_type() );
   }
   return $self->{all_tags};
 }
 
 sub dbh_datetime {
   my $self = shift;
-  return $self->util->dbh->selectall_arrayref('SELECT NOW()',{})->[0]->[0];
+  return $self->util->dbh->selectall_arrayref( 'SELECT NOW()', {} )->[0]->[0];
 }
 
 sub dates_of_last_ninety_days {
   my ($self) = @_;
-  if (!$self->{_dates_of_last_ninety_days}) {
+  if ( !$self->{_dates_of_last_ninety_days} ) {
     $self->{_dates_of_last_ninety_days} = [];
     my @temp;
-    foreach my $i (0..$NINETY_DAYS) {
-      my $dt = DateTime->now(time_zone => 'floating');
-      $dt->subtract( days=> $i );
+    foreach my $i ( 0 .. $NINETY_DAYS ) {
+      my $dt = DateTime->now( time_zone => 'floating' );
+      $dt->subtract( days => $i );
       push @temp, $dt->ymd();
     }
-    @{$self->{_dates_of_last_ninety_days}} = reverse @temp;
+    @{ $self->{_dates_of_last_ninety_days} } = reverse @temp;
   }
   return $self->{_dates_of_last_ninety_days};
 }
 
 sub aspect {
-  my ($self, $aspect) = @_;
+  my ( $self, $aspect ) = @_;
   if ($aspect) {
     $self->{aspect} = $aspect;
   }
@@ -78,7 +79,7 @@ sub aspect {
 
 sub sanitise_input {
   my ( $self, $input ) = @_;
-  my ( $sanitised_input ) = $input =~ /([a-z0-9_]+)/ixms;
+  my ($sanitised_input) = $input =~ /([a-z0-9_]+)/ixms;
   if ( $input ne $sanitised_input ) {
     croak $input . q{ ne } . $sanitised_input;
   }
@@ -92,15 +93,13 @@ sub location_is_instrument {
     return $self->{location_is_instrument};
   }
 
-  $instrument ||= npg::model::instrument->new({
-    util          => $self->util(),
-  });
+  $instrument ||= npg::model::instrument->new( { util => $self->util(), } );
   my $id_instrument;
 
   my @possible_ips = ();
-  my $x_forward =  $ENV{HTTP_X_FORWARDED_FOR} || q[];
+  my $x_forward = $ENV{HTTP_X_FORWARDED_FOR} || q[];
   if ($x_forward) {
-    push @possible_ips, (split /,\s/smx, $x_forward);
+    push @possible_ips, ( split /,\s/smx, $x_forward );
   }
 
   my $x_sequencer = $ENV{HTTP_X_SEQUENCER};
@@ -109,20 +108,22 @@ sub location_is_instrument {
   }
 
   my $remote_addr = $ENV{REMOTE_ADDR};
-  if ( $remote_addr ) {
+  if ($remote_addr) {
     push @possible_ips, $remote_addr;
   }
 
-  for my $ip ( @possible_ips ) {
-    if ($ip =~ /[^\d\.]/smx) { # the ip address should contain dots and digits only
-                               # HTTP_X_FORWARDED_FOR list contains something else
-                               # that later causes warnings
+  for my $ip (@possible_ips) {
+    if ( $ip =~ /[^\d\.]/smx )
+    {    # the ip address should contain dots and digits only
+          # HTTP_X_FORWARDED_FOR list contains something else
+          # that later causes warnings
       next;
     }
-    my $cname = _comp_name_by_host( $ip );
+    my $cname = _comp_name_by_host($ip);
     if ($cname) {
-      my $selected_instrument = $instrument->instrument_by_instrument_comp ( $cname );
-      if ( $selected_instrument ) {
+      my $selected_instrument
+          = $instrument->instrument_by_instrument_comp($cname);
+      if ($selected_instrument) {
         $id_instrument = $selected_instrument->id_instrument();
         last;
       }
@@ -135,13 +136,13 @@ sub location_is_instrument {
 }
 
 sub _comp_name_by_host {
-  my ( $ip ) = @_;
+  my ($ip) = @_;
   ##no critic(RequireCheckingReturnValueOfEval)
   my $comp_name;
   eval {
     my $hostname = gethostbyaddr inet_aton($ip), AF_INET;
     if ($hostname) {
-      ( $comp_name ) = $hostname =~ /^((?:\w|-)+)/mxs;
+      ($comp_name) = $hostname =~ /^((?:\w|-)+)/mxs;
     }
   };
   return $comp_name;
@@ -150,10 +151,13 @@ sub _comp_name_by_host {
 sub ajax_array_cost_group_values {
   my ( $self, $group ) = @_;
   my $return_string = q{['};
-  $return_string .= join q{','}, @{ npg::model::cost_group->new({
-    util => $self->util(),
-    name => $group,
-  })->group_codes() };
+  $return_string .= join q{','},
+      @{ npg::model::cost_group->new(
+      { util => $self->util(),
+        name => $group,
+      }
+      )->group_codes()
+      };
   $return_string .= q{']};
 
   return $return_string;

@@ -11,5 +11,6 @@ use Test::More;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 11663 $ =~ /(\d+)/mx; $r; };
 
 eval "use Test::Pod::Coverage 1.00";
-plan skip_all => "Test::Pod::Coverage 1.00 required for testing POD coverage" if $@;
+plan skip_all => "Test::Pod::Coverage 1.00 required for testing POD coverage"
+  if $@;
 all_pod_coverage_ok();

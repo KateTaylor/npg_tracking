@@ -13,30 +13,30 @@ use warnings;
 use English qw(-no_match_vars);
 use Carp;
 use HTTP::Request;
-require XML::Generator; # use() pollutes with AUTOLOAD
+require XML::Generator;    # use() pollutes with AUTOLOAD
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15277 $ =~ /(\d+)/smx; $r; };
 
 sub live {
-    my $self = shift;
-    return $self->live_url()  . q{/events};
+  my $self = shift;
+  return $self->live_url() . q{/events};
 }
 
 sub dev {
-    my $self = shift;
-    return $self->dev_url()   . q{/events};
+  my $self = shift;
+  return $self->dev_url() . q{/events};
 }
 
 sub fields {
-    return qw( message
-               eventful_type
-               eventful_id
-               family
-               identifier
-               location
-               key );
+  return qw( message
+      eventful_type
+      eventful_id
+      family
+      identifier
+      location
+      key );
 }
 
 sub create {
@@ -44,21 +44,22 @@ sub create {
   my $ua     = $self->util->useragent();
   my $xg     = XML::Generator->new();
   my $ent    = $self->entity_name();
-  my $xml    = q(<?xml version='1.0'?>).
-               $xg->$ent(map  { $xg->$_($self->$_()) }
-			 grep { defined $self->$_() }
-			 $self->fields());
+  my $xml    = q(<?xml version='1.0'?>)
+      . $xg->$ent(
+    map  { $xg->$_( $self->$_() ) }
+    grep { defined $self->$_() } $self->fields()
+      );
 
   push @{ $ua->requests_redirectable }, 'POST';
 
   my $response = $ua->post(
-			   $self->service(),
-			   'Content_Type'   => 'application/xml',
-			   'Content_Length' => length $xml,
-			   'Content'        => $xml,
-			   'Accept'         => 'text/xml',
-			  );
-  if (!$response->is_success()) {
+    $self->service(),
+    'Content_Type'   => 'application/xml',
+    'Content_Length' => length $xml,
+    'Content'        => $xml,
+    'Accept'         => 'text/xml',
+  );
+  if ( !$response->is_success() ) {
     croak q{Unable to update Sample Tracking: } . $response->status_line();
   }
   return 1;

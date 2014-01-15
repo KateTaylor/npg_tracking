@@ -16,7 +16,7 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 use_ok('npg::model::designation');
 
-my $util = t::util->new({fixtures => 1});
+my $util = t::util->new( { fixtures => 1 } );
 
 {
     my $designation = npg::model::designation->new();
@@ -24,10 +24,11 @@ my $util = t::util->new({fixtures => 1});
 }
 
 {
-    my $desig = npg::model::designation->new( {
-                                                util           => $util,
-                                                id_designation => 2,
-                                              }
+    my $desig = npg::model::designation->new(
+        {
+            util           => $util,
+            id_designation => 2,
+        }
     );
 
     is( $desig->description(), 'R&D', 'retrieve correct designation' );

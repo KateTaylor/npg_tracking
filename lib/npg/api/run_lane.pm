@@ -12,22 +12,23 @@ use npg::api::run;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16046 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_run_lane id_run tile_count tracks position );
 }
 
 sub new_from_xml {
-  my ($self, $pkg, $xmlfrag, $util) = @_;
-  my $child = $self->SUPER::new_from_xml($pkg, $xmlfrag, $util);
+  my ( $self, $pkg, $xmlfrag, $util ) = @_;
+  my $child = $self->SUPER::new_from_xml( $pkg, $xmlfrag, $util );
 
-  if($pkg eq 'npg::api::run_lane') {
+  if ( $pkg eq 'npg::api::run_lane' ) {
     $util = $child->util();
-    $child->{run} = npg::api::run->new({
-					util   => $util,
-					id_run => $xmlfrag->getAttribute('id_run'),
-				       });
+    $child->{run} = npg::api::run->new(
+      { util   => $util,
+        id_run => $xmlfrag->getAttribute('id_run'),
+      }
+    );
   }
 
   return $child;
@@ -36,24 +37,29 @@ sub new_from_xml {
 sub run {
   my $self = shift;
 
-  if(!$self->{run}) {
-    $self->{run} = npg::api::run->new({
-				       util   => $self->util(),
-				       id_run => $self->id_run(),
-				      });
+  if ( !$self->{run} ) {
+    $self->{run} = npg::api::run->new(
+      { util   => $self->util(),
+        id_run => $self->id_run(),
+      }
+    );
   }
   return $self->{run};
 }
 
 sub get {
-  my ($self, $field) = @_;
+  my ( $self, $field ) = @_;
 
-  if(!exists $self->{$field}) {
-    if( (exists $self->{id_run}) and
-        (exists $self->{position}) and
-        not (exists $self->{id_run_lane})
-      ){
-      %{$self} = %{(grep{$_->position == $self->{position}}@{$self->run()->run_lanes()})[0]};
+  if ( !exists $self->{$field} ) {
+    if (  ( exists $self->{id_run} )
+      and ( exists $self->{position} )
+      and not( exists $self->{id_run_lane} ) )
+    {
+      %{$self} = %{
+        ( grep { $_->position == $self->{position} }
+              @{ $self->run()->run_lanes() }
+        )[0]
+      };
     }
   }
 
@@ -61,12 +67,13 @@ sub get {
 }
 
 sub lims {
-  my $self  = shift;
+  my $self = shift;
 
-  if(!$self->{lims}) {
+  if ( !$self->{lims} ) {
     my $lims = $self->run()->lims();
     if ($lims) {
-      $self->{'lims'} = $lims->associated_child_lims_ia->{$self->position()};
+      $self->{'lims'}
+          = $lims->associated_child_lims_ia->{ $self->position() };
     }
   }
   return $self->{'lims'};
@@ -74,49 +81,49 @@ sub lims {
 
 sub is_library {
   my $self = shift;
-  my $l = $self->lims;
-  return $l && (!$l->is_control && !$l->is_pool) ? 1 : 0;
+  my $l    = $self->lims;
+  return $l && ( !$l->is_control && !$l->is_pool ) ? 1 : 0;
 }
 
 sub is_control {
   my $self = shift;
-  my $l = $self->lims;
+  my $l    = $self->lims;
   return $l && $l->is_control ? 1 : 0;
 }
 
 sub is_pool {
   my $self = shift;
-  my $l = $self->lims;
-  return ($l && $l->is_pool) ? 1 : 0;
+  my $l    = $self->lims;
+  return ( $l && $l->is_pool ) ? 1 : 0;
 }
 
 sub asset_id {
   my $self = shift;
-  my $l = $self->lims;
+  my $l    = $self->lims;
   return $l ? $l->library_id : undef;
 }
 
 sub contains_nonconsented_human {
   my $self = shift;
-  my $l = $self->lims();
+  my $l    = $self->lims();
   if ($l) {
     return $l->contains_nonconsented_human;
   }
   return 0;
 }
-*contains_unconsented_human = \&contains_nonconsented_human; #Backward compat
+*contains_unconsented_human = \&contains_nonconsented_human;  #Backward compat
 
 sub is_spiked_phix {
-   my $self = shift;
-   my $lims = $self->lims();
-   return ($lims && defined $lims->spiked_phix_tag_index) ? 1 : 0;
+  my $self = shift;
+  my $lims = $self->lims();
+  return ( $lims && defined $lims->spiked_phix_tag_index ) ? 1 : 0;
 }
 
 sub manual_qc {
-  my $self  = shift;
-  my $lims = $self->lims();
+  my $self      = shift;
+  my $lims      = $self->lims();
   my $manual_qc = undef;
-  if ($lims && defined $lims->seq_qc_state) {
+  if ( $lims && defined $lims->seq_qc_state ) {
     $manual_qc = $lims->seq_qc_state ? 'pass' : 'fail';
   }
   return $manual_qc;

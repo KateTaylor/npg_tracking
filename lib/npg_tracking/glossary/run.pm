@@ -13,10 +13,11 @@ use npg_tracking::util::types;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 16549 $ =~ /(\d+)/mxs; $r; };
 
-has 'id_run'    =>   (isa       => 'NpgTrackingRunId',
-                      is        => 'ro',
-                      required  => 1,
-                     );
+has 'id_run' => (
+  isa      => 'NpgTrackingRunId',
+  is       => 'ro',
+  required => 1,
+);
 1;
 
 __END__

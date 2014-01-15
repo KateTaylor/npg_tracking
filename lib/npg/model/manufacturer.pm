@@ -17,33 +17,35 @@ use npg::model::instrument;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_many('instrument_format');
 __PACKAGE__->has_all();
 
 sub fields {
   return qw(id_manufacturer
-            name);
+      name);
 }
 
 sub init {
   my $self = shift;
 
-  if($self->{'name'} &&
-     !$self->{'id_manufacturer'}) {
+  if ( $self->{'name'}
+    && !$self->{'id_manufacturer'} )
+  {
     my $query = q(SELECT id_manufacturer
                   FROM   manufacturer
                   WHERE  name = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->name());
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {}, $self->name() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(scalar @{$ref}) {
+    if ( scalar @{$ref} ) {
       $self->{'id_manufacturer'} = $ref->[0]->[0];
     }
   }
@@ -62,9 +64,7 @@ sub current_instruments {
                  AND    ifm.iscurrent          = 1
                  AND    i.iscurrent            = 1
                  ORDER BY i.id_instrument_format DESC);
-  return $self->gen_getarray($pkg,
-			     $query,
-			     $self->id_manufacturer());
+  return $self->gen_getarray( $pkg, $query, $self->id_manufacturer() );
 }
 
 sub instrument_count {
@@ -76,8 +76,9 @@ sub instrument_count {
                 AND    ifrm.id_instrument_format = i.id_instrument_format);
   my $ref = [];
   eval {
-    $ref = $self->util->dbh->selectall_arrayref($query, {},
-						$self->id_manufacturer());
+    $ref
+        = $self->util->dbh->selectall_arrayref( $query, {},
+      $self->id_manufacturer() );
   } or do {
     carp $EVAL_ERROR;
     return;

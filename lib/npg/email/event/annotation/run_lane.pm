@@ -19,7 +19,12 @@ with qw{npg::email::roles::event_attributes};
 
 Readonly::Scalar my $TEMPLATE => 'run_lane_annotation.tt2';
 
-has q{_entity_check} => ( isa => q{Str}, init_arg => undef, is => q{ro}, default => q{npg_tracking::Schema::Result::RunLaneAnnotation} );
+has q{_entity_check} => (
+  isa      => q{Str},
+  init_arg => undef,
+  is       => q{ro},
+  default  => q{npg_tracking::Schema::Result::RunLaneAnnotation},
+);
 
 sub _build_template {
   my ($self) = @_;
@@ -54,10 +59,13 @@ sub run {
 
   $self->compose_email();
   $self->send_email(
-    {
-      body => $self->next_email(),
-      to   => $self->watchers(),
-      subject => q{Run Lane } . $self->id_run() . q{_} . $self->lane() . q{ has been annotated by } . $self->user(),
+    { body    => $self->next_email(),
+      to      => $self->watchers(),
+      subject => q{Run Lane }
+          . $self->id_run() . q{_}
+          . $self->lane()
+          . q{ has been annotated by }
+          . $self->user(),
     }
   );
 
@@ -82,16 +90,17 @@ sub compose_email {
 
   $template_obj->process(
     $self->template(),
-    {
-      run        => $self->id_run(),
+    { run        => $self->id_run(),
       lane       => $self->lane(),
       lanes      => $details->{lanes},
       annotation => $self->event_row->description(),
       dev        => $self->dev(),
     },
-  ) or do {
-    croak sprintf '%s error: %s', $template_obj->error->type(), $template_obj->error->info();
-  };
+      )
+      or do {
+    croak sprintf '%s error: %s', $template_obj->error->type(),
+        $template_obj->error->info();
+      };
 
   return $template_obj;
 }
@@ -103,7 +112,7 @@ Returns the lane position number for the lane this annotation is on
 =cut
 
 sub lane {
-  my ( $self ) = @_;
+  my ($self) = @_;
   return $self->event_row->entity_obj->run_lane->position();
 }
 
@@ -118,19 +127,20 @@ sub understands {
   my ( $class, $data ) = @_;
 
   if (
-      (    $data->{event_row}
-        && $data->{event_row}->event_type->description() eq q{annotation}
-        && $data->{event_row}->event_type->entity_type->description() eq q{run_lane_annotation} )
-         ||
-      (    $data->{entity_type} eq q{run_lane_annotation}
-        && $data->{event_type}  eq q{annotation} )
-     ) {
-    return $class->new( $data );
+    (    $data->{event_row}
+      && $data->{event_row}->event_type->description() eq q{annotation}
+      && $data->{event_row}->event_type->entity_type->description() eq
+      q{run_lane_annotation}
+    )
+    || ( $data->{entity_type} eq q{run_lane_annotation}
+      && $data->{event_type} eq q{annotation} )
+      )
+  {
+    return $class->new($data);
   }
 
   return;
 }
-
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

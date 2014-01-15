@@ -20,7 +20,12 @@ with qw{npg::email::roles::instrument};
 
 Readonly::Scalar my $TEMPLATE => 'instrument_status_change.tt2';
 
-has q{_entity_check} => ( isa => q{Str}, init_arg => undef, is => q{ro}, default => q{npg_tracking::Schema::Result::InstrumentStatus} );
+has q{_entity_check} => (
+  isa      => q{Str},
+  init_arg => undef,
+  is       => q{ro},
+  default  => q{npg_tracking::Schema::Result::InstrumentStatus},
+);
 
 sub _build_template {
   my ($self) = @_;
@@ -67,11 +72,12 @@ sub run {
 
   $self->compose_email();
   $self->send_email(
-    {
-      body => $self->next_email(),
-      to   => $self->watchers( q{engineers} ),
-      subject => q{Instrument } . $self->name()
-               . q{ is at "} . $self->status_description() . q{"},
+    { body    => $self->next_email(),
+      to      => $self->watchers(q{engineers}),
+      subject => q{Instrument }
+          . $self->name()
+          . q{ is at "}
+          . $self->status_description() . q{"},
     }
   );
 
@@ -95,16 +101,16 @@ sub compose_email {
 
   $template_obj->process(
     $self->template(),
-    {
-        instrument  => $self->name(),
-        status      => $self->status_description(),
-        dev         => $self->dev(),
-        comment     => $self->entity->comment(),
+    { instrument => $self->name(),
+      status     => $self->status_description(),
+      dev        => $self->dev(),
+      comment    => $self->entity->comment(),
     },
-  ) or do {
+      )
+      or do {
     croak sprintf '%s error: %s',
         $template_obj->error->type(), $template_obj->error->info();
-  };
+      };
 
   return $template_obj;
 }
@@ -120,14 +126,16 @@ sub understands {
   my ( $class, $data ) = @_;
 
   if (
-      (    $data->{event_row}
-        && $data->{event_row}->event_type->description() eq q{status change}
-        && $data->{event_row}->event_type->entity_type->description() eq q{instrument_status} )
-         ||
-      (    $data->{entity_type} eq q{instrument_status}
-        && $data->{event_type}  eq q{status_change} )
-     ) {
-    return $class->new( $data );
+    (    $data->{event_row}
+      && $data->{event_row}->event_type->description() eq q{status change}
+      && $data->{event_row}->event_type->entity_type->description() eq
+      q{instrument_status}
+    )
+    || ( $data->{entity_type} eq q{instrument_status}
+      && $data->{event_type} eq q{status_change} )
+      )
+  {
+    return $class->new($data);
   }
   return;
 }

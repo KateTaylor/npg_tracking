@@ -47,8 +47,18 @@ sub run {
 
 # private methods
 
-has q{_no_run_complete_sent} => (isa => q{ArrayRef[Int]}, is => q{ro}, lazy_build => 1, writer => q{_set_complete});
-has q{_no_run_archived_sent} => (isa => q{ArrayRef[Int]}, is => q{ro}, lazy_build => 1, writer => q{_set_archived});
+has q{_no_run_complete_sent} => (
+  isa        => q{ArrayRef[Int]},
+  is         => q{ro},
+  lazy_build => 1,
+  writer     => q{_set_complete},
+);
+has q{_no_run_archived_sent} => (
+  isa        => q{ArrayRef[Int]},
+  is         => q{ro},
+  lazy_build => 1,
+  writer     => q{_set_archived},
+);
 
 sub _build__no_run_complete_sent {
   my ($self) = @_;
@@ -61,34 +71,38 @@ sub _build__no_run_archived_sent {
 }
 
 sub _populate_sent_arrays {
-  my ($self, $type) = @_;
+  my ( $self, $type ) = @_;
 
   my $schema = $self->schema_connection();
 
-  # get list of runs already with sent emails for run complete and run archived
-  my $mailed = $schema->resultset(q{MailRunProjectFollower});
+ # get list of runs already with sent emails for run complete and run archived
+  my $mailed        = $schema->resultset(q{MailRunProjectFollower});
   my $mail_complete = {};
   my $mail_archived = {};
-  while (my $mail = $mailed->next()) {
-    if ($mail->run_complete_sent()) {
-      $mail_complete->{$mail->id_run()}++;
+  while ( my $mail = $mailed->next() ) {
+    if ( $mail->run_complete_sent() ) {
+      $mail_complete->{ $mail->id_run() }++;
     }
-    if ($mail->run_archived_sent()) {
-      $mail_archived->{$mail->id_run()}++;
+    if ( $mail->run_archived_sent() ) {
+      $mail_archived->{ $mail->id_run() }++;
     }
   }
 
-  # get all runs which have a status of run complete, but have not yet had an email sent out
-  my $no_run_complete_sent = $self->_runs_which_have_not_had_email_for_status(q{run complete}, $mail_complete);
+# get all runs which have a status of run complete, but have not yet had an email sent out
+  my $no_run_complete_sent
+      = $self->_runs_which_have_not_had_email_for_status( q{run complete},
+    $mail_complete );
 
-  # get all runs which have a status of run archived, but have not yet had an email sent out
-  my $no_run_archived_sent = $self->_runs_which_have_not_had_email_for_status(q{run archived}, $mail_archived);
+# get all runs which have a status of run archived, but have not yet had an email sent out
+  my $no_run_archived_sent
+      = $self->_runs_which_have_not_had_email_for_status( q{run archived},
+    $mail_archived );
 
   $self->_set_complete($no_run_complete_sent);
   $self->_set_archived($no_run_archived_sent);
 
-  # currently only performing on two statuses, so return whichever one the initial request was for
-  if ($type eq q{complete}) {
+# currently only performing on two statuses, so return whichever one the initial request was for
+  if ( $type eq q{complete} ) {
     return $no_run_complete_sent;
   }
 
@@ -97,16 +111,17 @@ sub _populate_sent_arrays {
 
 # refactoring common code for determining non-sent status emails for run
 sub _runs_which_have_not_had_email_for_status {
-  my ($self, $status, $mailed) = @_;
+  my ( $self, $status, $mailed ) = @_;
 
   my $schema = $self->schema_connection();
 
-  # get all run statuses with matching description, and process them against the hash keys in the mailed list
-  my $rss = $schema->resultset(q(RunStatusDict))->find( {description => $status} )->run_statuses();
+# get all run statuses with matching description, and process them against the hash keys in the mailed list
+  my $rss = $schema->resultset(q(RunStatusDict))
+      ->find( { description => $status } )->run_statuses();
   my $not_sent = [];
-  while (my $rs = $rss->next()) {
+  while ( my $rs = $rss->next() ) {
     my $id_run = $rs->id_run();
-    if (!$mailed->{$id_run}) {
+    if ( !$mailed->{$id_run} ) {
       push @{$not_sent}, $rs->id_run();
     }
   }
@@ -117,8 +132,8 @@ sub _runs_which_have_not_had_email_for_status {
 sub _mail_run_complete {
   my ($self) = @_;
 
-  if (scalar @{$self->_no_run_complete_sent()}) {
-    $self->_mail_group($self->_no_run_complete_sent(), q{run_complete});
+  if ( scalar @{ $self->_no_run_complete_sent() } ) {
+    $self->_mail_group( $self->_no_run_complete_sent(), q{run_complete} );
   }
 
   return 1;
@@ -128,8 +143,8 @@ sub _mail_run_complete {
 sub _mail_run_archived {
   my ($self) = @_;
 
-  if (scalar @{$self->_no_run_archived_sent()}) {
-    $self->_mail_group($self->_no_run_archived_sent(), q{run_archived});
+  if ( scalar @{ $self->_no_run_archived_sent() } ) {
+    $self->_mail_group( $self->_no_run_archived_sent(), q{run_archived} );
   }
 
   return 1;
@@ -137,7 +152,7 @@ sub _mail_run_archived {
 
 # mail the group, and save out the timestamp that the mails where sent
 sub _mail_group {
-  my ($self, $runs_to_mail, $status) = @_;
+  my ( $self, $runs_to_mail, $status ) = @_;
 
   my $template = $status . q{.tt2};
 
@@ -146,15 +161,14 @@ sub _mail_group {
 
   my $schema = $self->schema_connection();
 
-  foreach my $id_run (@{$runs_to_mail}) {
+  foreach my $id_run ( @{$runs_to_mail} ) {
 
     my $info;
     my $skip;
-    # unfortunately, the dependency on Sequencescape can cause problems if there is just a problem with 1 batch
-    # we will skip to the next run if this is the case
-    eval {
-      $info = $self->study_lane_followers($id_run);
-    } or do {
+
+# unfortunately, the dependency on Sequencescape can cause problems if there is just a problem with 1 batch
+# we will skip to the next run if this is the case
+    eval { $info = $self->study_lane_followers($id_run); } or do {
       $skip++;
       carp qq{$EVAL_ERROR - this is not fatal, moving to next run};
     };
@@ -164,38 +178,45 @@ sub _mail_group {
     eval {
       my $template_obj = $self->email_templates_object();
 
-      foreach my $project (sort keys %{$info}) {
+      foreach my $project ( sort keys %{$info} ) {
 
-        $template_obj->process($template, {
-            project => $project,
-            run => $id_run,
-            lanes => $info->{$project}->{lanes},
-          });
+        $template_obj->process(
+          $template,
+          { project => $project,
+            run     => $id_run,
+            lanes   => $info->{$project}->{lanes},
+          }
+        );
 
         my $tos = $info->{$project}->{followers};
 
-        foreach my $to (@{$tos}) {
-          if ($to !~ /@/xms) {
+        foreach my $to ( @{$tos} ) {
+          if ( $to !~ /@/xms ) {
             $to .= $self->default_recipient_host();
           }
         }
 
-        $self->send_email({
-            body => $self->next_email(),
-            to => $tos,
-            subject => q{Run } . $id_run . q{ - } . $subject_suitable_status . q{ - } . $project,
-          });
+        $self->send_email(
+          { body    => $self->next_email(),
+            to      => $tos,
+            subject => q{Run }
+                . $id_run . q{ - }
+                . $subject_suitable_status . q{ - }
+                . $project,
+          }
+        );
       }
 
       # now record that emails for this lane at this status was sent was sent
       my $ts = strftime '%Y-%m-%d %H:%M:%S', localtime time;
 
       my $column = $status . q{_sent};
-      $schema->resultset(q{MailRunProjectFollower})->update_or_create({id_run => $id_run, $column => $ts});
+      $schema->resultset(q{MailRunProjectFollower})
+          ->update_or_create( { id_run => $id_run, $column => $ts } );
       1;
-    }
-    or do {
-      croak qq{Failed to send emails/update sent for run $id_run - $EVAL_ERROR};
+    } or do {
+      croak
+          qq{Failed to send emails/update sent for run $id_run - $EVAL_ERROR};
     };
 
   }

@@ -62,13 +62,14 @@ you have specified
 
 =cut
 
-
 sub new {
   my ( $class, $data ) = @_;
   $data ||= {};
   my $wanted_object;
 
-  if ( ! $data->{event_row} && ( ! $data->{entity_type} || ! $data->{event_type} ) ) {
+  if ( !$data->{event_row}
+    && ( !$data->{entity_type} || !$data->{event_type} ) )
+  {
     return;
   }
 
@@ -78,9 +79,9 @@ sub new {
   eval {
     $wanted_object = Module::PluginFinder->new(
       search_path => 'npg::email::event',
-      filter => sub {
-        my ($filter_class, $imported_data) = @_;
-        $filter_class->understands($imported_data)
+      filter      => sub {
+        my ( $filter_class, $imported_data ) = @_;
+        $filter_class->understands($imported_data);
       }
     )->construct( $data, $data );
   } or do {
@@ -89,7 +90,6 @@ sub new {
   };
   return $wanted_object;
 }
-
 
 1;
 __END__

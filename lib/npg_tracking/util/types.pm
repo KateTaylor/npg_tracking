@@ -17,37 +17,23 @@ Readonly::Scalar our $POSITION_MAX  => 9;
 Readonly::Scalar our $TAG_INDEX_MIN => 0;
 Readonly::Scalar our $TAG_INDEX_MAX => 999;
 
-subtype 'NpgTrackingReadableFile'
-      => as 'Str'
-      => where { -r $_ };
+subtype 'NpgTrackingReadableFile' => as 'Str' => where { -r $_ };
 
-subtype 'NpgTrackingExecutable'
-      => as 'Str'
-      => where { -x $_ };
+subtype 'NpgTrackingExecutable' => as 'Str' => where { -x $_ };
 
-subtype 'NpgTrackingDirectory'
-      => as 'Str'
-      => where { -d $_ };
+subtype 'NpgTrackingDirectory' => as 'Str' => where { -d $_ };
 
-subtype 'NpgTrackingNonNegativeInt'
-      => as 'Int'
-      => where { $_ >= 0 };
+subtype 'NpgTrackingNonNegativeInt' => as 'Int' => where { $_ >= 0 };
 
-subtype 'NpgTrackingPositiveInt'
-      => as 'Int'
-      => where { $_ > 0 };
+subtype 'NpgTrackingPositiveInt' => as 'Int' => where { $_ > 0 };
 
-subtype 'NpgTrackingRunId'
-      => as 'NpgTrackingPositiveInt';
+subtype 'NpgTrackingRunId' => as 'NpgTrackingPositiveInt';
 
-subtype 'NpgTrackingLaneNumber'
-      => as 'Int'
-      => where { $_ >= $POSITION_MIN && $_ <= $POSITION_MAX };
+subtype 'NpgTrackingLaneNumber' => as 'Int' =>
+    where { $_ >= $POSITION_MIN && $_ <= $POSITION_MAX };
 
-subtype 'NpgTrackingTagIndex'
-      => as 'Int'
-      => where { $_ >= $TAG_INDEX_MIN && $_ <= $TAG_INDEX_MAX };
-
+subtype 'NpgTrackingTagIndex' => as 'Int' =>
+    where { $_ >= $TAG_INDEX_MIN && $_ <= $TAG_INDEX_MAX };
 
 no Moose::Util::TypeConstraints;
 

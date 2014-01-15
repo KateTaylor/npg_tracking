@@ -39,7 +39,7 @@ Returns a run resultset object based on the id_run provided
 =cut
 
 sub get_run {
-  my ($self, $id_run) = @_;
+  my ( $self, $id_run ) = @_;
   return $self->schema_connection()->resultset(q{Run})->find($id_run);
 }
 
@@ -50,9 +50,9 @@ Returns a run-level st::api::lims object
 =cut
 
 sub get_lims {
-  my ($self, $id_run) = @_;
+  my ( $self, $id_run ) = @_;
   my $batch_id = $self->get_run($id_run)->batch_id();
-  return st::api::lims->new(batch_id => $batch_id, id_run => $id_run);
+  return st::api::lims->new( batch_id => $batch_id, id_run => $id_run );
 }
 
 =head2 study_lane_followers
@@ -74,27 +74,33 @@ Provides a hashref of studys from given batch, with lanes that are in the study,
 =cut
 
 sub study_lane_followers {
-  my ($self, $id_run) = @_;
+  my ( $self, $id_run ) = @_;
 
   my $return_hash = {};
   eval {
-    my $lims = $self->get_lims($id_run);
+    my $lims                = $self->get_lims($id_run);
     my $with_spiked_control = 0;
-    foreach my $child_lims ($lims->associated_child_lims) {
+    foreach my $child_lims ( $lims->associated_child_lims ) {
       my $position = $child_lims->position;
-      foreach my $study_name ($child_lims->study_names($with_spiked_control)) {
-        if ( !exists $return_hash->{ $study_name } ) {
+      foreach
+          my $study_name ( $child_lims->study_names($with_spiked_control) )
+      {
+        if ( !exists $return_hash->{$study_name} ) {
           $return_hash->{$study_name}->{followers} = undef;
-          $return_hash->{$study_name}->{lanes} = [];
+          $return_hash->{$study_name}->{lanes}     = [];
         }
-        push @{ $return_hash->{$study_name}->{lanes} }, {position => $position,library => $child_lims->library_name,};
+        push @{ $return_hash->{$study_name}->{lanes} },
+            { position => $position, library => $child_lims->library_name, };
       }
     }
 
-    foreach my $dlims ($lims->associated_lims) {
+    foreach my $dlims ( $lims->associated_lims ) {
       my $study_name = $dlims->study_name;
-      if ( $study_name && exists $return_hash->{$study_name} && !$return_hash->{$study_name}->{followers} ) {
-	my @addresses = $dlims->email_addresses;
+      if ( $study_name
+        && exists $return_hash->{$study_name}
+        && !$return_hash->{$study_name}->{followers} )
+      {
+        my @addresses = $dlims->email_addresses;
         $return_hash->{$study_name}->{followers} = $dlims->email_addresses;
       }
     }
@@ -105,7 +111,6 @@ sub study_lane_followers {
 
   return $return_hash;
 }
-
 
 =head2 id_run
 
@@ -123,15 +128,12 @@ sub _build_id_run {
   my ($self) = @_;
 
   my $id_run;
-  eval {
-    $id_run = $self->entity->id_run();
-  } or do {
+  eval { $id_run = $self->entity->id_run(); } or do {
     $id_run = $self->entity->run_lane->id_run();
   };
 
   return $id_run;
 }
-
 
 =head2 batch details
 
@@ -148,28 +150,28 @@ has batch_details => (
 sub _build_batch_details {
   my ($self) = @_;
 
-  my $details = {error => q{}, lanes => [], batch_id => undef,};
+  my $details = { error => q{}, lanes => [], batch_id => undef, };
   eval {
-    my $lims = $self->get_lims($self->id_run);
+    my $lims = $self->get_lims( $self->id_run );
     $details->{batch_id} = $lims->batch_id;
 
-    foreach my $child_lims ($lims->associated_child_lims) {
-      push @{ $details->{lanes} }, {
+    foreach my $child_lims ( $lims->associated_child_lims ) {
+      push @{ $details->{lanes} },
+          {
         position     => $child_lims->position,
         library      => $child_lims->library_name,
         control      => $child_lims->is_control,
         request_id   => $child_lims->request_id,
         req_ent_name => 'request',
-      };
+          };
     }
     1;
   } or do {
-     $details->{error} = $EVAL_ERROR;
+    $details->{error} = $EVAL_ERROR;
   };
 
   return $details;
 }
-
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

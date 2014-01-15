@@ -14,11 +14,11 @@ use npg::model::usergroup;
 use npg::model::user2usergroup;
 use English qw(-no_match_vars);
 use Carp;
-use Digest::SHA qw(sha256_hex);;
+use Digest::SHA qw(sha256_hex);
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15395 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields { return qw(id_user username rfid); }
 
@@ -31,14 +31,17 @@ sub init {
   }
 
   # try to get the id_user from the username (i.e. logged in through sso)
-  if ( $self->{'username'} &&
-       ! $self->{'id_user'} ) {
+  if ( $self->{'username'}
+    && !$self->{'id_user'} )
+  {
     my $query = q(SELECT id_user
                   FROM   user
                   WHERE  username = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref( $query, {}, $self->username() );
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {},
+        $self->username() );
     } or do {
       carp $EVAL_ERROR;
       return;
@@ -52,16 +55,17 @@ sub init {
   my $capture_username = $self->{username};
 
   # if that failed, see it the user has beeped in their rfid
-  if ( $self->{rfid} && ! $self->{id_user} ) {
+  if ( $self->{rfid} && !$self->{id_user} ) {
 
     $self->{username} = undef;
 
     my $query = q(SELECT id_user
                   FROM   user
                   WHERE  rfid = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref( $query, {}, $self->rfid() );
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {}, $self->rfid() );
     } or do {
       carp $EVAL_ERROR;
       return;
@@ -72,7 +76,7 @@ sub init {
     }
   }
 
-  if ( ! $self->{id_user} ) {
+  if ( !$self->{id_user} ) {
     $self->{username} = $capture_username || q{public};
   }
 
@@ -80,25 +84,31 @@ sub init {
 }
 
 sub usergroups {
-  my $self  = shift;
+  my $self = shift;
 
-  if(!$self->{'usergroups'}) {
-    my $pkg   = 'npg::model::usergroup';
-    my $query = qq(SELECT @{[join q(, ), map { "ug.$_" } $pkg->fields()]}, uug.id_user_usergroup
+  if ( !$self->{'usergroups'} ) {
+    my $pkg = 'npg::model::usergroup';
+    my $query
+        = qq(SELECT @{[join q(, ), map { "ug.$_" } $pkg->fields()]}, uug.id_user_usergroup
                    FROM   @{[$pkg->table()]} ug,
                           user2usergroup     uug
                    WHERE  uug.id_user     = ?
                    AND    ug.id_usergroup = uug.id_usergroup);
-    $self->{'usergroups'} = $self->gen_getarray( $pkg, $query, $self->id_user());
+    $self->{'usergroups'}
+        = $self->gen_getarray( $pkg, $query, $self->id_user() );
   }
   return $self->{'usergroups'};
 }
 
 sub is_member_of {
-  my ($self, $groupname) = @_;
-  if(scalar grep { $_->groupname() eq $groupname ||
-    (($groupname ne 'analyst') && ($_->groupname() eq 'admin' ))}
-     @{$self->usergroups()}) {
+  my ( $self, $groupname ) = @_;
+  if (
+    scalar grep {
+      $_->groupname() eq $groupname
+          || ( ( $groupname ne 'analyst' ) && ( $_->groupname() eq 'admin' ) )
+    } @{ $self->usergroups() }
+      )
+  {
     return 1;
   }
   return;
@@ -111,8 +121,9 @@ sub users {
 
 sub runs_loaded {
   my $self = shift;
-  if(!$self->{runs_loaded}) {
-    my $query = q(SELECT i.name AS instrument, r.id_run AS id_run, DATE(rs.date) AS date
+  if ( !$self->{runs_loaded} ) {
+    my $query
+        = q(SELECT i.name AS instrument, r.id_run AS id_run, DATE(rs.date) AS date
                   FROM   instrument i, run_status rs, run_status_dict rsd, run r
                   WHERE  rs.id_user = ?
                   AND    rs.id_run_status_dict = rsd.id_run_status_dict
@@ -122,10 +133,10 @@ sub runs_loaded {
                   ORDER BY rs.date DESC);
     my $dbh = $self->util->dbh();
     my $sth = $dbh->prepare($query);
-    $sth->execute($self->id_user());
+    $sth->execute( $self->id_user() );
     $self->{runs_loaded} = [];
-    while (my $row = $sth->fetchrow_hashref()) {
-      push @{$self->{runs_loaded}}, $row;
+    while ( my $row = $sth->fetchrow_hashref() ) {
+      push @{ $self->{runs_loaded} }, $row;
     }
   }
   return $self->{runs_loaded};

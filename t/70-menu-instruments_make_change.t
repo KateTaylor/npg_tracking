@@ -16,32 +16,47 @@ use npg::model::instrument_mod;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15060 $ =~ /(\d+)/mx; $r; };
 
 use_ok('npg::view::instrument_mod');
-my $util = t::util->new({ fixtures => 1, cgi => CGI->new() });
+my $util = t::util->new( { fixtures => 1, cgi => CGI->new() } );
 {
-  $util->requestor(q(joe_loader));
+    $util->requestor(q(joe_loader));
 
-  my $view = npg::view::instrument_mod->new({
-					     util   => $util,
-					     action => 'list',
-					     aspect => q{},
-					     model  => npg::model::instrument_mod->new({
-											util => $util,
-										       }),
-					    });
-  my $render;
-  eval { $render = $view->render(); };
-  
-  ok($util->test_rendered($render, 't/data/rendered/menus/instruments_make_change_mods.html'), 'menu instruments>make_change>mods');
+    my $view = npg::view::instrument_mod->new(
+        {
+            util   => $util,
+            action => 'list',
+            aspect => q{},
+            model  => npg::model::instrument_mod->new(
+                {
+                    util => $util,
+                }
+            ),
+        }
+    );
+    my $render;
+    eval { $render = $view->render(); };
+
+    ok(
+        $util->test_rendered(
+            $render, 't/data/rendered/menus/instruments_make_change_mods.html'
+        ),
+        'menu instruments>make_change>mods'
+    );
 }
 
-
 {
-  my $str = t::request->new({
-			     PATH_INFO      => '/instrument/edit_statuses',
-			     REQUEST_METHOD => 'GET',
-			     username       => 'joe_loader',
-			     util           => $util,
-			    });
+    my $str = t::request->new(
+        {
+            PATH_INFO      => '/instrument/edit_statuses',
+            REQUEST_METHOD => 'GET',
+            username       => 'joe_loader',
+            util           => $util,
+        }
+    );
 
-  ok($util->test_rendered($str,  't/data/rendered/menus/instruments_make_change_statuses.html'), 'menu instruments>make_change>edit_statuses');
+    ok(
+        $util->test_rendered(
+            $str, 't/data/rendered/menus/instruments_make_change_statuses.html'
+        ),
+        'menu instruments>make_change>edit_statuses'
+    );
 }

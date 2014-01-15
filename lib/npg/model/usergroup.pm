@@ -17,26 +17,29 @@ use npg::model::event_type;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields { return qw(id_usergroup groupname is_public description); }
 
 sub init {
   my $self = shift;
-  if($self->{'groupname'} &&
-     !$self->{'id_usergroup'}) {
+  if ( $self->{'groupname'}
+    && !$self->{'id_usergroup'} )
+  {
     my $query = q(SELECT id_usergroup
                   FROM   usergroup
                   WHERE  groupname = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->groupname());
+      $ref
+          = $self->util->dbh->selectall_arrayref( $query, {},
+        $self->groupname() );
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_usergroup'} = $ref->[0]->[0];
     }
   }
@@ -51,18 +54,19 @@ sub usergroups {
 
 sub public_usergroups {
   my $self = shift;
-  return [grep { $_->is_public() } @{$self->usergroups()}];
+  return [ grep { $_->is_public() } @{ $self->usergroups() } ];
 }
 
 sub users {
-  my ($self, $users) = @_;
+  my ( $self, $users ) = @_;
 
-  if(!$self->{'users'}) {
+  if ( !$self->{'users'} ) {
     my $pkg   = 'npg::model::user';
     my $query = q(SELECT id_user
                   FROM   user2usergroup uug
                   WHERE  uug.id_usergroup = ?);
-    $self->{'users'} = $self->gen_getarray($pkg, $query, $self->id_usergroup());
+    $self->{'users'}
+        = $self->gen_getarray( $pkg, $query, $self->id_usergroup() );
   }
 
   return $self->{'users'};
@@ -71,14 +75,15 @@ sub users {
 sub event_types {
   my $self = shift;
 
-  if(!$self->{'event_types'}) {
+  if ( !$self->{'event_types'} ) {
     my $pkg   = q(npg::model::event_type);
     my $query = qq(SELECT @{[join q(, ), map { "et.$_" } $pkg->fields()]}
                    FROM   @{[$pkg->table()]}    et,
                           event_type_subscriber ets
                    WHERE  ets.id_usergroup  = ?
                    AND    ets.id_event_type = et.id_event_type);
-    $self->{'event_types'} = $self->gen_getarray($pkg, $query, $self->id_usergroup());
+    $self->{'event_types'}
+        = $self->gen_getarray( $pkg, $query, $self->id_usergroup() );
   }
 
   return $self->{'event_types'};

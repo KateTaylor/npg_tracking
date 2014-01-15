@@ -18,34 +18,36 @@ with qw{npg_tracking::illumina::run::short_info};
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16549 $ =~ /(\d+)/mxs; $r; };
 
-has 'no_npg_check'=>  ( isa            => q{Bool},
-                         is            => q{rw},
-                         documentation => q{option to stop checking run_folder from npg},
-                         default       => 0,
-                       );
+has 'no_npg_check' => (
+  isa           => q{Bool},
+  is            => q{rw},
+  documentation => q{option to stop checking run_folder from npg},
+  default       => 0,
+);
 
-has 'npg_api_run' =>  ( isa => q{npg::api::run},
-                        is => q{rw},
-                        lazy_build => 1,
-                        documentation => 'npg api run object',
-                       );
+has 'npg_api_run' => (
+  isa           => q{npg::api::run},
+  is            => q{rw},
+  lazy_build    => 1,
+  documentation => 'npg api run object',
+);
 
 sub _build_npg_api_run {
   my $self = shift;
-  return npg::api::run->new({id_run => $self->id_run,});
+  return npg::api::run->new( { id_run => $self->id_run, } );
 }
 
-sub check{
+sub check {
   my $self = shift;
 
   my $run_folder = $self->run_folder();
-  if($self->no_npg_check){
+  if ( $self->no_npg_check ) {
     carp "Run folder $run_folder will not be checked by NPG";
     return 1;
   }
 
   my $run_folder_npg;
-  eval{
+  eval {
     $run_folder_npg = $self->npg_api_run->run_folder();
     1;
   } or do {
@@ -53,7 +55,7 @@ sub check{
     return;
   };
 
-  if(! ($run_folder eq $run_folder_npg )){
+  if ( !( $run_folder eq $run_folder_npg ) ) {
     carp "Run folder $run_folder does not match $run_folder_npg from NPG";
     return;
   }

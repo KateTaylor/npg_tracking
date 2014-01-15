@@ -13,19 +13,20 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 use npg_tracking::util::types;
 
-Readonly::Scalar our $TAG_DELIM      => q[#];
+Readonly::Scalar our $TAG_DELIM => q[#];
 
-
-has 'tag_index'   => (isa        => 'Maybe[NpgTrackingTagIndex]',
-                      is         => 'rw',
-                      predicate  => 'has_tag_index',
-                      required   => 0,
-                     );
+has 'tag_index' => (
+  isa       => 'Maybe[NpgTrackingTagIndex]',
+  is        => 'rw',
+  predicate => 'has_tag_index',
+  required  => 0,
+);
 
 sub tag_label {
-    my $self = shift;
-    my $tag_label = defined $self->tag_index ? $TAG_DELIM . $self->tag_index : q[];
-    return $tag_label;
+  my $self = shift;
+  my $tag_label
+      = defined $self->tag_index ? $TAG_DELIM . $self->tag_index : q[];
+  return $tag_label;
 }
 
 1;

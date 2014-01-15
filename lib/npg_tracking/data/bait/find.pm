@@ -20,85 +20,108 @@ with qw/ npg_tracking::data::reference::find /;
 
 Readonly::Scalar my $STRAIN_ARRAY_INDEX => 1;
 
-has 'bait_name'     => ( isa => q{Maybe[Str]}, is => q{ro}, lazy_build => 1,
-			 documentation => 'Bate name',);
+has 'bait_name' => (
+  isa           => q{Maybe[Str]},
+  is            => q{ro},
+  lazy_build    => 1,
+  documentation => 'Bate name',
+);
+
 sub _build_bait_name {
   my $self = shift;
   return $self->lims->bait_name;
 }
 
-has 'bait_path'     => ( isa => q{Maybe[Str]}, is => q{ro}, lazy_build => 1,
-                                 documentation => 'Path to the bait folder',);
+has 'bait_path' => (
+  isa           => q{Maybe[Str]},
+  is            => q{ro},
+  lazy_build    => 1,
+  documentation => 'Path to the bait folder',
+);
+
 sub _build_bait_path {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $bait_name = $self->bait_name;
   if ($bait_name) {
+
     # trim all white space around the name
     $bait_name =~ s/\A(\s)+//smx;
     $bait_name =~ s/(\s)+\z//smx;
   }
-  if (!$bait_name) {
+  if ( !$bait_name ) {
     $self->messages->push('Bait name not available.');
     return;
   }
-  $bait_name =~ s/ /_/gsm;     # replace spaces with underscores
-  my @refs = @{$self->refs};
-  if (!@refs) {
+  $bait_name =~ s/ /_/gsm;    # replace spaces with underscores
+  my @refs = @{ $self->refs };
+  if ( !@refs ) {
     $self->messages->push('No reference found');
     return;
   }
-  if (scalar @refs > 1) {
+  if ( scalar @refs > 1 ) {
     ##no critic (ProhibitParensWithBuiltins)
-    croak 'Multiple references returned: ' . join(q[ ], @refs);
+    croak 'Multiple references returned: ' . join( q[ ], @refs );
     ##use critic
   }
-  my $reference = $refs[0];
+  my $reference  = $refs[0];
   my $repository = $self->ref_repository;
-  $reference =~ s/.*$repository//smx;   # remove ref repository path
-  my @a = split /\//smx,$reference;
-  while (!$a[0]) {
+  $reference =~ s/.*$repository//smx;    # remove ref repository path
+  my @a = split /\//smx, $reference;
+  while ( !$a[0] ) {
     shift @a;
   }
 
-  my $bpath = catdir($self->bait_repository, $bait_name, $a[$STRAIN_ARRAY_INDEX]);
-  if (!-d $bpath) {
-    $self->messages->push('Bait directory ' . $bpath . ' does not exist');
+  my $bpath
+      = catdir( $self->bait_repository, $bait_name, $a[$STRAIN_ARRAY_INDEX] );
+  if ( !-d $bpath ) {
+    $self->messages->push( 'Bait directory ' . $bpath . ' does not exist' );
     return;
   }
   return $bpath;
 }
 
-has 'bait_intervals_path'   => ( isa => 'Maybe[Str]', is => 'ro', lazy_build => 1, writer => '_set_bait_intervals_path',);
-sub _build_bait_intervals_path
-{
+has 'bait_intervals_path' => (
+  isa        => 'Maybe[Str]',
+  is         => 'ro',
+  lazy_build => 1,
+  writer     => '_set_bait_intervals_path',
+);
+
+sub _build_bait_intervals_path {
   my $self = shift;
   return $self->_intervals_paths ? $self->_intervals_paths->[0] : undef;
 }
 
-has 'target_intervals_path' => ( isa => 'Maybe[Str]', is => 'ro', lazy_build => 1, writer => '_set_target_intervals_path',);
-sub _build_target_intervals_path
-{
+has 'target_intervals_path' => (
+  isa        => 'Maybe[Str]',
+  is         => 'ro',
+  lazy_build => 1,
+  writer     => '_set_target_intervals_path',
+);
+
+sub _build_target_intervals_path {
   my $self = shift;
   return $self->_intervals_paths ? $self->_intervals_paths->[1] : undef;
 }
 
-has '_intervals_paths' => ( isa => 'ArrayRef', is => 'ro', lazy_build => 1,);
+has '_intervals_paths' => ( isa => 'ArrayRef', is => 'ro', lazy_build => 1, );
+
 sub _build__intervals_paths {
-  my $self = shift;
+  my $self  = shift;
   my @files = ();
-  if ($self->bait_path) {
+  if ( $self->bait_path ) {
     @files = glob $self->bait_path . '/*.interval_list';
-    if (scalar @files != 2) {
+    if ( scalar @files != 2 ) {
       croak 'Wrong number of files in ' . $self->bait_path;
     }
     @files = sort @files;
     my $crt = $files[0];
-    if ($crt !~ /CTR\.interval_list$/xms) {
+    if ( $crt !~ /CTR\.interval_list$/xms ) {
       croak 'No CTR interval list';
     }
 
     my $ptr = $files[1];
-    if ($ptr !~ /PTR\.interval_list$/xms) {
+    if ( $ptr !~ /PTR\.interval_list$/xms ) {
       croak 'No PTR interval list';
     }
   }

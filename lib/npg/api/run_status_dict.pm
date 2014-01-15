@@ -16,36 +16,41 @@ use Readonly;
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_run_status_dict description);
 }
 
 sub new {
-  my ($class, @args) = @_;
+  my ( $class, @args ) = @_;
   my $self = $class->SUPER::new(@args);
 
-  if(!$self->{'id_run_status_dict'} &&
-     $self->{'description'}) {
+  if (!$self->{'id_run_status_dict'}
+    && $self->{'description'} )
+  {
     my $all_rsd = $self->run_status_dicts();
-    my ($rsd)   = grep { $_->description() eq $self->{'description'} } @{$all_rsd};
+    my ($rsd)
+        = grep { $_->description() eq $self->{'description'} } @{$all_rsd};
     return $rsd;
   }
   return $self;
 }
 
 sub run_status_dicts {
-  my $self             = shift;
-  my $run_status_dicts = $self->list->getElementsByTagName('run_status_dicts')->[0];
-  my $pkg              = ref $self;
-  return [map { $self->new_from_xml($pkg, $_); } $run_status_dicts->getElementsByTagName('run_status_dict')];
+  my $self = shift;
+  my $run_status_dicts
+      = $self->list->getElementsByTagName('run_status_dicts')->[0];
+  my $pkg = ref $self;
+  return [ map { $self->new_from_xml( $pkg, $_ ); }
+        $run_status_dicts->getElementsByTagName('run_status_dict') ];
 }
 
 sub runs {
-  my $self    = shift;
-  my $runs    = $self->read->getElementsByTagName('runs')->[0];
-  return [map { $self->new_from_xml('npg::api::run', $_); } $runs->getElementsByTagName('run')];
+  my $self = shift;
+  my $runs = $self->read->getElementsByTagName('runs')->[0];
+  return [ map { $self->new_from_xml( 'npg::api::run', $_ ); }
+        $runs->getElementsByTagName('run') ];
 }
 
 1;

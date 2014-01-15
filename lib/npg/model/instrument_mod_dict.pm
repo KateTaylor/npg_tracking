@@ -15,27 +15,29 @@ use Carp;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_instrument_mod_dict
-            description
-            revision);
+      description
+      revision);
 }
 
 sub instrument_mod_dicts {
-  my $self  = shift;
-  my $dbh   = $self->util->dbh();
-  my $pkg   = ref $self;
-  my $query = q{SELECT * FROM instrument_mod_dict ORDER BY description, revision};
-  return $self->gen_getarray($pkg, $query);
+  my $self = shift;
+  my $dbh  = $self->util->dbh();
+  my $pkg  = ref $self;
+  my $query
+      = q{SELECT * FROM instrument_mod_dict ORDER BY description, revision};
+  return $self->gen_getarray( $pkg, $query );
 }
 
 sub descriptions {
-  my $self  = shift;
-  my $dbh   = $self->util->dbh();
-  my $query = q{SELECT DISTINCT description FROM instrument_mod_dict ORDER BY description};
-  return $dbh->selectall_arrayref($query, {});
+  my $self = shift;
+  my $dbh  = $self->util->dbh();
+  my $query
+      = q{SELECT DISTINCT description FROM instrument_mod_dict ORDER BY description};
+  return $dbh->selectall_arrayref( $query, {} );
 }
 
 1;

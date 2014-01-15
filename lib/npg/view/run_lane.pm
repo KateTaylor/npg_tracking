@@ -28,12 +28,18 @@ sub authorised {
   my $action    = $self->action();
   my $requestor = $util->requestor();
 
-  if($aspect eq 'update_xml' &&
-     $requestor->is_member_of('pipeline')) {
+  if ( $aspect eq 'update_xml'
+    && $requestor->is_member_of('pipeline') )
+  {
     return 1;
   }
 
-  if( $aspect eq 'update_tags' && ($requestor->is_member_of('annotators') || $requestor->is_member_of('manual_qc')) ) {
+  if (
+    $aspect eq 'update_tags'
+    && ( $requestor->is_member_of('annotators')
+      || $requestor->is_member_of('manual_qc') )
+      )
+  {
     return 1;
   }
 
@@ -41,14 +47,15 @@ sub authorised {
 }
 
 sub update {
-  my ($self, @args) = @_;
-  my $util     = $self->util();
-  my $cgi      = $util->cgi();
-#  my $good_bad = $cgi->param('good_bad');
+  my ( $self, @args ) = @_;
+  my $util = $self->util();
+  my $cgi  = $util->cgi();
 
-#  if(defined $good_bad && $good_bad eq q[]) {
-#    $cgi->delete('good_bad');
-#  }
+  #  my $good_bad = $cgi->param('good_bad');
+
+  #  if(defined $good_bad && $good_bad eq q[]) {
+  #    $cgi->delete('good_bad');
+  #  }
 
   return $self->SUPER::update(@args);
 }
@@ -119,16 +126,18 @@ sub update_status_to_qc_complete {
   my $self  = shift;
   my $model = $self->model;
   my $util  = $self->util;
-  my $rsd   = npg::model::run_status_dict->new({
-						description => 'qc complete',
-						util        => $util,
-					       });
-  my $run_status = npg::model::run_status->new({
-						id_run             => $model->id_run,
-						id_run_status_dict => $rsd->id_run_status_dict,
-						id_user            => $util->requestor->id_user,
-						util               => $util,
-					       });
+  my $rsd   = npg::model::run_status_dict->new(
+    { description => 'qc complete',
+      util        => $util,
+    }
+  );
+  my $run_status = npg::model::run_status->new(
+    { id_run             => $model->id_run,
+      id_run_status_dict => $rsd->id_run_status_dict,
+      id_user            => $util->requestor->id_user,
+      util               => $util,
+    }
+  );
   return $run_status->create;
 }
 
@@ -143,25 +152,27 @@ sub update_tags {
   my $cgi  = $util->cgi();
   my $dbh  = $util->dbh();
 
-  my (@tags, @specified_tags);
-  if ($cgi->param('tags')) { @tags = split q{ }, $cgi->param('tags'); };
-  if ($cgi->param('tagged_already')) { @specified_tags = split q{ }, $cgi->param('tagged_already'); };
-  my (%tagged_already, %saving_tags, %in_save_box, %removing_tags);
+  my ( @tags, @specified_tags );
+  if ( $cgi->param('tags') ) { @tags = split q{ }, $cgi->param('tags'); }
+  if ( $cgi->param('tagged_already') ) {
+    @specified_tags = split q{ }, $cgi->param('tagged_already');
+  }
+  my ( %tagged_already, %saving_tags, %in_save_box, %removing_tags );
 
   for my $tag (@specified_tags) {
     $tagged_already{$tag}++;
   }
 
   for my $tag (@tags) {
-    $in_save_box{lc$tag}++;
-    if ($tagged_already{$tag}) {
+    $in_save_box{ lc $tag }++;
+    if ( $tagged_already{$tag} ) {
       next;
     }
-    $saving_tags{lc$tag}++;
+    $saving_tags{ lc $tag }++;
   }
 
   for my $tag (@specified_tags) {
-    if ($in_save_box{$tag}) {
+    if ( $in_save_box{$tag} ) {
       next;
     }
     $removing_tags{$tag}++;
@@ -169,15 +180,15 @@ sub update_tags {
 
   my @tags_to_save   = sort keys %saving_tags;
   my @tags_to_remove = sort keys %removing_tags;
-  my $tr_state = $self->util->transactions();
+  my $tr_state       = $self->util->transactions();
 
   $self->util->transactions(0);
   eval {
-    if (scalar @tags_to_save) {
-      $self->model->save_tags(\@tags_to_save, $self->util->requestor());
+    if ( scalar @tags_to_save ) {
+      $self->model->save_tags( \@tags_to_save, $self->util->requestor() );
     }
-    if (scalar @tags_to_remove) {
-      $self->model->remove_tags(\@tags_to_remove, $self->util->requestor());
+    if ( scalar @tags_to_remove ) {
+      $self->model->remove_tags( \@tags_to_remove, $self->util->requestor() );
     }
     1;
 
@@ -185,7 +196,9 @@ sub update_tags {
     $self->util->transactions($tr_state);
 
     $tr_state and $dbh->rollback();
-    croak $EVAL_ERROR . q[Rolled back attempt to save info for the tags for run lane ] . $self->model->id_run_lane();
+    croak $EVAL_ERROR
+        . q[Rolled back attempt to save info for the tags for run lane ]
+        . $self->model->id_run_lane();
   };
 
   $self->util->transactions($tr_state);
@@ -195,10 +208,10 @@ sub update_tags {
 }
 
 sub render {
-  my ($self, @args) = @_;
+  my ( $self, @args ) = @_;
 
   my $aspect = $self->aspect();
-  if($aspect eq 'read_png') {
+  if ( $aspect eq 'read_png' ) {
     return $self->read_png();
   }
 

@@ -34,28 +34,28 @@ Readonly::Scalar our $HOURS_IN_DAY                       => 24;
 Readonly::Scalar our $MINUTES_IN_HOUR                    => 60;
 Readonly::Scalar our $PERCENTAGE                         => 100;
 Readonly::Scalar our $DAYS_TO_SUBTRACT                   => 30;
-Readonly::Scalar our $DEFAULT_GANTT_WIDTH  => 1_000;
-Readonly::Scalar our $DEFAULT_GANTT_HEIGHT => 400;
-Readonly::Scalar our $DEFAULT_GANTT_Y_TICK => 9;
+Readonly::Scalar our $DEFAULT_GANTT_WIDTH                => 1_000;
+Readonly::Scalar our $DEFAULT_GANTT_HEIGHT               => 400;
+Readonly::Scalar our $DEFAULT_GANTT_Y_TICK               => 9;
 
-
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a(['instrument','user']);
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a( [ 'instrument', 'user' ] );
 __PACKAGE__->has_many_through('annotation|instrument_status_annotation');
 
 sub fields {
   return qw(id_instrument_status
-            id_instrument
-            date
-            id_instrument_status_dict
-            id_user
-            iscurrent
-            comment);
+      id_instrument
+      date
+      id_instrument_status_dict
+      id_user
+      iscurrent
+      comment);
 }
 
 sub instrument_status_dict {
   my $self = shift;
-  $self->{instrument_status_dict} = undef; # kill cache of instrument status dict object, as stops being able to find description
+  $self->{instrument_status_dict} = undef
+      ; # kill cache of instrument status dict object, as stops being able to find description
   return $self->gen_getobj('npg::model::instrument_status_dict');
 }
 
@@ -63,40 +63,48 @@ sub _check_order_ok {
   my $self = shift;
 
   my $status = $self->instrument_status_dict;
-  my $new = $status->description();
-  if (!$status->iscurrent) {
+  my $new    = $status->description();
+  if ( !$status->iscurrent ) {
     croak "Status \"$new\" is depricated";
   }
   my $instrument = $self->instrument();
   my $status_obj = $instrument->current_instrument_status();
-  if(!$status_obj) { return; }
+  if ( !$status_obj ) { return; }
 
   my $current = $status_obj->instrument_status_dict->description();
-  if ($current eq $new) {
+  if ( $current eq $new ) {
     return;
   }
-  if (any {$_ eq $new} @{$instrument->possible_next_statuses4status($current)}) {
+  if ( any { $_ eq $new }
+    @{ $instrument->possible_next_statuses4status($current) } )
+  {
     return;
   }
 
-  croak q{Instrument } . $instrument->name() . qq{ "$new" status cannot follow current "$current" status};
+  croak q{Instrument }
+      . $instrument->name()
+      . qq{ "$new" status cannot follow current "$current" status};
 }
 
 sub _request_approval {
   my $self = shift;
 
   my $new_status = $self->instrument_status_dict->description();
-  if ($new_status ne 'up') {
+  if ( $new_status ne 'up' ) {
     return;
   }
 
   my $requestor  = $self->util()->requestor();
   my $instrument = $self->instrument();
-  my $cis_desc   = $instrument->current_instrument_status->instrument_status_dict->description();
+  my $cis_desc
+      = $instrument->current_instrument_status->instrument_status_dict
+      ->description();
 
-  if ($cis_desc eq 'request approval' &&
-      !$requestor->is_member_of('approvers')) {
-    croak "@{[$requestor->username()]} is not a member of 'approvers' usergroup";
+  if ( $cis_desc eq 'request approval'
+    && !$requestor->is_member_of('approvers') )
+  {
+    croak
+        "@{[$requestor->username()]} is not a member of 'approvers' usergroup";
   }
   return;
 }
@@ -111,46 +119,54 @@ sub create {
   $self->_check_order_ok();
 
   eval {
-    my $rows = $dbh->do(q(UPDATE instrument_status
+    my $rows = $dbh->do(
+      q(UPDATE instrument_status
                           SET    iscurrent     = 0
                           WHERE  id_instrument = ?), {},
-			$self->id_instrument());
+      $self->id_instrument()
+    );
 
-    my $query = q(INSERT INTO instrument_status (id_instrument,date,id_instrument_status_dict,id_user,iscurrent,comment)
+    my $query
+        = q(INSERT INTO instrument_status (id_instrument,date,id_instrument_status_dict,id_user,iscurrent,comment)
                   VALUES (?,now(),?,?,1,?));
 
-    $dbh->do($query, {},
-	     $self->id_instrument(),
-	     $self->id_instrument_status_dict(),
-	     $self->id_user(),
-	     $self->comment());
+    $dbh->do(
+      $query, {},
+      $self->id_instrument(),
+      $self->id_instrument_status_dict(),
+      $self->id_user(), $self->comment()
+    );
 
     #########
     # Sometimes we have to change automatically to the next status
     #
     my $next_status = $self->instrument->status_to_change_to();
     if ($next_status) {
-      my $isd = npg::model::instrument_status_dict->new({
-		util        => $util,
-	        description => $next_status,
-	     });
+      my $isd = npg::model::instrument_status_dict->new(
+        { util        => $util,
+          description => $next_status,
+        }
+      );
       #########
       # reset our iscurrent again
       #
-      $dbh->do(q(UPDATE instrument_status
+      $dbh->do(
+        q(UPDATE instrument_status
                  SET    iscurrent     = 0
                  WHERE  id_instrument = ?), {},
-	       $self->id_instrument());
+        $self->id_instrument()
+      );
 
-      $dbh->do($query, {},
-	       $self->id_instrument(),
-	       $isd->id_instrument_status_dict(),
-	       $self->id_user(),
-	       'automatic status update');
+      $dbh->do(
+        $query, {},
+        $self->id_instrument(),
+        $isd->id_instrument_status_dict(),
+        $self->id_user(), 'automatic status update'
+      );
     }
 
     my $idref = $dbh->selectall_arrayref('SELECT LAST_INSERT_ID()');
-    $self->id_instrument_status($idref->[0]->[0]);
+    $self->id_instrument_status( $idref->[0]->[0] );
 
     $util->transactions(0);
 
@@ -161,17 +177,19 @@ sub create {
                AND    ent.description = 'instrument_status'
                AND    evt.description = 'status change');
     my $id_event_type = $dbh->selectall_arrayref($query)->[0]->[0];
-    if (!$id_event_type) {
+    if ( !$id_event_type ) {
       croak qq[no id_event_type $query];
     }
 
-    my $event = npg::model::event->new({
-					util          => $util,
-					id_event_type => $id_event_type,
-					entity_id     => $self->id_instrument_status(),
-					id_user       => $self->id_user(),
-					description   => qq(New instrument_status: @{[$self->instrument_status_dict->description()||'unspecified']} for instrument @{[$self->instrument->name()||'unspecified']}\n@{[$self->comment()||'unspecified']}),
-				       });
+    my $event = npg::model::event->new(
+      { util          => $util,
+        id_event_type => $id_event_type,
+        entity_id     => $self->id_instrument_status(),
+        id_user       => $self->id_user(),
+        description =>
+            qq(New instrument_status: @{[$self->instrument_status_dict->description()||'unspecified']} for instrument @{[$self->instrument->name()||'unspecified']}\n@{[$self->comment()||'unspecified']}),
+      }
+    );
     $event->create();
 
   } or do {
@@ -195,64 +213,73 @@ sub create {
 }
 
 sub current_instrument_statuses {
-  my ($self, $limit) = @_;
+  my ( $self, $limit ) = @_;
 
-  if(!$self->{'current_instrument_statuses'}) {
+  if ( !$self->{'current_instrument_statuses'} ) {
     my $query = qq(SELECT @{[join q(, ), $self->fields()]}
                    FROM   @{[$self->table()]}
                    WHERE iscurrent = 1
                    ORDER BY date DESC);
-    if($limit) {
+    if ($limit) {
       $query .= qq( LIMIT $limit);
     }
-    $self->{'current_instrument_statuses'} = $self->gen_getarray(ref $self, $query);
+    $self->{'current_instrument_statuses'}
+        = $self->gen_getarray( ref $self, $query );
   }
 
   return $self->{'current_instrument_statuses'};
 }
 
 sub latest_current_instrument_status {
-  my $self  = shift;
+  my $self = shift;
 
-  if(!$self->{'latest_instrument_status'}) {
+  if ( !$self->{'latest_instrument_status'} ) {
     my $query = qq(SELECT @{[join q(, ), $self->fields()]}
                    FROM   @{[$self->table()]}
                    WHERE  iscurrent = 1
                    AND    date      = (SELECT MAX(date) FROM @{[$self->table()]}));
-    $self->{'latest_instrument_status'} = $self->gen_getarray(ref $self, $query)->[0];
+    $self->{'latest_instrument_status'}
+        = $self->gen_getarray( ref $self, $query )->[0];
   }
 
   return $self->{'latest_instrument_status'};
 }
 
 sub utilisation {
-  my ($self, $type) = @_;
-  my $util  = $self->util();
-  my $dbh   = $util->dbh();
+  my ( $self, $type ) = @_;
+  my $util = $self->util();
+  my $dbh  = $util->dbh();
   my $query;
 
-  if ($type && $type eq 'hour') {
+  if ( $type && $type eq 'hour' ) {
     $query = q(CREATE TEMPORARY TABLE date_range(date DATETIME NOT NULL));
-  } else {
+  }
+  else {
     $query = q(CREATE TEMPORARY TABLE date_range(date DATE NOT NULL));
   }
-  $dbh->do($query, {});
+  $dbh->do( $query, {} );
 
-  Readonly::Scalar my $INTERVAL => 30;
+  Readonly::Scalar my $INTERVAL     => 30;
   Readonly::Scalar my $HOURS_IN_DAY => 24;
-  for my $i (1..$INTERVAL) {
-    if ($type && $type eq 'hour') {
-      for my $h (0..($HOURS_IN_DAY-1)) {
-        $dbh->do(q(INSERT INTO date_range VALUES(DATE_SUB(NOW(), INTERVAL ? HOUR))), {}, $i*$HOURS_IN_DAY+$h);
+  for my $i ( 1 .. $INTERVAL ) {
+    if ( $type && $type eq 'hour' ) {
+      for my $h ( 0 .. ( $HOURS_IN_DAY - 1 ) ) {
+        $dbh->do(
+          q(INSERT INTO date_range VALUES(DATE_SUB(NOW(), INTERVAL ? HOUR))),
+          {},
+          $i * $HOURS_IN_DAY + $h
+        );
       }
-    } else {
-      $query = q(INSERT INTO date_range VALUES(DATE_SUB(NOW(), INTERVAL ? DAY)));
-      $dbh->do($query, {}, $i);
+    }
+    else {
+      $query
+          = q(INSERT INTO date_range VALUES(DATE_SUB(NOW(), INTERVAL ? DAY)));
+      $dbh->do( $query, {}, $i );
     }
   }
 
-  my $ic = scalar @{$self->instrument->current_instruments()};
-  if ($type && $type eq 'hour') {
+  my $ic = scalar @{ $self->instrument->current_instruments() };
+  if ( $type && $type eq 'hour' ) {
     $query = q{SELECT DATE_FORMAT(date_range.date, '%Y-%m-%d %H') AS date,
                FORMAT((100*COUNT(DISTINCT(id_instrument))/?), 2) AS perc_utilisation
                FROM   date_range
@@ -285,7 +312,8 @@ sub utilisation {
                AND runs.end   >= date_range.date
                GROUP BY DATE_FORMAT(date_range.date, '%Y-%m-%d %H')
                ORDER BY date_range.date};
-  } else {
+  }
+  else {
     $query = q{SELECT date_range.date,
                       FORMAT((100*COUNT(DISTINCT(id_instrument))/?), 2) AS perc_utilisation
                FROM   date_range
@@ -315,26 +343,27 @@ sub utilisation {
   $self->{'utilisation'} = [];
   my $sth = $dbh->prepare(qq{$query});
   $sth->execute($ic);
-  while (my $row = $sth->fetchrow_hashref()) {
-    push @{$self->{'utilisation'}}, $row;
+  while ( my $row = $sth->fetchrow_hashref() ) {
+    push @{ $self->{'utilisation'} }, $row;
   }
 
   $query = q(DROP TEMPORARY TABLE date_range);
-  $dbh->do($query, {});
+  $dbh->do( $query, {} );
 
   return $self->{'utilisation'};
 }
 
 sub dates_all_instruments_up {
-  my ( $self ) = @_;
-  return $self->dates_instruments_up( 1 );
+  my ($self) = @_;
+  return $self->dates_instruments_up(1);
 }
 
 sub dates_instruments_up {
   my ( $self, $all ) = @_;
-  my $util   = $self->util();
-  my $dbh    = $util->dbh();
-  my $query  = q{SELECT i.name, i.id_instrument, i_s.date AS date, isd.description AS description
+  my $util = $self->util();
+  my $dbh  = $util->dbh();
+  my $query
+      = q{SELECT i.name, i.id_instrument, i_s.date AS date, isd.description AS description
     FROM   instrument_status i_s,
            instrument_status_dict isd,
            instrument i,
@@ -345,7 +374,7 @@ sub dates_instruments_up {
     AND    i.id_instrument_format = i_f.id_instrument_format
     };
 
-  if ( ! $all ) {
+  if ( !$all ) {
     $query .= q{AND    i_f.model = ?
     };
   }
@@ -353,8 +382,14 @@ sub dates_instruments_up {
 
   my $inst_format = $self->{inst_format} || q{HK};
 
-  my $ref = $all ? $dbh->selectall_arrayref( $query, {} ) : $dbh->selectall_arrayref( $query, {}, $inst_format );
-  my $start_end = $dbh->selectall_arrayref(q{SELECT min(i_s.date) AS start_hour, NOW() AS end_hour FROM instrument_status i_s});
+  my $ref
+      = $all
+      ? $dbh->selectall_arrayref( $query, {} )
+      : $dbh->selectall_arrayref( $query, {}, $inst_format );
+  my $start_end
+      = $dbh->selectall_arrayref(
+    q{SELECT min(i_s.date) AS start_hour, NOW() AS end_hour FROM instrument_status i_s}
+      );
   my $name        = $ref->[0]->[0] || q[];
   my $count       = 0;
   my $start_hour  = $start_end->[0]->[0];
@@ -363,20 +398,20 @@ sub dates_instruments_up {
   my ( $current_status, $temp_hash );
   $current_status = q[];
 
-  for my $status ( @{ $ref } ) {
+  for my $status ( @{$ref} ) {
 
-    my $this_status = $status->[$FOURTH_ARRAY_ELEMENT] ;
+    my $this_status         = $status->[$FOURTH_ARRAY_ELEMENT];
     my $this_status_is_down = _consider_down($this_status);
-    my $this_status_date = $status->[2];
-    my $this_instr_name = $status->[0];
+    my $this_status_date    = $status->[2];
+    my $this_instr_name     = $status->[0];
 
     if ( $this_instr_name ne $name ) {
-      if ( $temp_hash ) {
+      if ($temp_hash) {
         if ( !$temp_hash->{down} ) {
           $temp_hash->{down} = $end_hour;
         }
 
-        $self->convert_to_datetime_objects( $temp_hash );
+        $self->convert_to_datetime_objects($temp_hash);
         push @{ $instruments->{$name} }, $temp_hash;
       }
 
@@ -385,19 +420,22 @@ sub dates_instruments_up {
       $temp_hash      = undef;
       $current_status = q[];
 
-    } elsif ( _consider_down($current_status) && $this_status eq 'up' ) {
+    }
+    elsif ( _consider_down($current_status) && $this_status eq 'up' ) {
       $self->convert_to_datetime_objects($temp_hash);
-      push @{$instruments->{$name}}, $temp_hash;
+      push @{ $instruments->{$name} }, $temp_hash;
       $temp_hash = undef;
     }
 
     if ( $count == 0 && $this_status_is_down ) {
-      $temp_hash = {up => $start_hour, down => $this_status_date};
+      $temp_hash = { up => $start_hour, down => $this_status_date };
       $current_status = $this_status;
-    } elsif ( $this_status_is_down ) {
+    }
+    elsif ($this_status_is_down) {
       $temp_hash->{'down'} = $this_status_date;
       $current_status = $this_status;
-    } elsif ( !$temp_hash ) {
+    }
+    elsif ( !$temp_hash ) {
       $current_status = $this_status;
       $temp_hash = { up => $this_status_date };
     }
@@ -406,12 +444,14 @@ sub dates_instruments_up {
   }
   $temp_hash->{down} = $end_hour;
   if ( $temp_hash->{up} ) {
-    $self->convert_to_datetime_objects( $temp_hash );
+    $self->convert_to_datetime_objects($temp_hash);
     push @{ $instruments->{$name} }, $temp_hash;
   }
 
-  if ( ! scalar keys %{$instruments} ) {
-    croak q{<br />&nbsp;No instruments found for } . ( $all ? q{all} : $inst_format ) . q{.<br />&nbsp;If you feel this is in error, please email us.<br />};
+  if ( !scalar keys %{$instruments} ) {
+    croak q{<br />&nbsp;No instruments found for }
+        . ( $all ? q{all} : $inst_format )
+        . q{.<br />&nbsp;If you feel this is in error, please email us.<br />};
   }
 
   return $instruments;
@@ -419,84 +459,105 @@ sub dates_instruments_up {
 
 sub _consider_down {
   my $status = shift;
-  return $status && ($status eq 'down' || $status eq 'down for repair') ? 1 : 0;
+  return $status
+      && ( $status eq 'down' || $status eq 'down for repair' ) ? 1 : 0;
 }
 
 sub gantt_map {
-  my ($self, $chart_id, $url) = @_;
-  my $refs = $self->gantt_chart_png(1);
-  my $image_map = npg::util::image::image_map->new();
+  my ( $self, $chart_id, $url ) = @_;
+  my $refs        = $self->gantt_chart_png(1);
+  my $image_map   = npg::util::image::image_map->new();
   my $annotations = $refs->{data};
-  my $data = [];
+  my $data        = [];
   my @temp;
-  foreach my $a (@{$refs->{ref_points}}) {
-    if (ref$a && ref$a eq 'ARRAY') {
-      foreach my $spot(@{$a}) {
-        if (ref$spot && ref$spot eq 'ARRAY') {
-	  shift @{$spot};
-	  push @temp, $spot;
+  foreach my $a ( @{ $refs->{ref_points} } ) {
+    if ( ref $a && ref $a eq 'ARRAY' ) {
+      foreach my $spot ( @{$a} ) {
+        if ( ref $spot && ref $spot eq 'ARRAY' ) {
+          shift @{$spot};
+          push @temp, $spot;
         }
       }
     }
   }
-  foreach my $a (@{$annotations}) {
-    if (ref$a && ref$a eq 'ARRAY') {
-      foreach my $annotation (@{$a}) {
+  foreach my $a ( @{$annotations} ) {
+    if ( ref $a && ref $a eq 'ARRAY' ) {
+      foreach my $annotation ( @{$a} ) {
         if ($annotation) {
-	  my $box = shift @temp;
-	  @{$box} = ($box->[0], $box->[3], $box->[1], $box->[2]); ## no critic (ProhibitMagicNumbers)
-	  my ($key, @info) = split /:/xms, $annotation;
-	  $annotation = join q{:}, @info;
-	  push @{$box}, {$key => $annotation, url => qq{$ENV{SCRIPT_NAME}/instrument/$key}};
-	  push @{$data}, $box;
+          my $box = shift @temp;
+## no critic (ProhibitMagicNumbers)
+          @{$box} = ( $box->[0], $box->[3], $box->[1], $box->[2] );
+          my ( $key, @info ) = split /:/xms, $annotation;
+          $annotation = join q{:}, @info;
+          push @{$box},
+              {
+            $key => $annotation,
+            url  => qq{$ENV{SCRIPT_NAME}/instrument/$key}
+              };
+          push @{$data}, $box;
         }
       }
     }
   }
 
-  foreach my $gantt_box (@{$refs->{gantt_boxes}}) {
+  foreach my $gantt_box ( @{ $refs->{gantt_boxes} } ) {
     push @{$data}, $gantt_box;
   }
 
-  my $map = $image_map->render_map({
-    data => $data,
-    image_url => $ENV{SCRIPT_NAME}.$url,
-    id => $chart_id,
-  });
+  my $map = $image_map->render_map(
+    { data      => $data,
+      image_url => $ENV{SCRIPT_NAME} . $url,
+      id        => $chart_id,
+    }
+  );
 
   return $map;
 }
 
 sub gantt_chart_png {
-  my ($self, $ref_points, $instrument_model) = @_;
-  my $stripe_across_for_gantt = $self->stripe_across_for_gantt( $instrument_model );
-  my $dates_of_annotations = npg::model::instrument_annotation->new({util => $self->util()})->dates_of_annotations_over_default_uptime( $instrument_model );
+  my ( $self, $ref_points, $instrument_model ) = @_;
+  my $stripe_across_for_gantt
+      = $self->stripe_across_for_gantt($instrument_model);
+  my $dates_of_annotations
+      = npg::model::instrument_annotation->new( { util => $self->util() } )
+      ->dates_of_annotations_over_default_uptime($instrument_model);
   my $merge = npg::util::image::merge->new();
 
-#use Test::More; diag explain $dates_of_annotations->{data};
+  #use Test::More; diag explain $dates_of_annotations->{data};
 
   my $arg_refs = {
-    format => 'gantt_chart_vertical',
-    x_label       => 'Instrument',
-    y_label       => 'Date',
-    y_tick_number => $DEFAULT_GANTT_Y_TICK,
-    y_max_value   => $stripe_across_for_gantt->{y_max_value},
-    y_min_value   => $stripe_across_for_gantt->{y_min_value},
-    x_axis        => $stripe_across_for_gantt->{instruments},
-    data_points   => $stripe_across_for_gantt->{data},
-    add_points    => $dates_of_annotations->{data},
-    height        => $DEFAULT_GANTT_HEIGHT,
-    width         => $DEFAULT_GANTT_WIDTH,
-    borderclrs    => [qw{lgray}],
+    format          => 'gantt_chart_vertical',
+    x_label         => 'Instrument',
+    y_label         => 'Date',
+    y_tick_number   => $DEFAULT_GANTT_Y_TICK,
+    y_max_value     => $stripe_across_for_gantt->{y_max_value},
+    y_min_value     => $stripe_across_for_gantt->{y_min_value},
+    x_axis          => $stripe_across_for_gantt->{instruments},
+    data_points     => $stripe_across_for_gantt->{data},
+    add_points      => $dates_of_annotations->{data},
+    height          => $DEFAULT_GANTT_HEIGHT,
+    width           => $DEFAULT_GANTT_WIDTH,
+    borderclrs      => [qw{lgray}],
     y_number_format => $stripe_across_for_gantt->{code},
-    get_anno_refs => 1,
+    get_anno_refs   => 1,
   };
   my $png;
-  eval { $png = $merge->merge_images($arg_refs); } or do { croak qq{Unable to create gantt_chart_png:\n\n}.$EVAL_ERROR; };
+  eval { $png = $merge->merge_images($arg_refs); }
+      or
+      do { croak qq{Unable to create gantt_chart_png:\n\n} . $EVAL_ERROR; };
   if ($ref_points) {
     my $image_map = npg::util::image::image_map->new();
-    my $href = {ref_points => $merge->data_point_refs(), data => $dates_of_annotations->{annotations}};
-    $href->{gantt_boxes} = $image_map->process_instrument_gantt_values({additional_info => q{DOWN}, data_points => $merge->gantt_refs(), data_values => $stripe_across_for_gantt->{data}, convert => $stripe_across_for_gantt->{code}});
+    my $href      = {
+      ref_points => $merge->data_point_refs(),
+      data       => $dates_of_annotations->{annotations}
+    };
+    $href->{gantt_boxes} = $image_map->process_instrument_gantt_values(
+      { additional_info => q{DOWN},
+        data_points     => $merge->gantt_refs(),
+        data_values     => $stripe_across_for_gantt->{data},
+        convert         => $stripe_across_for_gantt->{code}
+      }
+    );
     return $href;
   }
   return $png;
@@ -504,59 +565,90 @@ sub gantt_chart_png {
 
 sub instrument_utilisation {
   my ($self) = @_;
-  if (!$self->{instrument_utilisation}) {
-    $self->{instrument_utilisation} = npg::model::instrument_utilisation->new({util => $self->util});
+  if ( !$self->{instrument_utilisation} ) {
+    $self->{instrument_utilisation}
+        = npg::model::instrument_utilisation->new( { util => $self->util } );
   }
   return $self->{instrument_utilisation};
 }
 
 sub combined_utilisation_and_uptime_gantt_map {
-  my ($self, $chart_id, $url) = @_;
-  my $uptime_map = $self->gantt_map($chart_id, $url);
-  my $utilisation_map = $self->instrument_utilisation->gantt_map($chart_id, $url);
+  my ( $self, $chart_id, $url ) = @_;
+  my $uptime_map = $self->gantt_map( $chart_id, $url );
+  my $utilisation_map
+      = $self->instrument_utilisation->gantt_map( $chart_id, $url );
   $uptime_map =~ s/\<\/map\>.*\z//gxms;
   $utilisation_map =~ s/\<map[ ]name=".*?"\>//gxms;
-  return $uptime_map.$utilisation_map;
+  return $uptime_map . $utilisation_map;
 }
 
 sub combined_utilisation_and_uptime_gantt_png {
-  my ($self, $instrument_model) = @_;
+  my ( $self, $instrument_model ) = @_;
   my $gantt_chart_png = $self->gantt_chart_png( q{}, $instrument_model );
-  my $utilisation_chart_png = $self->instrument_utilisation->gantt_run_timeline_png( q{}, $instrument_model );
-  my $merge = npg::util::image::merge->new();
+  my $utilisation_chart_png
+      = $self->instrument_utilisation->gantt_run_timeline_png( q{},
+    $instrument_model );
+  my $merge    = npg::util::image::merge->new();
   my $arg_refs = {
-    format => q{overlay_all_images_exactly},
-    images => [$utilisation_chart_png,$gantt_chart_png],
-    white_is_transparent => 1,
+    format                   => q{overlay_all_images_exactly},
+    images                   => [ $utilisation_chart_png, $gantt_chart_png ],
+    white_is_transparent     => 1,
     all_white_is_transparent => 1,
   };
 
   my $png;
-  eval { $png = $merge->merge_images($arg_refs); } or do { croak qq{Unable to create combined_utilisation_and_uptime_gantt_png:\n\n}.$EVAL_ERROR; };
+  eval { $png = $merge->merge_images($arg_refs); } or do {
+    croak qq{Unable to create combined_utilisation_and_uptime_gantt_png:\n\n}
+        . $EVAL_ERROR;
+  };
   return $png;
 }
 
 sub convert_to_datetime_objects {
   my ( $self, $temp_hash ) = @_;
-  my ( $year,$month,$day,$hour,$min,$sec ) = $temp_hash->{up} =~ /(\d{4})-(\d{2})-(\d{2})[ ](\d{2}):(\d{2}):(\d{2})/xms;
-  $temp_hash->{up} = DateTime->new( year => $year, month => $month, day => $day, hour => $hour, minute => $min, second =>$sec, time_zone => 'floating' );
-  ( $year,$month,$day,$hour,$min,$sec ) = $temp_hash->{down} =~ /(\d{4})-(\d{2})-(\d{2})[ ](\d{2}):(\d{2}):(\d{2})/xms;
-  $temp_hash->{down} = DateTime->new( year => $year, month => $month, day => $day, hour => $hour, minute => $min, second =>$sec, time_zone => 'floating' );
+  my ( $year, $month, $day, $hour, $min, $sec )
+      = $temp_hash->{up}
+      =~ /(\d{4})-(\d{2})-(\d{2})[ ](\d{2}):(\d{2}):(\d{2})/xms;
+  $temp_hash->{up} = DateTime->new(
+    year      => $year,
+    month     => $month,
+    day       => $day,
+    hour      => $hour,
+    minute    => $min,
+    second    => $sec,
+    time_zone => 'floating'
+  );
+  ( $year, $month, $day, $hour, $min, $sec )
+      = $temp_hash->{down}
+      =~ /(\d{4})-(\d{2})-(\d{2})[ ](\d{2}):(\d{2}):(\d{2})/xms;
+  $temp_hash->{down} = DateTime->new(
+    year      => $year,
+    month     => $month,
+    day       => $day,
+    hour      => $hour,
+    minute    => $min,
+    second    => $sec,
+    time_zone => 'floating'
+  );
   return;
 }
 
 sub instrument_up_down {
   my ( $self, $all ) = @_;
-  my $insts = $self->dates_instruments_up( $all );
+  my $insts  = $self->dates_instruments_up($all);
   my $return = [];
-  foreach my $i (sort keys %{$insts}) {
+  foreach my $i ( sort keys %{$insts} ) {
     my $temp_hash = {
-      name => $i,
+      name     => $i,
       statuses => [],
     };
-    foreach my $up (@{$insts->{$i}}) {
+    foreach my $up ( @{ $insts->{$i} } ) {
       foreach my $k (qw(up down)) {
-        push @{$temp_hash->{statuses}}, { date => $up->{$k}->ymd().q{ }.$up->{$k}->hms(), description => $k, };
+        push @{ $temp_hash->{statuses} },
+            {
+          date        => $up->{$k}->ymd() . q{ } . $up->{$k}->hms(),
+          description => $k,
+            };
       }
     }
     push @{$return}, $temp_hash;
@@ -575,35 +667,36 @@ sub stripe_across_for_gantt {
 
   my $max_number_of_changes = 0;
   $inst_up_down = $self->_order_by_inst_number($inst_up_down);
-  my $stripe = [];
-  my $stripe_index = 0;
-  my $dt = DateTime->now();
-  my $dt_less_ninety = DateTime->now()->subtract( days => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL );
+  my $stripe         = [];
+  my $stripe_index   = 0;
+  my $dt             = DateTime->now();
+  my $dt_less_ninety = DateTime->now()
+      ->subtract( days => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL );
 
-  my $all_insts = $self->instruments();
+  my $all_insts      = $self->instruments();
   my $stripe_indices = {};
-  foreach my $inst ( @{ $all_insts } ) {
-    if ( ! $inst->iscurrent()
-         ||
-         $inst->model() ne $instrument_model
-       ) {
+  foreach my $inst ( @{$all_insts} ) {
+    if (!$inst->iscurrent()
+      || $inst->model() ne $instrument_model )
+    {
       next;
     }
     push @{$instruments}, $inst->name();
-    $stripe_indices->{$inst->id_instrument()} = $stripe_index;
+    $stripe_indices->{ $inst->id_instrument() } = $stripe_index;
     $stripe_index++;
   }
 
-  foreach my $i ( @{ $inst_up_down } ) {
+  foreach my $i ( @{$inst_up_down} ) {
 
-    my $inst_object = npg::model::instrument->new({
-      util => $self->util(), name => $i->{name},
-    });
+    my $inst_object = npg::model::instrument->new(
+      { util => $self->util(),
+        name => $i->{name},
+      }
+    );
 
-    if ( ! $inst_object->iscurrent()
-         ||
-         $inst_object->model() ne $instrument_model
-       ) {
+    if (!$inst_object->iscurrent()
+      || $inst_object->model() ne $instrument_model )
+    {
       next;
     }
 
@@ -611,14 +704,14 @@ sub stripe_across_for_gantt {
 
     @{ $i->{statuses} } = reverse @{ $i->{statuses} };
 
-    if ($i->{statuses}->[0]->{description} eq 'down') {
+    if ( $i->{statuses}->[0]->{description} eq 'down' ) {
       unshift @{ $i->{statuses} }, { description => q{up}, date => $dt };
     }
     my @temp;
-    foreach my $s (@{$i->{statuses}}) {
-      if (!ref$s->{date}) {
-        my ($y,$m,$d) = $s->{date} =~ /(\d+)-(\d+)-(\d+)/xms;
-     	  $s->{date} = DateTime->new(year => $y, month => $m, day => $d);
+    foreach my $s ( @{ $i->{statuses} } ) {
+      if ( !ref $s->{date} ) {
+        my ( $y, $m, $d ) = $s->{date} =~ /(\d+)-(\d+)-(\d+)/xms;
+        $s->{date} = DateTime->new( year => $y, month => $m, day => $d );
       }
       if ( DateTime->compare( $s->{date}, $dt_less_ninety ) >= 0 ) {
         push @temp, $s;
@@ -630,17 +723,17 @@ sub stripe_across_for_gantt {
     if ( $no_changes > $max_number_of_changes ) {
       $max_number_of_changes = $no_changes;
     }
-    $i->{stripe_index} = $stripe_indices->{$inst_object->id_instrument()};
+    $i->{stripe_index} = $stripe_indices->{ $inst_object->id_instrument() };
   }
 
-  for my $count (1..$max_number_of_changes) {
+  for my $count ( 1 .. $max_number_of_changes ) {
     push @{$stripe}, [];
   }
 
   my $date_ninety_days_ago = $dt_less_ninety->dmy();
-  my $date_now = $dt->dmy();
+  my $date_now             = $dt->dmy();
 
-  foreach my $i (@{$inst_up_down}) {
+  foreach my $i ( @{$inst_up_down} ) {
 
     next if ( !$i->{iscurrent} );
 
@@ -651,46 +744,52 @@ sub stripe_across_for_gantt {
       if ($date) {
         $date = $dt_less_ninety->delta_days($date)->in_units(q{days});
       }
-      $array->[$i->{stripe_index}] = $date || 0;
+      $array->[ $i->{stripe_index} ] = $date || 0;
       $stat_index++;
     }
 
   }
   my $convert_to_date_code = $self->_convert_to_date_code();
 
-  return {instruments => $instruments, data => $stripe, y_max_value => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL, y_min_value => 0, code => $convert_to_date_code};
+  return {
+    instruments => $instruments,
+    data        => $stripe,
+    y_max_value => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL,
+    y_min_value => 0,
+    code        => $convert_to_date_code
+  };
 }
 
 sub _convert_to_date_code {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $convert_to_date_code = sub {
-    my ( $i ) = @_;
+    my ($i) = @_;
     return $self->dates_of_last_ninety_days()->[$i];
   };
   return $convert_to_date_code;
 }
 
 sub _order_by_inst_number {
-  my ($self, $inst_up_down) = @_;
+  my ( $self, $inst_up_down ) = @_;
   my @inst_array;
-  foreach my $i (@{$inst_up_down}) {
+  foreach my $i ( @{$inst_up_down} ) {
     my ($inst_number) = $i->{name} =~ /(\d+)/xms;
     $inst_array[$inst_number] = $i;
   }
   my $return_array = [];
   foreach my $i (@inst_array) {
-    next if (!$i);
+    next if ( !$i );
     push @{$return_array}, $i;
   }
   return $return_array;
 }
 
 sub uptime_for_all_instruments {
-  my ($self, $interval) = @_;
+  my ( $self, $interval ) = @_;
 
-  if (!$self->{uptime_for_all_instruments}) {
+  if ( !$self->{uptime_for_all_instruments} ) {
     $interval ||= $DEFAULT_INSTRUMENT_UPTIME_INTERVAL;
-    my $hours = $interval*$HOURS_IN_DAY;
+    my $hours = $interval * $HOURS_IN_DAY;
     my @uptime;
     my $dt = DateTime->now( time_zone => 'floating' );
 
@@ -698,7 +797,7 @@ sub uptime_for_all_instruments {
     $dt->set_second(0);
     $dt->set_minute(0);
 
-    for my $i (1..$hours) {
+    for my $i ( 1 .. $hours ) {
       my $minutes = $MINUTES_IN_HOUR;
       $dt->subtract( hours => 1 );
       my $clone = $dt->clone();
@@ -707,25 +806,31 @@ sub uptime_for_all_instruments {
 
     my $instrument_up_regions = $self->dates_instruments_up($interval);
 
-    for my $instrument (sort keys %{$instrument_up_regions}) {
-      next if ($instrument eq 'IL28'); # we ignore IL28 (HK) as it is currently not owned by WTSI (deliberately not tested this if condition)
+    for my $instrument ( sort keys %{$instrument_up_regions} ) {
+      next
+          if ( $instrument eq 'IL28' )
+          ; # we ignore IL28 (HK) as it is currently not owned by WTSI (deliberately not tested this if condition)
 
       for my $hour (@uptime) {
 
-        for my $region_hash (@{$instrument_up_regions->{$instrument}}) {
-          if ((! List::MoreUtils::any {$_ eq $instrument} @{$hour}) && $hour->[0] >= $region_hash->{up} && $hour->[0] <= $region_hash->{down}) {
-              push @{$hour}, $instrument;
+        for my $region_hash ( @{ $instrument_up_regions->{$instrument} } ) {
+          if ( ( !List::MoreUtils::any { $_ eq $instrument } @{$hour} )
+            && $hour->[0] >= $region_hash->{up}
+            && $hour->[0] <= $region_hash->{down} )
+          {
+            push @{$hour}, $instrument;
           }
         }
       }
     }
 
-    my $ic = scalar @{$self->instrument->current_instruments()} - 1; # 1 subtracted to account for hot spare. Not happy, but not stored in database
+    my $ic = scalar @{ $self->instrument->current_instruments() } - 1
+        ; # 1 subtracted to account for hot spare. Not happy, but not stored in database
 
     for my $hour (@uptime) {
       my $ic_up = scalar @{$hour} - 1;
-      $hour = [$hour->[0], sprintf '%.2f', $ic_up*$PERCENTAGE/$ic];
-    };
+      $hour = [ $hour->[0], sprintf '%.2f', $ic_up * $PERCENTAGE / $ic ];
+    }
 
     $self->{uptime_for_all_instruments} = \@uptime;
   }
@@ -733,22 +838,22 @@ sub uptime_for_all_instruments {
 }
 
 sub average_percentage_uptime_for_day {
-  my ($self, $interval) = @_;
+  my ( $self, $interval ) = @_;
 
-  if (!$self->{average_percentage_uptime_for_day}) {
+  if ( !$self->{average_percentage_uptime_for_day} ) {
     my $uptime = $self->uptime_for_all_instruments($interval);
     my %days;
 
-    for my $time (@{$uptime}) {
-      push @{$days{$time->[0]->ymd()}}, $time->[1];
+    for my $time ( @{$uptime} ) {
+      push @{ $days{ $time->[0]->ymd() } }, $time->[1];
     }
 
     my $table_rows = [];
-    for my $day (sort keys %days) {
-      my $sum          = sum @{$days{$day}};
-      my $scalar_array = scalar @{$days{$day}};
-      my $perc         = sprintf '%.2f', $sum/$scalar_array;
-      push @{$table_rows}, [$day, $perc];
+    for my $day ( sort keys %days ) {
+      my $sum          = sum @{ $days{$day} };
+      my $scalar_array = scalar @{ $days{$day} };
+      my $perc         = sprintf '%.2f', $sum / $scalar_array;
+      push @{$table_rows}, [ $day, $perc ];
     }
 
     $self->{average_percentage_uptime_for_day} = $table_rows;
@@ -758,16 +863,16 @@ sub average_percentage_uptime_for_day {
 }
 
 sub instrument_percentage_uptimes {
-  my ($self, $interval) = @_;
+  my ( $self, $interval ) = @_;
 
-  if (!$self->{instrument_percentage_uptimes}) {
+  if ( !$self->{instrument_percentage_uptimes} ) {
     $interval ||= $DEFAULT_INSTRUMENT_UPTIME_INTERVAL;
-    my $name    = $self->instrument->name();
+    my $name                    = $self->instrument->name();
     my $up_periods_all_machines = $self->dates_instruments_up($interval);
     my $up_periods_this_machine = $up_periods_all_machines->{$name};
-    my $today = DateTime->now( time_zone => 'floating' );
-    my $dt    = $today->clone();
-    my $dt2   = $today->clone();
+    my $today                   = DateTime->now( time_zone => 'floating' );
+    my $dt                      = $today->clone();
+    my $dt2                     = $today->clone();
 
     $dt->set_hour(0);
     $dt->set_minute(0);
@@ -777,37 +882,48 @@ sub instrument_percentage_uptimes {
     $dt2->set_second(0);
     $dt->subtract( days => $interval );
 
-    my $seconds_uptime = $self->seconds_uptime($dt, $dt2, $up_periods_this_machine);
-    my $seconds_of_last_interval_days = $dt2->subtract_datetime_absolute($dt)->in_units('seconds');
-    my $percentage_of_total = sprintf '%.2f', $seconds_uptime*$PERCENTAGE/$seconds_of_last_interval_days;
+    my $seconds_uptime
+        = $self->seconds_uptime( $dt, $dt2, $up_periods_this_machine );
+    my $seconds_of_last_interval_days
+        = $dt2->subtract_datetime_absolute($dt)->in_units('seconds');
+    my $percentage_of_total = sprintf '%.2f',
+        $seconds_uptime * $PERCENTAGE / $seconds_of_last_interval_days;
 
     $dt = $today->clone();
     $dt->set_hour(0);
     $dt->set_minute(0);
     $dt->set_second(0);
-    $dt->subtract( days => $DAYS_TO_SUBTRACT);
-    $seconds_uptime = $self->seconds_uptime($dt, $dt2, $up_periods_this_machine);
+    $dt->subtract( days => $DAYS_TO_SUBTRACT );
+    $seconds_uptime
+        = $self->seconds_uptime( $dt, $dt2, $up_periods_this_machine );
 
-    my $seconds_of_last_30_days = $dt2->subtract_datetime_absolute($dt)->in_units('seconds');
-    my $percentage_of_last_30_days = sprintf '%.2f', $seconds_uptime*$PERCENTAGE/$seconds_of_last_30_days;
-    $self->{instrument_percentage_uptimes} = [$percentage_of_total, $percentage_of_last_30_days]
+    my $seconds_of_last_30_days
+        = $dt2->subtract_datetime_absolute($dt)->in_units('seconds');
+    my $percentage_of_last_30_days = sprintf '%.2f',
+        $seconds_uptime * $PERCENTAGE / $seconds_of_last_30_days;
+    $self->{instrument_percentage_uptimes}
+        = [ $percentage_of_total, $percentage_of_last_30_days ];
   }
 
   return $self->{instrument_percentage_uptimes};
 }
 
 sub seconds_uptime {
-  my ($self, $dt1, $dt2, $up_periods_this_machine) = @_;
+  my ( $self, $dt1, $dt2, $up_periods_this_machine ) = @_;
   my $seconds_uptime;
 
-  for my $up_period (@{$up_periods_this_machine}) {
+  for my $up_period ( @{$up_periods_this_machine} ) {
     my $duration;
-    $duration = ($up_period->{up} <= $dt1 && $up_period->{down} >= $dt2) ? $dt2->subtract_datetime_absolute($dt1)
-              : ($up_period->{up} >= $dt1 && $up_period->{down} <= $dt2) ? $up_period->{down}->subtract_datetime_absolute($up_period->{up})
-	      : ($dt1 >= $up_period->{up} && $dt1 <= $up_period->{down}) ? $up_period->{down}->subtract_datetime_absolute($dt1)
-	      : ($dt2 >= $up_period->{up} && $dt2 <= $up_period->{down}) ? $dt2->subtract_datetime_absolute($up_period->{up})
-	      :                                                            q{}
-	      ;
+    $duration
+        = ( $up_period->{up} <= $dt1 && $up_period->{down} >= $dt2 )
+        ? $dt2->subtract_datetime_absolute($dt1)
+        : ( $up_period->{up} >= $dt1 && $up_period->{down} <= $dt2 )
+        ? $up_period->{down}->subtract_datetime_absolute( $up_period->{up} )
+        : ( $dt1 >= $up_period->{up} && $dt1 <= $up_period->{down} )
+        ? $up_period->{down}->subtract_datetime_absolute($dt1)
+        : ( $dt2 >= $up_period->{up} && $dt2 <= $up_period->{down} )
+        ? $dt2->subtract_datetime_absolute( $up_period->{up} )
+        : q{};
     if ($duration) {
       $seconds_uptime += $duration->in_units('seconds');
     }
@@ -816,23 +932,24 @@ sub seconds_uptime {
 }
 
 sub instruments {
-  my ( $self ) = @_;
-  if ( ! $self->{instruments} ) {
-    $self->{instruments} = $self->gen_getobj( q{npg::model::instrument} )->instruments();
+  my ($self) = @_;
+  if ( !$self->{instruments} ) {
+    $self->{instruments}
+        = $self->gen_getobj(q{npg::model::instrument})->instruments();
   }
   return $self->{instruments};
 }
 
 sub instrument_model {
-  my ( $self ) = @_;
-  if ( ! $self->{instrument_model} ) {
+  my ($self) = @_;
+  if ( !$self->{instrument_model} ) {
     $self->{instrument_model} = $self->util->cgi->param('inst_format');
   }
   return $self->{instrument_model} || q{};
 }
 
 sub current_instrument_status {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
   if ( $self->instrument() ) {
     return $self->instrument()->current_instrument_status();

@@ -22,45 +22,47 @@ use st::api::lims;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15308 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(grep { $_ ne 'id_run' } fields());
-__PACKAGE__->hasmany([{annotation => 'run_annotation'}]);
-__PACKAGE__->hasa({current_run_status => 'run_status'});
-__PACKAGE__->hasmany(['run_status']);
+__PACKAGE__->mk_accessors( grep { $_ ne 'id_run' } fields() );
+__PACKAGE__->hasmany( [ { annotation => 'run_annotation' } ] );
+__PACKAGE__->hasa( { current_run_status => 'run_status' } );
+__PACKAGE__->hasmany( ['run_status'] );
 
 sub fields {
   return qw(id_run
-            id_instrument
-            priority
-            actual_cycle_count
-            expected_cycle_count
-            id_run_pair
-            name
-            batch_id
-            is_paired
-            team
-            id_instrument_format
-            loading_date
-            run_folder);
+      id_instrument
+      priority
+      actual_cycle_count
+      expected_cycle_count
+      id_run_pair
+      name
+      batch_id
+      is_paired
+      team
+      id_instrument_format
+      loading_date
+      run_folder);
 }
 
-sub is_paired_read{
+sub is_paired_read {
   my $self = shift;
 
-  if(!exists $self->{is_paired_read}){
+  if ( !exists $self->{is_paired_read} ) {
 
-    if($self->is_paired_run()){
+    if ( $self->is_paired_run() ) {
 
       $self->{is_paired_read} = 1;
-    }else{
+    }
+    else {
 
       my $tags = $self->tags();
-      foreach my $tag (@{$tags}){
+      foreach my $tag ( @{$tags} ) {
 
-        if($tag eq q{paired_read}){
+        if ( $tag eq q{paired_read} ) {
 
           $self->{is_paired_read} = 1;
           return $self->{is_paired_read};
-        }elsif($tag eq q{single_read}){
+        }
+        elsif ( $tag eq q{single_read} ) {
 
           $self->{is_paired_read} = 0;
           return $self->{is_paired_read};
@@ -73,10 +75,10 @@ sub is_paired_read{
   return $self->{is_paired_read};
 }
 
-sub is_paired_run{
+sub is_paired_run {
   my $self = shift;
 
-  if(!exists $self->{is_paired_run}){
+  if ( !exists $self->{is_paired_run} ) {
 
     $self->{is_paired_run} = $self->get(q{is_paired});
   }
@@ -84,7 +86,7 @@ sub is_paired_run{
   return $self->{is_paired_run};
 }
 
-sub is_single_read{
+sub is_single_read {
   my $self = shift;
 
   return !$self->is_paired_read() + 0;
@@ -103,38 +105,41 @@ sub is_rta {
 sub having_control_lane {
   my $self = shift;
 
-  foreach my $lane (@{ $self->run_lanes() }){
-    if($lane->is_control()){
-      return 1;
-    }
-  }
-  return 0;
-}
-sub has_tag {
-  my ($self, $req_tag) = @_;
-  my $tags = $self->tags();
-  foreach my $tag (@{$tags}) {
-    if($tag eq $req_tag) {
+  foreach my $lane ( @{ $self->run_lanes() } ) {
+    if ( $lane->is_control() ) {
       return 1;
     }
   }
   return 0;
 }
 
-sub tags{
+sub has_tag {
+  my ( $self, $req_tag ) = @_;
+  my $tags = $self->tags();
+  foreach my $tag ( @{$tags} ) {
+    if ( $tag eq $req_tag ) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+sub tags {
   my $self = shift;
 
-  if(!$self->{tags}) {
+  if ( !$self->{tags} ) {
 
     my $tags_element = $self->read->getElementsByTagName('tags')->[0];
 
-    if(!$tags_element) {
+    if ( !$tags_element ) {
 
       $self->{tags} = [];
       carp q[Warning: Failed to fetch tags.];
-    }else{
+    }
+    else {
 
-      $self->{tags} = [map {$_->getAttribute('description')} $tags_element->getElementsByTagName('tag')];
+      $self->{tags} = [ map { $_->getAttribute('description') }
+            $tags_element->getElementsByTagName('tag') ];
     }
   }
 
@@ -144,8 +149,8 @@ sub tags{
 sub init {
   my $self = shift;
 
-  if($self->{id_run}) {
-    ($self->{id_run}) = $self->{id_run} =~ /(\d+)$/smx;
+  if ( $self->{id_run} ) {
+    ( $self->{id_run} ) = $self->{id_run} =~ /(\d+)$/smx;
     $self->{id_run} += 0;
   }
 
@@ -153,29 +158,31 @@ sub init {
 }
 
 sub id_run {
-  my ($self, @args) = @_;
+  my ( $self, @args ) = @_;
 
-  if(!scalar @args) {
-    my $ret = $self->SUPER::get('id_run', @args) || q();
-    ($ret)  = $ret =~ /(\d+)$/smx;
-    $ret   += 0;
+  if ( !scalar @args ) {
+    my $ret = $self->SUPER::get( 'id_run', @args ) || q();
+    ($ret) = $ret =~ /(\d+)$/smx;
+    $ret += 0;
     return $ret;
 
-  } else {
-    $self->SUPER::set('id_run', @args);
+  }
+  else {
+    $self->SUPER::set( 'id_run', @args );
   }
 
-  return $self->SUPER::get('id_run', @args);
+  return $self->SUPER::get( 'id_run', @args );
 }
 
 sub run_pair {
   my $self = shift;
 
-  if(!$self->{'run_pair'}) {
-    $self->{'run_pair'} = npg::api::run->new({
-					      'util'   => $self->util(),
-                                              'id_run' => $self->id_run_pair(),
-                                            });
+  if ( !$self->{'run_pair'} ) {
+    $self->{'run_pair'} = npg::api::run->new(
+      { 'util'   => $self->util(),
+        'id_run' => $self->id_run_pair(),
+      }
+    );
   }
 
   return $self->{'run_pair'};
@@ -184,11 +191,12 @@ sub run_pair {
 sub instrument {
   my $self = shift;
 
-  if(!$self->{instrument}) {
-    $self->{instrument} = npg::api::instrument->new({
-						     util          => $self->util(),
-						     id_instrument => $self->id_instrument(),
-						    });
+  if ( !$self->{instrument} ) {
+    $self->{instrument} = npg::api::instrument->new(
+      { util          => $self->util(),
+        id_instrument => $self->id_instrument(),
+      }
+    );
   }
 
   return $self->{instrument};
@@ -197,18 +205,23 @@ sub instrument {
 sub run_lanes {
   my $self = shift;
 
-  if(!$self->{run_lanes}) {
+  if ( !$self->{run_lanes} ) {
     my $run_lanes = $self->read->getElementsByTagName('run_lanes')->[0];
 
-    if(!$run_lanes) {
-      croak q[Error: Failed to fetch run_lanes.];#.$run_lanes->asString(1); # pretty print serialised DOM
+    if ( !$run_lanes ) {
+      croak q[Error: Failed to fetch run_lanes.]
+          ;    #.$run_lanes->asString(1); # pretty print serialised DOM
     }
 
     ## no critic (ProhibitComplexMappings)
-    $self->{run_lanes} = [map { weaken($_->{run}); $_; }
-                          map { $_->{run} = $self; $_; }
-			  map { npg::api::run_lane->new_from_xml('npg::api::run_lane', $_, $self->util()); }
-			  $run_lanes->getElementsByTagName('run_lane')];
+    $self->{run_lanes} = [
+      map { weaken( $_->{run} ); $_; }
+          map { $_->{run} = $self; $_; }
+          map {
+        npg::api::run_lane->new_from_xml( 'npg::api::run_lane', $_,
+          $self->util() );
+          } $run_lanes->getElementsByTagName('run_lane')
+    ];
   }
 
   ## use critic
@@ -216,44 +229,50 @@ sub run_lanes {
 }
 
 sub run_annotations {
-  my ($self, @args) = @_;
+  my ( $self, @args ) = @_;
   return $self->annotations(@args);
 }
 
 sub list_recent {
-  my $self       = shift;
+  my $self = shift;
+
   # used somewhere
   my $util       = $self->util();
-  my ($obj_type) = (ref $self) =~ /([^:]+)$/smx;
+  my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
   my $obj_pk     = $self->primary_key();
   my $obj_pk_val = $self->$obj_pk();
-  my $obj_uri    = sprintf '%s/%s;list_summary_xml', $util->base_uri(), $obj_type;
+  my $obj_uri    = sprintf '%s/%s;list_summary_xml', $util->base_uri(),
+      $obj_type;
 
-  $self->{'list_recent'} = $util->parser->parse_string($util->get($obj_uri,[]));
+  $self->{'list_recent'}
+      = $util->parser->parse_string( $util->get( $obj_uri, [] ) );
 
-  my $runs    = $self->{'list_recent'}->getElementsByTagName('runs')->[0];
-  my $pkg     = ref $self;
+  my $runs = $self->{'list_recent'}->getElementsByTagName('runs')->[0];
+  my $pkg  = ref $self;
 
-  return [map { $self->new_from_xml($pkg, $_) } $runs->getElementsByTagName('run')];
+  return [ map { $self->new_from_xml( $pkg, $_ ) }
+        $runs->getElementsByTagName('run') ];
 }
 
 sub recent_running_runs {
   my ($self) = @_;
+
   # used in instrument_utilisation module
   my $util       = $self->util();
-  my ($obj_type) = (ref $self) =~ /([^:]+)$/smx;
-  my $obj_uri    = sprintf '%s/%s/recent/running/runs.xml', $util->base_uri(), $obj_type;
+  my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
+  my $obj_uri    = sprintf '%s/%s/recent/running/runs.xml', $util->base_uri(),
+      $obj_type;
 
-  my $xml_obj = $util->parser->parse_string( $util->get($obj_uri, []));
-  my @runs    = $xml_obj->getElementsByTagName('run');
+  my $xml_obj = $util->parser->parse_string( $util->get( $obj_uri, [] ) );
+  my @runs = $xml_obj->getElementsByTagName('run');
 
   foreach my $run (@runs) {
     my $temp = {};
-    $temp->{id_run} = $run->getAttribute('id_run');
-    $temp->{start} = $run->getAttribute('start');
-    $temp->{end} = $run->getAttribute('end');
+    $temp->{id_run}        = $run->getAttribute('id_run');
+    $temp->{start}         = $run->getAttribute('start');
+    $temp->{end}           = $run->getAttribute('end');
     $temp->{id_instrument} = $run->getAttribute('id_instrument');
-    $run = $temp;
+    $run                   = $temp;
   }
 
   return \@runs;
@@ -262,71 +281,74 @@ sub recent_running_runs {
 sub lims {
   my $self = shift;
 
-  if(!$self->{'lims'} && $self->batch_id()) {
-    $self->{'lims'} = st::api::lims->new(id_run   => $self->id_run,
-                                         batch_id => $self->batch_id(),
-                                        );
+  if ( !$self->{'lims'} && $self->batch_id() ) {
+    $self->{'lims'} = st::api::lims->new(
+      id_run   => $self->id_run,
+      batch_id => $self->batch_id(),
+    );
   }
   return $self->{'lims'};
 }
 
 sub add_tags {
-  my ($self, @new_tags) = @_;
-  my $util       = $self->util();
-  my $id_run     = $self->id_run();
-  my @old_tags   = @{$self->tags()};
+  my ( $self, @new_tags ) = @_;
+  my $util     = $self->util();
+  my $id_run   = $self->id_run();
+  my @old_tags = @{ $self->tags() };
 
-  if(!$id_run) {
+  if ( !$id_run ) {
     croak q(Cannot add a tag without an existing run id);
   }
 
-  my $obj_uri = $util->base_uri().qq{/run/$id_run;update_tags};
-  my $payload = ['Content_Type' => 'form-data',
-                 'Content'      => [
-                                      'pipeline'        => 1,
-                                      'tags'            => "@new_tags @old_tags",
-                                      'tagged_already'  => "@old_tags",
-                                   ],
-                ];
-  my $content = $util->post_non_xml($obj_uri, $payload);
-  if($content =~ /Run[ ]$id_run[ ]tagged/smx) {
+  my $obj_uri = $util->base_uri() . qq{/run/$id_run;update_tags};
+  my $payload = [
+    'Content_Type' => 'form-data',
+    'Content'      => [
+      'pipeline'       => 1,
+      'tags'           => "@new_tags @old_tags",
+      'tagged_already' => "@old_tags",
+    ],
+  ];
+  my $content = $util->post_non_xml( $obj_uri, $payload );
+  if ( $content =~ /Run[ ]$id_run[ ]tagged/smx ) {
     carp qq{Run $id_run tagged with @new_tags.};
   }
   return 1;
 }
 
 sub remove_tags {
-  my ($self, @tags_to_remove) = @_;
-  my $util       = $self->util();
-  my $id_run     = $self->id_run();
-  my @old_tags   = @{$self->tags()};
+  my ( $self, @tags_to_remove ) = @_;
+  my $util     = $self->util();
+  my $id_run   = $self->id_run();
+  my @old_tags = @{ $self->tags() };
 
-  my (@new_tags, %tags_to_remove_hash);
+  my ( @new_tags, %tags_to_remove_hash );
 
-  foreach my $tag (@tags_to_remove){
+  foreach my $tag (@tags_to_remove) {
     $tags_to_remove_hash{$tag}++;
   }
 
-  foreach my $tag (@old_tags){
-    if(!$tags_to_remove_hash{$tag}){
+  foreach my $tag (@old_tags) {
+    if ( !$tags_to_remove_hash{$tag} ) {
       push @new_tags, $tag;
     }
   }
 
-  if(!$id_run) {
+  if ( !$id_run ) {
     croak q(Cannot add a tag without an existing run id);
   }
 
-  my $obj_uri = $util->base_uri().qq{/run/$id_run;update_tags};
-  my $payload = ['Content_Type' => 'form-data',
-                 'Content'      => [
-                                      'pipeline'        => 1,
-                                      'tags'            => "@new_tags",
-                                      'tagged_already'  => "@old_tags",
-                                   ],
-                ];
-  my $content = $util->post_non_xml($obj_uri, $payload);
-  if($content =~ /Run[ ]$id_run[ ]tagged/smx) {
+  my $obj_uri = $util->base_uri() . qq{/run/$id_run;update_tags};
+  my $payload = [
+    'Content_Type' => 'form-data',
+    'Content'      => [
+      'pipeline'       => 1,
+      'tags'           => "@new_tags",
+      'tagged_already' => "@old_tags",
+    ],
+  ];
+  my $content = $util->post_non_xml( $obj_uri, $payload );
+  if ( $content =~ /Run[ ]$id_run[ ]tagged/smx ) {
     carp qq{Run $id_run tags removed: @tags_to_remove.};
   }
   return 1;
