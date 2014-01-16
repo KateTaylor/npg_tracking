@@ -21,7 +21,7 @@ use Try::Tiny;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16261 $ =~ /(\d+)/mxs; $r; };
 
 Readonly::Scalar our $FEATURE_EXTENSION => q[.yml];
-Readonly::Scalar our $TEMP_DIR => q{/tmp};
+Readonly::Scalar our $TEMP_DIR          => q{/tmp};
 
 =head1 NAME
 
@@ -40,7 +40,6 @@ A Moose role for creating and loading a test sqlite database using an existing D
 =head1 SUBROUTINES/METHODS
 
 =cut
-
 
 =head2 rs_list2fixture
 
@@ -62,26 +61,26 @@ Takes three arguments:
    npg_testing::db::rs_list2fixture($t, [$rs]);
 
 =cut
-sub rs_list2fixture {
-    my ($self, $tname, $rs_list, $path) = @_;
-    if (!ref $self) {
-      $path = $rs_list;
-      $rs_list = $tname;
-      $tname = $self;
-    }
-    if (!$path) {
-      $path = getcwd();
-    }
-    my @rows = ();
-    foreach my $rs (@{$rs_list}) {
-        while (my $r = $rs->next) {
-            push @rows, {$r->get_columns};
-        }
-    }
-    DumpFile(catfile($path,$tname).$FEATURE_EXTENSION, \@rows);
-    return;
-}
 
+sub rs_list2fixture {
+  my ( $self, $tname, $rs_list, $path ) = @_;
+  if ( !ref $self ) {
+    $path    = $rs_list;
+    $rs_list = $tname;
+    $tname   = $self;
+  }
+  if ( !$path ) {
+    $path = getcwd();
+  }
+  my @rows = ();
+  foreach my $rs ( @{$rs_list} ) {
+    while ( my $r = $rs->next ) {
+      push @rows, { $r->get_columns };
+    }
+  }
+  DumpFile( catfile( $path, $tname ) . $FEATURE_EXTENSION, \@rows );
+  return;
+}
 
 =head2 load_fixtures
 
@@ -95,46 +94,47 @@ Old2new fixtures script
 ls -l | grep .yml | perl -nle 'my @columns = split q[ ], $_; my $old = pop @columns; my @w=split /-|_/, $old; my $number = shift @w; my $name = join q[], map {ucfirst $_} @w; $name = join q[-], $number, $name; `mv  $old $name`'
 
 =cut
+
 sub load_fixtures {
-    my ($self, $schema, $path) = @_;
+  my ( $self, $schema, $path ) = @_;
 
-    if (!$path && !(ref $schema)) {
-        $path = $schema;
-        $schema = $self;
-    }
-    if (!$path) {
-        croak 'Path should be given';
-    }
+  if ( !$path && !( ref $schema ) ) {
+    $path   = $schema;
+    $schema = $self;
+  }
+  if ( !$path ) {
+    croak 'Path should be given';
+  }
 
-    opendir my $dh, $path or croak "Could not open $path";
-    my @fixtures = sort grep { /[.]yml$/smix } readdir $dh;
-    closedir $dh;
-    if (scalar @fixtures == 0) { croak qq[no fixtures found at $path]; }
+  opendir my $dh, $path or croak "Could not open $path";
+  my @fixtures = sort grep { /[.]yml$/smix } readdir $dh;
+  closedir $dh;
+  if ( scalar @fixtures == 0 ) { croak qq[no fixtures found at $path]; }
 
-    for my $fx (@fixtures) {
-        my $yml  = LoadFile("$path/$fx");
-        my @temp = split m/[._]/sxm, $fx;
-        pop @temp;
-        my $table = join q[.], @temp;
-        $table =~ s/^(\d)+-//smx;
-        warn "+- Loading $fx into $table\n";
-        my $rs;
-        try {
-            $rs = $schema->resultset($table);
-	} catch { #old-style names have to be mapped to DBIx classes
-            ##no critic (ProhibitParensWithBuiltins)
-	    $table = join q[], map {ucfirst $_} split(/\./smx, $table);
-            ##use critic
-            if ($table eq q[QxYield]) {$table = q[QXYield];}
-            $rs = $schema->resultset($table);
-	};
-        foreach my $row (@{$yml}) {
-	    $rs->create($row);
-        }
+  for my $fx (@fixtures) {
+    my $yml = LoadFile("$path/$fx");
+    my @temp = split m/[._]/sxm, $fx;
+    pop @temp;
+    my $table = join q[.], @temp;
+    $table =~ s/^(\d)+-//smx;
+    warn "+- Loading $fx into $table\n";
+    my $rs;
+    try {
+      $rs = $schema->resultset($table);
     }
-    return;
+    catch {    #old-style names have to be mapped to DBIx classes
+      ##no critic (ProhibitParensWithBuiltins)
+      $table = join q[], map { ucfirst $_ } split( /\./smx, $table );
+      ##use critic
+      if ( $table eq q[QxYield] ) { $table = q[QXYield]; }
+      $rs = $schema->resultset($table);
+    };
+    foreach my $row ( @{$yml} ) {
+      $rs->create($row);
+    }
+  }
+  return;
 }
-
 
 =head2 create_test_db
 
@@ -147,31 +147,35 @@ named file in a temporary directory is used; this file will
 be cleaned up on exit.
 
 =cut
+
 sub create_test_db {
-    my ($self, $schema_package, $fixtures_path, $tmpdbfilename) = @_;
+  my ( $self, $schema_package, $fixtures_path, $tmpdbfilename ) = @_;
 
-    if (!$schema_package) { croak q[Schema package undefined in create_test_db]; }
+  if ( !$schema_package ) {
+    croak q[Schema package undefined in create_test_db];
+  }
 
-    ##no critic (ProhibitStringyEval RequireCheckingReturnValueOfEval)
-    eval "require $schema_package" or do { croak $EVAL_ERROR;} ;
-    ##use critic
+  ##no critic (ProhibitStringyEval RequireCheckingReturnValueOfEval)
+  eval "require $schema_package" or do { croak $EVAL_ERROR; };
+  ##use critic
 
-    if (!defined $tmpdbfilename) {
-       $tmpdbfilename = tempdir(
-         DIR => $TEMP_DIR,
-         CLEANUP => 1,
-       ) . q{/test.db};
-       carp $tmpdbfilename;
-    }
+  if ( !defined $tmpdbfilename ) {
+    $tmpdbfilename = tempdir(
+      DIR     => $TEMP_DIR,
+      CLEANUP => 1,
+    ) . q{/test.db};
+    carp $tmpdbfilename;
+  }
 
-    my $tmpschema = $schema_package->connect('dbi:SQLite:'.$tmpdbfilename);
-    $tmpschema->deploy;
-    if ($fixtures_path) {
-        $self->load_fixtures($tmpschema,  $fixtures_path);
-    } else {
-        carp q[Fixtures path undefined in create_test_db];
-    }
-    return $tmpschema;
+  my $tmpschema = $schema_package->connect( 'dbi:SQLite:' . $tmpdbfilename );
+  $tmpschema->deploy;
+  if ($fixtures_path) {
+    $self->load_fixtures( $tmpschema, $fixtures_path );
+  }
+  else {
+    carp q[Fixtures path undefined in create_test_db];
+  }
+  return $tmpschema;
 }
 
 =head2 deploy_test_db
@@ -182,32 +186,33 @@ full namespace, the second (optional) is the path to the
 directory where the fixtures are located.
 
 =cut
+
 sub deploy_test_db {
-    my ($schema_package, $fixtures_path) = @_;
+  my ( $schema_package, $fixtures_path ) = @_;
 
-    if (!$ENV{dev} || $ENV{dev} ne 'test') {
-      ##no critic (RequireInterpolationOfMetachars)
-      croak '$ENV{dev} should be set to "test"';
-      ##use critic
-    }
-    if (!$schema_package) {
-      croak q[Schema package undefined in create_test_db];
-    }
-
-    ##no critic (ProhibitStringyEval RequireCheckingReturnValueOfEval)
-    eval "require $schema_package" or do { croak $EVAL_ERROR;} ;
+  if ( !$ENV{dev} || $ENV{dev} ne 'test' ) {
+    ##no critic (RequireInterpolationOfMetachars)
+    croak '$ENV{dev} should be set to "test"';
     ##use critic
+  }
+  if ( !$schema_package ) {
+    croak q[Schema package undefined in create_test_db];
+  }
 
-    my $schema = $schema_package->connect();
-    $schema->deploy({add_drop_table => 1});
-    if ($fixtures_path) {
-       load_fixtures($schema,  $fixtures_path);
-    } else {
-        carp q[Fixtures path undefined in create_test_db];
-    }
-    return $schema;
+  ##no critic (ProhibitStringyEval RequireCheckingReturnValueOfEval)
+  eval "require $schema_package" or do { croak $EVAL_ERROR; };
+  ##use critic
+
+  my $schema = $schema_package->connect();
+  $schema->deploy( { add_drop_table => 1 } );
+  if ($fixtures_path) {
+    load_fixtures( $schema, $fixtures_path );
+  }
+  else {
+    carp q[Fixtures path undefined in create_test_db];
+  }
+  return $schema;
 }
-
 
 no Moose::Role;
 1;

@@ -13,12 +13,12 @@ use base qw(npg::model);
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_all();
 
 sub fields {
   return qw(id_designation
-            description);
+    description);
 }
 
 #

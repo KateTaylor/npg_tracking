@@ -15,18 +15,19 @@ extends 'npg_tracking::daemon';
 
 Readonly::Scalar our $PROXY_SERVER => q[wwwcache.sanger.ac.uk];
 Readonly::Scalar our $PROXY_PORT   => 3128;
-Readonly::Scalar our $COMMAND => qq[java -Xmx2g -Dhttp.proxyHost=$PROXY_SERVER -Dhttp.proxyPort=$PROXY_PORT -jar ~srpipe/jenkins.war --httpPort=9960];
+Readonly::Scalar our $COMMAND =>
+qq[java -Xmx2g -Dhttp.proxyHost=$PROXY_SERVER -Dhttp.proxyPort=$PROXY_PORT -jar ~srpipe/jenkins.war --httpPort=9960];
 
-override '_build_hosts' => sub { return ['sf-4-1-02','sf2-farm-srv1']; };
-override '_build_env_vars' => sub { return {'http_proxy' => qq[http://$PROXY_SERVER:$PROXY_PORT]}; };
-override 'command'  => sub {
-  my ($self, $host) = @_;
+override '_build_hosts' => sub { return [ 'sf-4-1-02', 'sf2-farm-srv1' ]; };
+override '_build_env_vars' =>
+  sub { return { 'http_proxy' => qq[http://$PROXY_SERVER:$PROXY_PORT] }; };
+override 'command' => sub {
+  my ( $self, $host ) = @_;
   my $log_name = join q[_], q[jenkins], $host, $self->timestamp();
-  $log_name .=  q[.log];
-  return join q[ ], $COMMAND, q[--logfile=] . $self->log_dir . q[/]. $log_name;
+  $log_name .= q[.log];
+  return join q[ ], $COMMAND, q[--logfile=] . $self->log_dir . q[/] . $log_name;
 };
-override 'daemon_name'  => sub { return 'npg_jenkins'; };
-
+override 'daemon_name' => sub { return 'npg_jenkins'; };
 
 no Moose;
 

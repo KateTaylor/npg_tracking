@@ -14,11 +14,11 @@ use Moose;
 our $VERSION = do { my ($r) = q$Revision: 7844 $ =~ /(\d+)/smx; $r; };
 
 with qw/
-          npg_tracking::glossary::run
-          npg_tracking::glossary::lane
-          npg_tracking::glossary::tag
-          npg_tracking::data::reference::find
-       /;
+  npg_tracking::glossary::run
+  npg_tracking::glossary::lane
+  npg_tracking::glossary::tag
+  npg_tracking::data::reference::find
+  /;
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

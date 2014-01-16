@@ -16,7 +16,7 @@ use Carp;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15341 $ =~ /(\d+)/mxs; $r; };
 
-our @EXPORT_OK = qw(person_info);  # symbols to export on request
+our @EXPORT_OK = qw(person_info);    # symbols to export on request
 
 Readonly::Scalar our $SANGER_LDAP_SERVER => 'ldap.internal.sanger.ac.uk';
 Readonly::Scalar our $LDAP_SEARCH_BASE   => 'ou=people,dc=sanger,dc=ac,dc=uk';
@@ -24,26 +24,32 @@ Readonly::Scalar our $LDAP_SEARCH_BASE   => 'ou=people,dc=sanger,dc=ac,dc=uk';
 sub person_info {
   my $username = shift;
 
-  my $info = {name => q[], team => q[],};
-  if (!$username) {
-    warn qq[Warning: cannot retrieve person info from LDAP server since username is not given.\n];
+  my $info = { name => q[], team => q[], };
+  if ( !$username ) {
+    warn
+qq[Warning: cannot retrieve person info from LDAP server since username is not given.\n];
     return $info;
   }
 
-  my $ldap=Net::LDAP->new($SANGER_LDAP_SERVER) or croak qq[Cannot connect to LDAP server $SANGER_LDAP_SERVER: $EVAL_ERROR];
-  $ldap->bind; # anonymous
-  my $mesg=$ldap->search(base => $LDAP_SEARCH_BASE,
-                         filter => "(&(sangerActiveAccount=TRUE)(sangerRealPerson=TRUE)(|(uid=$username)))",
-                         attrs => ['sn', 'givenName', 'cn', 'departmentNumber']  #jpegPhoto attr also available
-                        );
-  $mesg->code && croak qq[LDAP error when searching for $username: ] . $mesg->error;
-  my @entries=$mesg->entries();
-  if (scalar @entries == 1) {
+  my $ldap = Net::LDAP->new($SANGER_LDAP_SERVER)
+    or croak qq[Cannot connect to LDAP server $SANGER_LDAP_SERVER: $EVAL_ERROR];
+  $ldap->bind;    # anonymous
+  my $mesg = $ldap->search(
+    base => $LDAP_SEARCH_BASE,
+    filter =>
+      "(&(sangerActiveAccount=TRUE)(sangerRealPerson=TRUE)(|(uid=$username)))",
+    attrs => [ 'sn', 'givenName', 'cn',
+      'departmentNumber' ]    #jpegPhoto attr also available
+  );
+  $mesg->code
+    && croak qq[LDAP error when searching for $username: ] . $mesg->error;
+  my @entries = $mesg->entries();
+  if ( scalar @entries == 1 ) {
     my $entry = $entries[0];
-    my $sn = $entry->get_value('sn') || q[];
-    my $gn = $entry->get_value('givenName') || q[];
-    my $cn = $entry->get_value('cn') || q[];
-    if($cn ne $gn . q[ ] . $sn) {
+    my $sn    = $entry->get_value('sn') || q[];
+    my $gn    = $entry->get_value('givenName') || q[];
+    my $cn    = $entry->get_value('cn') || q[];
+    if ( $cn ne $gn . q[ ] . $sn ) {
       $cn =~ s/\s+.*$//smx;
       $gn .= ' (' . $cn . ')';
     }

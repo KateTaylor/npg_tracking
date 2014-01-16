@@ -25,72 +25,84 @@ Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 14928 $ =~ /(\d+)/sm
 
 my $MAIL_DOMAIN = npg::util::mail_domain();
 
-Readonly::Scalar our $LAST_INDEX => -1;
+Readonly::Scalar our $LAST_INDEX         => -1;
 Readonly::Scalar our $DESCRIPTION_LENGTH => 255;
 
-__PACKAGE__->mk_accessors(fields(), 'run');
-__PACKAGE__->has_a(['event_type', 'user']);
+__PACKAGE__->mk_accessors( fields(), 'run' );
+__PACKAGE__->has_a( [ 'event_type', 'user' ] );
 
 sub fields {
   return qw(id_event
-            id_event_type
-            date
-            description
-            entity_id
-            id_user);
+    id_event_type
+    date
+    description
+    entity_id
+    id_user);
 }
 
 sub init {
   my ($self) = @_;
 
-  if($self->{entity_type_description} &&
-     !$self->{id_entity_type}) {
-    my $ent = npg::model::entity_type->new({
-					    description => $self->{entity_type_description},
-					    util        => $self->util(),
-					   });
+  if ( $self->{entity_type_description}
+    && !$self->{id_entity_type} )
+  {
+    my $ent = npg::model::entity_type->new(
+      {
+        description => $self->{entity_type_description},
+        util        => $self->util(),
+      }
+    );
     $self->{id_entity_type} = $ent->id_entity_type();
   }
 
-  if($self->{event_type_description} &&
-     !$self->{id_event_type} &&
-     $self->{id_entity_type}) {
-    my $ent = npg::model::event_type->new({
-					   description    => $self->{event_type_description},
-					   id_entity_type => $self->{id_entity_type},
-					   util           => $self->util(),
-					  });
+  if ( $self->{event_type_description}
+    && !$self->{id_event_type}
+    && $self->{id_entity_type} )
+  {
+    my $ent = npg::model::event_type->new(
+      {
+        description    => $self->{event_type_description},
+        id_entity_type => $self->{id_entity_type},
+        util           => $self->util(),
+      }
+    );
     $self->{id_event_type} = $ent->id_event_type();
   }
   return $self;
 }
 
 sub create {
-  my ($self, $arg_refs) = @_;
+  my ( $self, $arg_refs ) = @_;
   my $util = $self->util();
 
-  if($self->{entity_type_description} &&
-     !$self->{id_entity_type}) {
-    my $et = npg::model::entity_type->new({
-					   util        => $util,
-					   description => $self->{'entity_type_description'},
-					  });
+  if ( $self->{entity_type_description}
+    && !$self->{id_entity_type} )
+  {
+    my $et = npg::model::entity_type->new(
+      {
+        util        => $util,
+        description => $self->{'entity_type_description'},
+      }
+    );
     $self->{id_entity_type} = $et->id_entity_type();
   }
 
-  if($self->{event_type_description} &&
-     $self->{id_entity_type} &&
-     !$self->{id_event_type}) {
-    my $et = npg::model::event_type->new({
-					  util           => $util,
-					  description    => $self->{event_type_description},
-					  id_entity_type => $self->{id_entity_type},
-					 });
+  if ( $self->{event_type_description}
+    && $self->{id_entity_type}
+    && !$self->{id_event_type} )
+  {
+    my $et = npg::model::event_type->new(
+      {
+        util           => $util,
+        description    => $self->{event_type_description},
+        id_entity_type => $self->{id_entity_type},
+      }
+    );
     $self->{event_type}    = $et;
     $self->{id_event_type} = $et->id_event_type();
   }
 
-  if(!$self->{id_user}) {
+  if ( !$self->{id_user} ) {
     $self->{id_user} = $util->requestor->id_user();
   }
 

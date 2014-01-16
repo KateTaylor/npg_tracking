@@ -19,7 +19,12 @@ with qw{npg::email::roles::event_attributes};
 
 Readonly::Scalar my $TEMPLATE => 'run_annotation.tt2';
 
-has q{_entity_check} => ( isa => q{Str}, init_arg => undef, is => q{ro}, default => q{npg_tracking::Schema::Result::RunAnnotation} );
+has q{_entity_check} => (
+  isa      => q{Str},
+  init_arg => undef,
+  is       => q{ro},
+  default  => q{npg_tracking::Schema::Result::RunAnnotation}
+);
 
 sub _build_template {
   my ($self) = @_;
@@ -55,9 +60,12 @@ sub run {
   $self->compose_email();
   $self->send_email(
     {
-      body => $self->next_email(),
-      to   => $self->watchers(),
-      subject => q{Run } . $self->id_run() . q{ has been annotated by } . $self->user(),
+      body    => $self->next_email(),
+      to      => $self->watchers(),
+      subject => q{Run }
+        . $self->id_run()
+        . q{ has been annotated by }
+        . $self->user(),
     }
   );
 
@@ -88,9 +96,11 @@ sub compose_email {
       annotation => $self->event_row->description(),
       dev        => $self->dev(),
     },
-  ) or do {
-    croak sprintf '%s error: %s', $template_obj->error->type(), $template_obj->error->info();
-  };
+    )
+    or do {
+    croak sprintf '%s error: %s', $template_obj->error->type(),
+      $template_obj->error->info();
+    };
 
   return $template_obj;
 }
@@ -106,19 +116,21 @@ sub understands {
   my ( $class, $data ) = @_;
 
   if (
-      (    $data->{event_row}
-        && $data->{event_row}->event_type->description() eq q{annotation}
-        && $data->{event_row}->event_type->entity_type->description() eq q{run_annotation} )
-         ||
-      (    $data->{entity_type} eq q{run_annotation}
-        && $data->{event_type}  eq q{annotation} )
-     ) {
-    return $class->new( $data );
+    (
+         $data->{event_row}
+      && $data->{event_row}->event_type->description() eq q{annotation}
+      && $data->{event_row}->event_type->entity_type->description() eq
+      q{run_annotation}
+    )
+    || ( $data->{entity_type} eq q{run_annotation}
+      && $data->{event_type} eq q{annotation} )
+    )
+  {
+    return $class->new($data);
   }
 
   return;
 }
-
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

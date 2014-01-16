@@ -17,9 +17,9 @@ use Readonly;
 Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15220 $ =~ /(\d+)/smx; $r; };
 
 sub new {
-  my ($class, @args) = @_;
+  my ( $class, @args ) = @_;
   my $self = $class->SUPER::new(@args);
-  my $id   = $self->model->id_run_status() || q();
+  my $id = $self->model->id_run_status() || q();
   return $self;
 }
 
@@ -33,19 +33,20 @@ sub authorised {
   #########
   # Allow pipeline group access to the create_xml interface of run_status
   #
-  if($aspect eq 'create_xml' &&
-     $requestor->is_member_of('pipeline')) {
+  if ( $aspect eq 'create_xml'
+    && $requestor->is_member_of('pipeline') )
+  {
     return 1;
   }
 
-  if(($action eq 'create' ||
-      $action eq 'read'   ||
-      $action eq 'list') &&
-     ($requestor->is_member_of('loaders')    ||
-      $requestor->is_member_of('engineers')  ||
-      $requestor->is_member_of('annotators') ||
-      $requestor->is_member_of('manual_qc')
-  )) {
+  if (
+    ( $action eq 'create' || $action eq 'read' || $action eq 'list' )
+    && ( $requestor->is_member_of('loaders')
+      || $requestor->is_member_of('engineers')
+      || $requestor->is_member_of('annotators')
+      || $requestor->is_member_of('manual_qc') )
+    )
+  {
     return 1;
   }
 
@@ -53,30 +54,31 @@ sub authorised {
 }
 
 sub add_ajax {
-  my $self           = shift;
-  my $cgi            = $self->util->cgi();
-  my $model          = $self->model();
-  my $id_run         = $cgi->param('id_run');
+  my $self   = shift;
+  my $cgi    = $self->util->cgi();
+  my $model  = $self->model();
+  my $id_run = $cgi->param('id_run');
   $model->{'id_run'} = $id_run;
   return;
 }
 
 sub create {
-  my $self              = shift;
-  my $cgi               = $self->util->cgi();
-  my $model             = $self->model();
-  my $requestor         = $self->util->requestor();
-  $cgi->param('id_user', $requestor->id_user());
+  my $self      = shift;
+  my $cgi       = $self->util->cgi();
+  my $model     = $self->model();
+  my $requestor = $self->util->requestor();
+  $cgi->param( 'id_user', $requestor->id_user() );
   $model->{update_pair} = $cgi->param('update_pair');
 
   return $self->SUPER::create();
 }
 
 sub list_xml {
-  my $self = shift;
+  my $self     = shift;
   my $template = q[run_status_list_xml.tt2];
   print "Content-type: text/xml\n\n" or croak $OS_ERROR;
   $self->process_template('run_status_list_xml.tt2');
+
   # flush and close
   $self->output_finished(1);
   return 1;

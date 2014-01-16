@@ -14,22 +14,22 @@ use warnings;
 use Moose;
 use MooseX::AttributeHelpers;
 
-our $VERSION    = do { my ($r) = q$Revision: 16549 $ =~ /(\d+)/smx; $r; };
+our $VERSION = do { my ($r) = q$Revision: 16549 $ =~ /(\d+)/smx; $r; };
 
 has 'mlist' => (
-      metaclass => 'Collection::Array',
-      is        => 'ro',
-      isa       => 'ArrayRef[Str]',
-      default   => sub { [] },
-      provides  => {
-          'push'     => 'push',
-          'pop'      => 'pop',
-          'count'    => 'count',
-          'empty'    => 'empty',
-          'clear'    => 'clear',
-          'elements' => 'messages',
-      },
-                 );
+  metaclass => 'Collection::Array',
+  is        => 'ro',
+  isa       => 'ArrayRef[Str]',
+  default   => sub { [] },
+  provides  => {
+    'push'     => 'push',
+    'pop'      => 'pop',
+    'count'    => 'count',
+    'empty'    => 'empty',
+    'clear'    => 'clear',
+    'elements' => 'messages',
+  },
+);
 no Moose;
 
 1;

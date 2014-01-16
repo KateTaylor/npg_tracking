@@ -15,10 +15,10 @@ use Carp;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 14897 $ =~ /(\d+)/smx; $r; };
 
-sub read { ## no critic (Subroutines::ProhibitBuiltinHomonyms)
+sub read {    ## no critic (Subroutines::ProhibitBuiltinHomonyms)
   my ($self) = @_;
   my $model = $self->model();
-  $model->query($model->dummy_pk());
+  $model->query( $model->dummy_pk() );
   return 1;
 }
 
@@ -28,8 +28,8 @@ sub list {
   my $cgi   = $util->cgi();
   my $query = $cgi->param('query') || q();
   my $model = $self->model();
-  $query    =~ s/^\s+//smx;
-  $query    =~ s/\s+$//smx;
+  $query =~ s/^\s+//smx;
+  $query =~ s/\s+$//smx;
 
   $model->query($query);
 
@@ -45,7 +45,8 @@ sub list_advanced {
   $model->util($util);
   $model->query($query);
   if ($query) {
-    foreach my $field ($model->fields()) {
+
+    foreach my $field ( $model->fields() ) {
       $model->{$field} = $cgi->param($field) || undef;
     }
   }
@@ -66,7 +67,7 @@ sub list_advanced_ajax {
 }
 
 sub list_advanced_xml {
-  my $self = shift;
+  my $self  = shift;
   my $util  = $self->util();
   my $model = $self->model();
   $model->util($util);

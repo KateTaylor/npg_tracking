@@ -16,13 +16,13 @@ use English qw(-no_match_vars);
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
 sub new {
-  my ($class, @args) = @_;
+  my ( $class, @args ) = @_;
   my $self  = $class->SUPER::new(@args);
   my $model = $self->model();
   my $idrsd = $model->id_run_status_dict();
 
-  if($idrsd && $idrsd !~ /^\d+$/smx) {
-    $model->description($model->id_run_status_dict());
+  if ( $idrsd && $idrsd !~ /^\d+$/smx ) {
+    $model->description( $model->id_run_status_dict() );
     $model->id_run_status_dict(0);
     $model->init();
   }
@@ -31,10 +31,10 @@ sub new {
 }
 
 sub render {
-  my ($self, @args) = @_;
+  my ( $self, @args ) = @_;
   my $aspect = $self->aspect() || q();
 
-  if($aspect eq 'read_xml') {
+  if ( $aspect eq 'read_xml' ) {
     $self->read_xml();
     return q[];
   }
@@ -52,8 +52,8 @@ sub read_xml {
 
   $self->process_template('run_status_dict_read_header_xml.tt2');
 
-  for my $row (@{$model->runs()}) {
-    $self->process_template('run_list_row_xml.tt2', {run=>$row});
+  for my $row ( @{ $model->runs() } ) {
+    $self->process_template( 'run_list_row_xml.tt2', { run => $row } );
   }
 
   $self->process_template('run_status_dict_read_footer_xml.tt2');

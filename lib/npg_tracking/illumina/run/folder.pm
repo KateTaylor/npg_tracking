@@ -24,77 +24,161 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16549 
 
 with 'npg_tracking::illumina::run::folder::location';
 
-Readonly::Scalar our $TAG_QSEQS     => q{tag_qseqs};
-Readonly::Scalar our $QC_DIR        => q{qc};
-Readonly::Scalar our $BASECALL_DIR  => q{BaseCalls};
-Readonly::Scalar our $BASECALL_MATCH => q{_basecalls_};
-Readonly::Scalar our $ARCHIVE_DIR   => q{archive};
-Readonly::Scalar our $SUMMARY_LINK  => q{Latest_Summary};
-Readonly::Array  our @RECALIBRATED_DIR_MATCH  => ( qw{GERALD PB_cal no_cal} );
-Readonly::Array  our @BUSTARD_DIR_MATCH       => ( q{Bustard}, $BASECALL_DIR, $BASECALL_MATCH );
-Readonly::Array  our @INTENSITY_DIR_MATCH     => ( qw{Intensities Firecrest} );
+Readonly::Scalar our $TAG_QSEQS             => q{tag_qseqs};
+Readonly::Scalar our $QC_DIR                => q{qc};
+Readonly::Scalar our $BASECALL_DIR          => q{BaseCalls};
+Readonly::Scalar our $BASECALL_MATCH        => q{_basecalls_};
+Readonly::Scalar our $ARCHIVE_DIR           => q{archive};
+Readonly::Scalar our $SUMMARY_LINK          => q{Latest_Summary};
+Readonly::Array our @RECALIBRATED_DIR_MATCH => (qw{GERALD PB_cal no_cal});
+Readonly::Array our @BUSTARD_DIR_MATCH =>
+  ( q{Bustard}, $BASECALL_DIR, $BASECALL_MATCH );
+Readonly::Array our @INTENSITY_DIR_MATCH => (qw{Intensities Firecrest});
 
 ##############
 # public methods
 
 Readonly::Array our @ORDER_TO_ASSESS_SUBPATH_ASSIGNATION => (
-    qw{
-      recalibrated_path basecall_path bustard_path intensity_path
-      data_path pb_cal_path qc_path archive_path tag_qseqs_path
-      runfolder_path
+  qw{
+    recalibrated_path basecall_path bustard_path intensity_path
+    data_path pb_cal_path qc_path archive_path tag_qseqs_path
+    runfolder_path
     }
-  );
+);
 
-has q{analysis_path}      => ( isa => q{Str}, is => q{ro}, lazy_build => 1,
-                                 documentation => qq{Path to the analysis directory to be used, generally equivalent to recalibrated_path.\nIf not set on construction, will default to an empty string - you should request recalibrated_path}, );
+has q{analysis_path} => (
+  isa        => q{Str},
+  is         => q{ro},
+  lazy_build => 1,
+  documentation =>
+qq{Path to the analysis directory to be used, generally equivalent to recalibrated_path.\nIf not set on construction, will default to an empty string - you should request recalibrated_path},
+);
 
-has q{data_path}          => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_data_path},
-                                 documentation => 'Path to the "Data" directory',);
-has q{reports_path}       => ( isa => q{Str}, is => q{ro}, lazy_build => 1,
-                                 documentation => 'Path to the "reports" directory',);
-has q{intensity_path}     => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_intensity_path},
-                                 documentation => 'Path to the "Intensities" directory',);
-has q{bustard_path}       => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_bustard_path},
-                                 documentation => 'Path to the "Bustard" directory',);
-has q{basecall_path}      => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_basecall_path},
-                                 documentation => 'Path to the "Basecalls" directory',);
-has q{bam_basecall_path}  => ( isa => q{Str}, is => q{ro}, predicate => 'has_bam_basecall_path',  writer => q{_set_bam_basecall_path},
-                                 documentation => 'Path to the "BAM Basecalls" directory',);
-has q{dif_files_path}      => ( isa => q{Str}, is => q{ro}, predicate => 'has_dif_files_path',  writer => q{_set_dif_files_path},
-                                 documentation => 'Path to the "dif files" directory',);
-has q{recalibrated_path}  => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_recalibrated_path},
-                                 documentation => 'Path to the recalibrated qualities directory (e.g. "GERALD")',);
-has q{pb_cal_path}        => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_pb_cal_path},
-                                 documentation => 'Path to the PB_cal directory',);
-has q{tag_qseqs_path}     => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_tag_qseqs_path},
-                                 documentation => 'Path to the tagged qseq directory',);
-has q{archive_path}       => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_archive_path},
-                                 documentation => 'Path to the output ready for archiving directory',);
-has q{qc_path}            => ( isa => q{Str}, is => q{ro}, lazy_build => 1,
-                                 documentation => 'Path to the QC directory',);
-has q{score_path}         => ( isa => q{Str}, is => q{ro}, lazy_build => 1,
-                                 documentation => 'Path to the directory containing score files',);
-has q{qseq_location_path} => ( isa => q{Str}, is => q{ro}, lazy_build => 1, writer => q{_set_qseq_location_path},
-                                 documentation => 'Path to the directory which may be containing calibrated qseq files',);
+has q{data_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  writer        => q{_set_data_path},
+  documentation => 'Path to the "Data" directory',
+);
+has q{reports_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  documentation => 'Path to the "reports" directory',
+);
+has q{intensity_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  writer        => q{_set_intensity_path},
+  documentation => 'Path to the "Intensities" directory',
+);
+has q{bustard_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  writer        => q{_set_bustard_path},
+  documentation => 'Path to the "Bustard" directory',
+);
+has q{basecall_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  writer        => q{_set_basecall_path},
+  documentation => 'Path to the "Basecalls" directory',
+);
+has q{bam_basecall_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  predicate     => 'has_bam_basecall_path',
+  writer        => q{_set_bam_basecall_path},
+  documentation => 'Path to the "BAM Basecalls" directory',
+);
+has q{dif_files_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  predicate     => 'has_dif_files_path',
+  writer        => q{_set_dif_files_path},
+  documentation => 'Path to the "dif files" directory',
+);
+has q{recalibrated_path} => (
+  isa        => q{Str},
+  is         => q{ro},
+  lazy_build => 1,
+  writer     => q{_set_recalibrated_path},
+  documentation =>
+    'Path to the recalibrated qualities directory (e.g. "GERALD")',
+);
+has q{pb_cal_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  writer        => q{_set_pb_cal_path},
+  documentation => 'Path to the PB_cal directory',
+);
+has q{tag_qseqs_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  writer        => q{_set_tag_qseqs_path},
+  documentation => 'Path to the tagged qseq directory',
+);
+has q{archive_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  writer        => q{_set_archive_path},
+  documentation => 'Path to the output ready for archiving directory',
+);
+has q{qc_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  documentation => 'Path to the QC directory',
+);
+has q{score_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  documentation => 'Path to the directory containing score files',
+);
+has q{qseq_location_path} => (
+  isa        => q{Str},
+  is         => q{ro},
+  lazy_build => 1,
+  writer     => q{_set_qseq_location_path},
+  documentation =>
+    'Path to the directory which may be containing calibrated qseq files',
+);
 
-has q{npg_tracking_schema} => ( isa => q{Maybe[npg_tracking::Schema]}, is => q{ro}, lazy_build => 1,
-                                 documentation => 'NPG tracking DBIC schema', );
+has q{npg_tracking_schema} => (
+  isa           => q{Maybe[npg_tracking::Schema]},
+  is            => q{ro},
+  lazy_build    => 1,
+  documentation => 'NPG tracking DBIC schema',
+);
 
 #############
 # private methods
-has q{subpath} => ( isa => q{Str}, is => q{ro}, predicate => q{has_subpath}, writer => q{_set_subpath});
+has q{subpath} => (
+  isa       => q{Str},
+  is        => q{ro},
+  predicate => q{has_subpath},
+  writer    => q{_set_subpath}
+);
 
 sub _given_path {
   my ($self) = @_;
 
-  if ($self->has_subpath()) {
+  if ( $self->has_subpath() ) {
     return $self->subpath();
   }
 
   my $subpath = q{};
   foreach my $path_method (@ORDER_TO_ASSESS_SUBPATH_ASSIGNATION) {
     my $has_path_method = q{has_} . $path_method;
-    if ($self->$has_path_method()) {
+    if ( $self->$has_path_method() ) {
       $subpath = $self->$path_method();
       last;
     }
@@ -111,7 +195,8 @@ sub _build_npg_tracking_schema {
   my $schema;
   try {
     $schema = npg_tracking::Schema->connect();
-  } catch {
+  }
+  catch {
     warn qq{Unable to connect to NPG tracking DB for faster globs.\n};
   };
   return $schema;
@@ -192,93 +277,108 @@ sub _populate_directory_paths {
 
   # if recalibrated_path has been provided/populated, use this
   if ( $self->has_recalibrated_path() ) {
-    return $self->_process_path($self->recalibrated_path());
+    return $self->_process_path( $self->recalibrated_path() );
   }
 
   # if an analysis_path has been provided, then use this
   if ( $self->has_analysis_path() && $self->analysis_path() ) {
-    return $self->_process_path($self->analysis_path());
+    return $self->_process_path( $self->analysis_path() );
   }
 
   # else try to find the recalibrated analysis path
-  my $path = $self->_find_recalibrated_directory_path($self->runfolder_path());
+  my $path =
+    $self->_find_recalibrated_directory_path( $self->runfolder_path() );
   return $self->_process_path($path);
 }
 
 sub _process_path {
-  my ($self, $path) = @_;
+  my ( $self, $path ) = @_;
 
   my @path = split m{/}xms, $path;
 
-  my ($intensity_dir, $bustard_dir, $recalibrated_dir) = (q{},q{},q{});
+  my ( $intensity_dir, $bustard_dir, $recalibrated_dir ) = ( q{}, q{}, q{} );
 
   foreach my $section (@path) {
 
     my $populated_something = 0;
-    foreach my $dir_name ( @INTENSITY_DIR_MATCH ) {
+    foreach my $dir_name (@INTENSITY_DIR_MATCH) {
       if ( $section =~ /$dir_name/xms ) {
         $intensity_dir = $section;
         $populated_something++;
         last;
       }
     }
-    if ( $populated_something ) {
+    if ($populated_something) {
       next;
     }
 
-    foreach my $dir_name ( @BUSTARD_DIR_MATCH ) {
+    foreach my $dir_name (@BUSTARD_DIR_MATCH) {
       if ( $section =~ /$dir_name/xms ) {
         $bustard_dir = $section;
         $populated_something++;
         last;
       }
     }
-    if ( $populated_something ) {
+    if ($populated_something) {
       next;
     }
 
-    foreach my $dir_name ( @RECALIBRATED_DIR_MATCH ) {
+    foreach my $dir_name (@RECALIBRATED_DIR_MATCH) {
       if ( $section =~ /$dir_name/xms ) {
         $recalibrated_dir = $section;
         $populated_something++;
         last;
       }
     }
-    if ( $populated_something ) {
+    if ($populated_something) {
       next;
     }
 
   }
 
   my $use_bustard_as_recalibrated;
-  if ( $intensity_dir && $bustard_dir && ! $recalibrated_dir ) {
-    if ( $self->can( q{log} ) ) {
-      my $msg = $self->id_run() . q{: No recalibrated_dir worked out, I will use the bustard_path as the recalibrated path, unless you have already provided it};
-      $self->log( $msg );
+  if ( $intensity_dir && $bustard_dir && !$recalibrated_dir ) {
+    if ( $self->can(q{log}) ) {
+      my $msg = $self->id_run()
+        . q{: No recalibrated_dir worked out, I will use the bustard_path as the recalibrated path, unless you have already provided it};
+      $self->log($msg);
     }
     $use_bustard_as_recalibrated++;
   }
 
-  if ( ! ($intensity_dir && $bustard_dir) ) {
-      confess $self->id_run() . qq{: no intensity or bustard directory: $path};
+  if ( !( $intensity_dir && $bustard_dir ) ) {
+    confess $self->id_run() . qq{: no intensity or bustard directory: $path};
   }
 
-  my $intensity_path     = $self->runfolder_path() . qq{/Data/$intensity_dir};
-  my $bustard_path       = qq{$intensity_path/$bustard_dir};
-  my $basecall_path      = qq{$intensity_path/$BASECALL_DIR};
-  my $recalibrated_path = $use_bustard_as_recalibrated ?  $bustard_path
-                        :                                 qq{$bustard_path/$recalibrated_dir}
-                        ;
+  my $intensity_path = $self->runfolder_path() . qq{/Data/$intensity_dir};
+  my $bustard_path   = qq{$intensity_path/$bustard_dir};
+  my $basecall_path  = qq{$intensity_path/$BASECALL_DIR};
+  my $recalibrated_path =
+      $use_bustard_as_recalibrated
+    ? $bustard_path
+    : qq{$bustard_path/$recalibrated_dir};
 
-  if (!$self->has_data_path())         { $self->_set_data_path($self->runfolder_path() . q{/Data}); };
-  if (!$self->has_intensity_path())    { $self->_set_intensity_path($intensity_path); };
-  if (!$self->has_bustard_path())      { $self->_set_bustard_path($bustard_path); };
-  if (!$self->has_basecall_path())     { $self->_set_basecall_path($basecall_path); };
-  if (!$self->has_pb_cal_path())       { $self->_set_pb_cal_path($bustard_path . q{/PB_cal}); };
-  if (!$self->has_recalibrated_path()) { $self->_set_recalibrated_path($recalibrated_path); };
+  if ( !$self->has_data_path() ) {
+    $self->_set_data_path( $self->runfolder_path() . q{/Data} );
+  }
+  if ( !$self->has_intensity_path() ) {
+    $self->_set_intensity_path($intensity_path);
+  }
+  if ( !$self->has_bustard_path() ) { $self->_set_bustard_path($bustard_path); }
+  if ( !$self->has_basecall_path() ) {
+    $self->_set_basecall_path($basecall_path);
+  }
+  if ( !$self->has_pb_cal_path() ) {
+    $self->_set_pb_cal_path( $bustard_path . q{/PB_cal} );
+  }
+  if ( !$self->has_recalibrated_path() ) {
+    $self->_set_recalibrated_path($recalibrated_path);
+  }
 
-  if ($self->can(q{verbose}) && $self->verbose()) {
-    foreach my $dir (qw{data intensity bustard basecall recalibrated tag_qseqs pb_cal}) {
+  if ( $self->can(q{verbose}) && $self->verbose() ) {
+    foreach my $dir (
+      qw{data intensity bustard basecall recalibrated tag_qseqs pb_cal})
+    {
       my $subpath_dir = $dir . q{_path};
       carp qq{$dir : } . $self->$subpath_dir();
     }
@@ -287,13 +387,12 @@ sub _process_path {
   return 1;
 }
 
-
 sub _find_recalibrated_directory_path {
   my ( $self, $path ) = @_;
   my $recalibrated_path;
 
   # have users declared analysis_path, try this
-  if ($self->has_analysis_path()) {
+  if ( $self->has_analysis_path() ) {
     $recalibrated_path = $self->_recalibrated_path( $self->analysis_path() );
   }
 
@@ -302,7 +401,7 @@ sub _find_recalibrated_directory_path {
   }
 
   # have users declared any subpaths, try this
-  if ($self->_given_path()) {
+  if ( $self->_given_path() ) {
     $recalibrated_path = $self->_recalibrated_path( $self->_given_path() );
   }
 
@@ -313,27 +412,30 @@ sub _find_recalibrated_directory_path {
   # try current directory, as we may already be there
   my ($dir) = getcwd() =~ m{ ([[:word:]/.,+-]+) }xms;
   $dir ||= q{};
-  $dir =~ s{\A/*private}{}xms; # some environments may cause this to be appended to the directory
+  $dir =~ s{\A/*private}{}xms
+    ;    # some environments may cause this to be appended to the directory
 
   if ( $dir =~ m{/Data/}xms ) {
-    $recalibrated_path = $self->_recalibrated_path( $dir );
+    $recalibrated_path = $self->_recalibrated_path($dir);
   }
 
   if ($recalibrated_path) {
     return $recalibrated_path;
   }
 
-  if ( -l qq{$path/$SUMMARY_LINK}) {
-    $recalibrated_path = $self->_recalibrated_path( readlink qq{$path/$SUMMARY_LINK} );
+  if ( -l qq{$path/$SUMMARY_LINK} ) {
+    $recalibrated_path =
+      $self->_recalibrated_path( readlink qq{$path/$SUMMARY_LINK} );
   }
 
   if ($recalibrated_path) {
     return $recalibrated_path;
   }
 
-  $recalibrated_path = $self->_try_to_find_recalibrated_path_from_runfolder_path($path);
+  $recalibrated_path =
+    $self->_try_to_find_recalibrated_path_from_runfolder_path($path);
 
-  if ( ! defined $recalibrated_path) {
+  if ( !defined $recalibrated_path ) {
     croak $self->id_run() . q[: Could not find usable recalibrated directory];
   }
 
@@ -342,49 +444,52 @@ sub _find_recalibrated_directory_path {
 
 # globs the filesystem under runfolder_path to see if it can find recalibrated directory. Croaks if it finds more than one.
 sub _try_to_find_recalibrated_path_from_runfolder_path {
-  my ($self, $rf_path) = @_;
+  my ( $self, $rf_path ) = @_;
   $rf_path ||= $self->runfolder_path();
 
   my @dirs;
-  foreach my $int_dir_name ( @INTENSITY_DIR_MATCH ) {
-    foreach my $bustard_dir_name ( @BUSTARD_DIR_MATCH ) {
-      foreach my $recal_dir_name ( @RECALIBRATED_DIR_MATCH ) {
-        my @temp_dirs = glob $rf_path . qq{/Data/*$int_dir_name*/$bustard_dir_name*/$recal_dir_name*};
+  foreach my $int_dir_name (@INTENSITY_DIR_MATCH) {
+    foreach my $bustard_dir_name (@BUSTARD_DIR_MATCH) {
+      foreach my $recal_dir_name (@RECALIBRATED_DIR_MATCH) {
+        my @temp_dirs = glob $rf_path
+          . qq{/Data/*$int_dir_name*/$bustard_dir_name*/$recal_dir_name*};
         push @dirs, @temp_dirs;
       }
     }
   }
 
-  @dirs = grep {-d $_} @dirs;
+  @dirs = grep { -d $_ } @dirs;
 
-  if (scalar@dirs > 1) {
+  if ( scalar @dirs > 1 ) {
     my $dirs_string = join qq{\n}, @dirs;
-    croak $self->id_run() . qq{: found multiple possible recalibrated_directories\n$dirs_string\n};
+    croak $self->id_run()
+      . qq{: found multiple possible recalibrated_directories\n$dirs_string\n};
   }
 
-  if (scalar@dirs == 1) {
+  if ( scalar @dirs == 1 ) {
     return $dirs[0];
   }
 
-  if ( $self->can( q{log} ) ) {
-    my $msg = $self->id_run() . q{: no recalibrated directories found. If I find only 1 bustard level directory, I will use that};
-    $self->log( $msg );
+  if ( $self->can(q{log}) ) {
+    my $msg = $self->id_run()
+      . q{: no recalibrated directories found. If I find only 1 bustard level directory, I will use that};
+    $self->log($msg);
   }
 
   @dirs = ();
-  foreach my $int_dir_name ( @INTENSITY_DIR_MATCH ) {
-    foreach my $bustard_dir_name ( @BUSTARD_DIR_MATCH ) {
+  foreach my $int_dir_name (@INTENSITY_DIR_MATCH) {
+    foreach my $bustard_dir_name (@BUSTARD_DIR_MATCH) {
       push @dirs, glob $rf_path . qq{/Data/*$int_dir_name*/$bustard_dir_name*};
     }
   }
 
-  if (scalar@dirs > 1) {
+  if ( scalar @dirs > 1 ) {
     my $dirs_string = join qq{\n}, @dirs;
-    croak $self->id_run() . qq{: found multiple possible bustard level directories\n$dirs_string\n};
+    croak $self->id_run()
+      . qq{: found multiple possible bustard level directories\n$dirs_string\n};
   }
 
-
-  if (scalar@dirs == 1) {
+  if ( scalar @dirs == 1 ) {
     return $dirs[0];
   }
 
@@ -392,25 +497,26 @@ sub _try_to_find_recalibrated_path_from_runfolder_path {
 }
 
 sub _recalibrated_path {
-  my ($self, $dir) = @_;
+  my ( $self, $dir ) = @_;
   my $rf_path = $self->runfolder_path();
 
-  if ($dir !~ /\A\Q$rf_path\E/xms) {
+  if ( $dir !~ /\A\Q$rf_path\E/xms ) {
     $dir = $rf_path . q{/} . $dir;
   }
 
-  my @subpath = splitdir( $dir );
+  my @subpath = splitdir($dir);
 
-  # proceed through the path (from the end) and look for a directory which matches the $RECALIBRATED_DIR_MATCH string
+# proceed through the path (from the end) and look for a directory which matches the $RECALIBRATED_DIR_MATCH string
   while (@subpath) {
     my $path = catdir(@subpath);
 
     if (
-       -d $path # path of all remaining parts of the directory
-       ) {
-      foreach my $dir_name ( @RECALIBRATED_DIR_MATCH ) {
+      -d $path    # path of all remaining parts of the directory
+      )
+    {
+      foreach my $dir_name (@RECALIBRATED_DIR_MATCH) {
         if ( $path =~ m{/$dir_name[^/]*\z}xms ) {
-          return $path
+          return $path;
         }
       }
     }
@@ -418,7 +524,7 @@ sub _recalibrated_path {
     pop @subpath;
   }
 
-  if ($self->can(q{verbose}) && $self->verbose()) {
+  if ( $self->can(q{verbose}) && $self->verbose() ) {
     carp $dir. q{ does not appear to contain a recalibrated directory};
   }
   return;
@@ -433,26 +539,28 @@ sub get_path_from_given_path {
   unshift @subpaths, q{subpath};
 
   foreach my $subpath (@subpaths) {
-    # proceed through the path (from the end) and look for a directory containing Config and either Data or Images directories
+
+# proceed through the path (from the end) and look for a directory containing Config and either Data or Images directories
     my $has_method = q{has_} . $subpath;
-    next if (!$self->$has_method());
+    next if ( !$self->$has_method() );
     my @subpath = splitdir( $self->$subpath() );
     while (@subpath) {
       my $path = catdir(@subpath);
 
       if (
-          -d $path # path of all remaining parts of _given_path (subpath)
-            and
-          -d catdir($path, q{Config}) # does this directory have a Config Directory
-            and
-          (
-            -d catdir($path, q{Data}) # a runfolder is likely to have a Data directory
-              or
-            -d catdir($path, q{Images}) # but if it is not a RTA run, it might have an Images directory if analysis has not been performed
-          )
-         ) {
-           return $path;
-         }
+        -d $path    # path of all remaining parts of _given_path (subpath)
+        and -d catdir( $path,
+          q{Config} )    # does this directory have a Config Directory
+        and (
+          -d catdir( $path,
+            q{Data} )    # a runfolder is likely to have a Data directory
+          or -d catdir( $path, q{Images}
+          ) # but if it is not a RTA run, it might have an Images directory if analysis has not been performed
+        )
+        )
+      {
+        return $path;
+      }
       pop @subpath;
     }
   }
@@ -461,28 +569,29 @@ sub get_path_from_given_path {
 }
 
 sub lane_archive_path {
-  my ($self, $position) = @_;
-  my $lane =  Moose::Meta::Class->create_anon_class(
-                roles => [qw/npg_tracking::glossary::lane/]
-              )->new_object({position => $position});
-  return catdir($self->archive_path, $lane->lane_archive);
+  my ( $self, $position ) = @_;
+  my $lane =
+    Moose::Meta::Class->create_anon_class(
+    roles => [qw/npg_tracking::glossary::lane/] )
+    ->new_object( { position => $position } );
+  return catdir( $self->archive_path, $lane->lane_archive );
 }
 
 sub lane_qc_path {
-  my ($self, $position) = @_;
-  return catdir($self->lane_archive_path($position), $QC_DIR);
+  my ( $self, $position ) = @_;
+  return catdir( $self->lane_archive_path($position), $QC_DIR );
 }
 
 sub lane_archive_paths {
   my $self = shift;
 
-  my @dirs = ();
+  my @dirs        = ();
   my $archive_dir = $self->archive_path;
-  opendir(my $dh, $archive_dir) || croak "Can't opendir $archive_dir";
+  opendir( my $dh, $archive_dir ) || croak "Can't opendir $archive_dir";
   my @lanes = grep { /^lane\d$/smx && -d "$archive_dir/$_" } readdir $dh;
   closedir $dh;
   foreach my $lane_dir (@lanes) {
-    my $dir = catdir($archive_dir, $lane_dir);
+    my $dir = catdir( $archive_dir, $lane_dir );
     push @dirs, $dir;
   }
   return \@dirs;
@@ -492,15 +601,14 @@ sub lane_qc_paths {
   my $self = shift;
 
   my @dirs = ();
-  foreach my $path (@{$self->lane_archive_paths}) {
-    my $dir = catdir($path, $QC_DIR);
-    if (-d $dir) {
+  foreach my $path ( @{ $self->lane_archive_paths } ) {
+    my $dir = catdir( $path, $QC_DIR );
+    if ( -d $dir ) {
       push @dirs, $dir;
     }
   }
   return \@dirs;
 }
-
 
 1;
 __END__

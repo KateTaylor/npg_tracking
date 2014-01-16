@@ -15,14 +15,33 @@ Readonly::Scalar my $MAIL_DOMAIN       => q(sanger.ac.uk);
 Readonly::Scalar my $DEFAULT_DATA_PATH => q(data);
 Readonly::Scalar my $UNIX_YEAR_DELTA   => 1900;
 
-sub dbname { my $self = shift; return $self->config->val($self->dbsection(), 'dbname') || q(npg); }
-sub dbhost { my $self = shift; return $self->config->val($self->dbsection(), 'dbhost') || q(localhost); }
-sub dbport { my $self = shift; return $self->config->val($self->dbsection(), 'dbport') || q(3306); }
-sub dbuser { my $self = shift; return $self->config->val($self->dbsection(), 'dbuser') || q(root); }
-sub dbpass { my $self = shift; return $self->config->val($self->dbsection(), 'dbpass') || q(); }
+sub dbname {
+  my $self = shift;
+  return $self->config->val( $self->dbsection(), 'dbname' ) || q(npg);
+}
+
+sub dbhost {
+  my $self = shift;
+  return $self->config->val( $self->dbsection(), 'dbhost' ) || q(localhost);
+}
+
+sub dbport {
+  my $self = shift;
+  return $self->config->val( $self->dbsection(), 'dbport' ) || q(3306);
+}
+
+sub dbuser {
+  my $self = shift;
+  return $self->config->val( $self->dbsection(), 'dbuser' ) || q(root);
+}
+
+sub dbpass {
+  my $self = shift;
+  return $self->config->val( $self->dbsection(), 'dbpass' ) || q();
+}
 
 sub yearmonthday {
-  my ($t1, $t2, $t3, $day, $month, $year) = localtime;
+  my ( $t1, $t2, $t3, $day, $month, $year ) = localtime;
   $year += $UNIX_YEAR_DELTA;
   $month++;
   $month = sprintf '%02d', $month;
@@ -39,7 +58,7 @@ sub cleanup {
 
 sub data_path {
   my $root = $DEFAULT_DATA_PATH;
-  if ($ENV{'NPG_DATA_ROOT'}) {
+  if ( $ENV{'NPG_DATA_ROOT'} ) {
     ($root) = $ENV{'NPG_DATA_ROOT'} =~ m{([a-z0-9/\._\-]+)}ixms;
   }
   return $root;
@@ -51,7 +70,7 @@ sub dbsection {
 
 sub decription_key {
   my $self = shift;
-  return $self->config->val($self->dbsection(), 'decription_key');
+  return $self->config->val( $self->dbsection(), 'decription_key' );
 }
 
 sub mail_domain {

@@ -15,9 +15,12 @@ extends 'npg_tracking::daemon';
 
 override '_build_hosts' => sub { return ['sf2-farm-srv1']; };
 ##no critic (RequireInterpolationOfMetachars)
-override 'command'  => sub { return q[perl -e 'use strict; use warnings; use npg::samplesheet::auto;  use Log::Log4perl qw(:easy); BEGIN{ Log::Log4perl->easy_init({level=>$INFO,}); } npg::samplesheet::auto->new()->loop();']; };
+override 'command' => sub {
+  return
+q[perl -e 'use strict; use warnings; use npg::samplesheet::auto;  use Log::Log4perl qw(:easy); BEGIN{ Log::Log4perl->easy_init({level=>$INFO,}); } npg::samplesheet::auto->new()->loop();'];
+};
 ##use critic
-override 'daemon_name'  => sub { return 'npg_samplesheet_daemon'; };
+override 'daemon_name' => sub { return 'npg_samplesheet_daemon'; };
 
 no Moose;
 

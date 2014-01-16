@@ -20,69 +20,74 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 Readonly our $MAX_COLOUR_GRADIENTS_SCALE   => 255;
 Readonly our $MAX_COLOUR_GRADIENTS_HEATMAP => 250;
 
-__PACKAGE__->mk_accessors(qw(cmap colours data_array gradient_array tiles_per_lane image_map_reference data_point_refs gantt_refs));
+__PACKAGE__->mk_accessors(
+  qw(cmap colours data_array gradient_array tiles_per_lane image_map_reference data_point_refs gantt_refs)
+);
 
 sub new {
-  my ($class, $ref) = @_;
+  my ( $class, $ref ) = @_;
   $ref ||= {};
   bless $ref, $class;
 
-  $ref->{cmap}    ||= npg::util::image::colourmap->new();
+  $ref->{cmap} ||= npg::util::image::colourmap->new();
   $ref->{colours} ||= [qw(red purple orange blue green yellow magenta cyan)];
   return $ref;
 }
 
 sub array_rotate {
-  my ($self, $in) = @_;
+  my ( $self, $in ) = @_;
 
   my $h = scalar @{$in};
   $h or return [];
-  my $w = scalar @{$in->[0]};
+  my $w = scalar @{ $in->[0] };
   $w or return [];
 
   my $out = [];
 
-  for my $j (0..$h-1) {
-    for my $i (0..$w-1) {
-      $out->[$i]       ||= [];
-      $out->[$i]->[$j]   = $in->[$j]->[$i];
+  for my $j ( 0 .. $h - 1 ) {
+    for my $i ( 0 .. $w - 1 ) {
+      $out->[$i] ||= [];
+      $out->[$i]->[$j] = $in->[$j]->[$i];
     }
   }
   return $out;
 }
 
 sub build_linear_gradient {
-  my ($self, $start_colour, $stop_colour, $steps, $plot_type) = @_;
+  my ( $self, $start_colour, $stop_colour, $steps, $plot_type ) = @_;
 
   my $cmap = $self->cmap();
 
-  if (!$start_colour) {
-    $start_colour = ['black','yellow','red'];
-    $stop_colour  = undef;
+  if ( !$start_colour ) {
+    $start_colour = [ 'black', 'yellow', 'red' ];
+    $stop_colour = undef;
   }
 
-  if (!$steps && $self->data_array()) {
+  if ( !$steps && $self->data_array() ) {
     my $data_array = $self->data_array();
-    $steps = scalar@{$data_array} * scalar@{$data_array->[0]};
+    $steps = scalar @{$data_array} * scalar @{ $data_array->[0] };
   }
 
-  $steps = $plot_type && $plot_type eq 'scale' && !$steps    ? $MAX_COLOUR_GRADIENTS_SCALE
-         : !$steps || $steps > $MAX_COLOUR_GRADIENTS_HEATMAP ? $MAX_COLOUR_GRADIENTS_HEATMAP
-         :                                                     $steps
-	 ;
+  $steps =
+    $plot_type && $plot_type eq 'scale' && !$steps ? $MAX_COLOUR_GRADIENTS_SCALE
+    : !$steps
+    || $steps > $MAX_COLOUR_GRADIENTS_HEATMAP ? $MAX_COLOUR_GRADIENTS_HEATMAP
+    : $steps;
 
   my @gradient_array;
-  if (ref$start_colour eq 'ARRAY') {
-    @gradient_array = $cmap->build_linear_gradient($steps, $start_colour);
-  } else {
-    @gradient_array = $cmap->build_linear_gradient($steps, $start_colour, $stop_colour);
+  if ( ref $start_colour eq 'ARRAY' ) {
+    @gradient_array = $cmap->build_linear_gradient( $steps, $start_colour );
+  }
+  else {
+    @gradient_array =
+      $cmap->build_linear_gradient( $steps, $start_colour, $stop_colour );
   }
 
   foreach my $gradient (@gradient_array) {
-    $gradient = [$cmap->rgb_by_hex($gradient)];
+    $gradient = [ $cmap->rgb_by_hex($gradient) ];
   }
 
-  $self->gradient_array(\@gradient_array);
+  $self->gradient_array( \@gradient_array );
 
   return $self->gradient_array();
 }

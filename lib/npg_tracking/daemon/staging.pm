@@ -16,25 +16,26 @@ extends 'npg_tracking::daemon';
 Readonly::Scalar our $SCRIPT_NAME => q[staging_area_monitor];
 
 override '_build_hosts' => sub {
-    ##no critic (TestingAndDebugging::ProhibitNoWarnings)
-    no warnings 'once';
-    ##use critic
-    require npg_tracking::illumina::run::folder::location;
-    my @full_list = map { 'sf' . $_ . '-nfs' }
-        @npg_tracking::illumina::run::folder::location::STAGING_AREAS_INDEXES;
-    return \@full_list;
+  ##no critic (TestingAndDebugging::ProhibitNoWarnings)
+  no warnings 'once';
+  ##use critic
+  require npg_tracking::illumina::run::folder::location;
+  my @full_list = map { 'sf' . $_ . '-nfs' }
+    @npg_tracking::illumina::run::folder::location::STAGING_AREAS_INDEXES;
+  return \@full_list;
 };
-override 'command'      => sub { my ($self, $host) = @_;
-                                 if (!$host) {
-				   croak q{Need host name};
-				 }
-                                 (my $sfarea) = $host =~ /^sf(\d+)-nfs$/smx;
-                                 if (!$sfarea) {
-                                   croak qq{Host name $host does not follow expected pattern sfXX-nfs};
-				 }
-                                 return join q[ ], $SCRIPT_NAME, q{/export/sf} . $sfarea;
-                               };
-override 'daemon_name'  => sub { return $SCRIPT_NAME; };
+override 'command' => sub {
+  my ( $self, $host ) = @_;
+  if ( !$host ) {
+    croak q{Need host name};
+  }
+  ( my $sfarea ) = $host =~ /^sf(\d+)-nfs$/smx;
+  if ( !$sfarea ) {
+    croak qq{Host name $host does not follow expected pattern sfXX-nfs};
+  }
+  return join q[ ], $SCRIPT_NAME, q{/export/sf} . $sfarea;
+};
+override 'daemon_name' => sub { return $SCRIPT_NAME; };
 
 no Moose;
 

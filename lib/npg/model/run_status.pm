@@ -22,33 +22,33 @@ use DateTime;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16269 $ =~ /(\d+)/smx; $r; };
 
 Readonly::Hash our %DAYS_PER_STATUS => (
-  'run complete' => 1,
-  'run mirrored' => 1,
-  'analysis pending' => 1,
-  'analysis in progress' => 2,
+  'run complete'                   => 1,
+  'run mirrored'                   => 1,
+  'analysis pending'               => 1,
+  'analysis in progress'           => 2,
   'secondary analysis in progress' => 3,
-  'analysis complete' => 1,
-  'archival pending' => 1,
-  'analysis in progress' => 1,
-  'analysis complete' => 1,
-  'archival in progress' => 2,
+  'analysis complete'              => 1,
+  'archival pending'               => 1,
+  'analysis in progress'           => 1,
+  'analysis complete'              => 1,
+  'archival in progress'           => 2,
 );
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a([qw(run user run_status_dict)]);
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a( [qw(run user run_status_dict)] );
 
 sub fields {
   return qw(id_run_status
-            id_run
-            date
-            id_run_status_dict
-            id_user
-            iscurrent);
+    id_run
+    date
+    id_run_status_dict
+    id_user
+    iscurrent);
 }
 
 sub epoch {
   my $self = shift;
-  return str2time($self->date());
+  return str2time( $self->date() );
 }
 
 sub create {
@@ -58,21 +58,22 @@ sub create {
   my $tr_state = $util->transactions();
 
   eval {
-    my $rows = $dbh->do(q(UPDATE run_status
+    my $rows = $dbh->do(
+      q(UPDATE run_status
                           SET    iscurrent = 0
                           WHERE  id_run    = ?), {},
-               $self->id_run());
+      $self->id_run()
+    );
 
-    my $query = q(INSERT INTO run_status (id_run,date,id_run_status_dict,id_user,iscurrent)
+    my $query =
+q(INSERT INTO run_status (id_run,date,id_run_status_dict,id_user,iscurrent)
                   VALUES (?,now(),?,?,1));
 
-    $dbh->do($query, {},
-	     $self->id_run(),
-	     $self->id_run_status_dict(),
-	     $self->id_user());
+    $dbh->do( $query, {}, $self->id_run(), $self->id_run_status_dict(),
+      $self->id_user() );
 
     my $idref = $dbh->selectall_arrayref('SELECT LAST_INSERT_ID()');
-    $self->id_run_status($idref->[0]->[0]);
+    $self->id_run_status( $idref->[0]->[0] );
 
     $util->transactions(0);
 
@@ -83,22 +84,26 @@ sub create {
                   } @{$self->run->run_statuses()}]});
 
     my $contents_of_lanes = "\n\nBatch Id: @{[$self->run->batch_id()]}\n";
-    $contents_of_lanes .= 'Lanes : '.join q( ), map{$_->position} @{$self->run->run_lanes()};
+    $contents_of_lanes .= 'Lanes : ' . join q( ),
+      map { $_->position } @{ $self->run->run_lanes() };
     $contents_of_lanes .= "\n";
 
     my $desc = $self->run_status_dict->description();
 
-    my $msg = qq($desc for run @{[$self->run->name()]}\nhttp://npg.sanger.ac.uk/perl/npg/run/@{[$self->run->name()]}\n$history\n\n$contents_of_lanes);
-    my $event = npg::model::event->new({
-					run                => $self->run(),
-					status_description => $desc,
-					util               => $util,
-					id_event_type      => 1, # run_status/status change
-					entity_id          => $self->id_run_status(),
-					description        => $msg,
-				       });
+    my $msg =
+qq($desc for run @{[$self->run->name()]}\nhttp://npg.sanger.ac.uk/perl/npg/run/@{[$self->run->name()]}\n$history\n\n$contents_of_lanes);
+    my $event = npg::model::event->new(
+      {
+        run                => $self->run(),
+        status_description => $desc,
+        util               => $util,
+        id_event_type      => 1,                      # run_status/status change
+        entity_id          => $self->id_run_status(),
+        description        => $msg,
+      }
+    );
     $event->{id_run} = $self->id_run();
-    $event->create({run => $self->id_run(), id_user => $self->id_user()});
+    $event->create( { run => $self->id_run(), id_user => $self->id_user() } );
 
     $self->run()->instrument()->autochange_status_if_needed($desc);
 
@@ -125,17 +130,17 @@ sub create {
 }
 
 sub current_run_statuses {
-  my ($self, $limit) = @_;
+  my ( $self, $limit ) = @_;
 
-  if(!$self->{'current_run_statuses'}) {
+  if ( !$self->{'current_run_statuses'} ) {
     my $query = qq(SELECT @{[join q(, ), $self->fields()]}
                    FROM   @{[$self->table()]}
                    WHERE iscurrent = 1
                    ORDER BY date DESC);
-    if($limit) {
+    if ($limit) {
       $query .= qq( LIMIT $limit);
     }
-    $self->{'current_run_statuses'} = $self->gen_getarray(ref $self, $query);
+    $self->{'current_run_statuses'} = $self->gen_getarray( ref $self, $query );
   }
 
   return $self->{'current_run_statuses'};
@@ -144,13 +149,14 @@ sub current_run_statuses {
 sub latest_current_run_status {
   my $self = shift;
 
-  if(!$self->{'latest_run_status'}) {
+  if ( !$self->{'latest_run_status'} ) {
     my $query = qq(SELECT @{[join q(, ), $self->fields()]}
                    FROM   @{[$self->table()]}
                    WHERE  iscurrent = 1
                    ORDER BY date DESC
                    LIMIT 1);
-    $self->{'latest_run_status'} = $self->gen_getarray(ref $self, $query)->[0];
+    $self->{'latest_run_status'} =
+      $self->gen_getarray( ref $self, $query )->[0];
   }
 
   return $self->{'latest_run_status'};
@@ -159,7 +165,7 @@ sub latest_current_run_status {
 sub active_runs_over_last_30_days {
   my $self = shift;
 
-  if (!$self->{'active_runs_over_last_30_days'}) {
+  if ( !$self->{'active_runs_over_last_30_days'} ) {
     my $query = q{SELECT id_run, date
                   FROM   run_status
                   WHERE date > DATE_SUB(NOW(), INTERVAL 30 DAY)
@@ -167,29 +173,33 @@ sub active_runs_over_last_30_days {
                                                FROM   run_status_dict
                                                WHERE  description in ('run in progress', 'run on hold', 'run complete'))
                   ORDER BY date};
-    $self->{'active_runs_over_last_30_days'} = $self->gen_getarray(ref $self, $query);
+    $self->{'active_runs_over_last_30_days'} =
+      $self->gen_getarray( ref $self, $query );
   }
   return $self->{'active_runs_over_last_30_days'};
 }
 
-
 sub potentially_stuck_runs {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $return = {};
 
   my $rows = $self->_runs_at_requested_statuses();
 
   my $dtnow = $self->_datetime_now();
 
-  foreach my $row ( @{ $rows } ) {
-    my ( $id_run, $date, $status, $priority ) = @{ $row };
+  foreach my $row ( @{$rows} ) {
+    my ( $id_run, $date, $status, $priority ) = @{$row};
     my ( $year, $month, $day ) = $date =~ /(\d{4})-(\d{2})-(\d{2})/xms;
     my $dt = DateTime->new(
-      year => $year, month => $month, day => $day, time_zone => 'UTC',
+      year      => $year,
+      month     => $month,
+      day       => $day,
+      time_zone => 'UTC',
     );
-    my $days = $dtnow->delta_days($dt)->in_units( q{days} );
+    my $days = $dtnow->delta_days($dt)->in_units(q{days});
     if ( $days >= $DAYS_PER_STATUS{$status} ) {
-      push @{ $return->{$status} }, { id_run => $id_run, days => $days, priority => $priority };
+      push @{ $return->{$status} },
+        { id_run => $id_run, days => $days, priority => $priority };
     }
   }
 
@@ -197,13 +207,13 @@ sub potentially_stuck_runs {
 }
 
 sub _runs_at_requested_statuses {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  if ( ! $self->{_runs_at_requested_statuses} ) {
+  if ( !$self->{_runs_at_requested_statuses} ) {
     my @statuses_for_query = keys %DAYS_PER_STATUS;
     my $query_string = q{'} . ( join q{','}, keys %DAYS_PER_STATUS ) . q{'};
 
-    my $query =  qq{SELECT rs.id_run, rs.date, rsd.description, r.priority
+    my $query = qq{SELECT rs.id_run, rs.date, rsd.description, r.priority
                     FROM run_status rs, run_status_dict rsd, run r
                     WHERE  rs.iscurrent = 1
                     AND    rs.id_run_status_dict = rsd.id_run_status_dict
@@ -211,14 +221,15 @@ sub _runs_at_requested_statuses {
                     AND    rsd.description IN ($query_string)
                     ORDER BY rsd.id_run_status_dict, rs.id_run};
 
-    $self->{_runs_at_requested_statuses} = $self->util->dbh->selectall_arrayref( $query );
+    $self->{_runs_at_requested_statuses} =
+      $self->util->dbh->selectall_arrayref($query);
   }
   return $self->{_runs_at_requested_statuses};
 }
 
 sub _datetime_now {
-  my ( $self ) = @_;
-  if ( ! $self->{_datetime_now} ) {
+  my ($self) = @_;
+  if ( !$self->{_datetime_now} ) {
     $self->{_datetime_now} = DateTime->now( time_zone => 'UTC' );
   }
   return $self->{_datetime_now};

@@ -17,32 +17,33 @@ use npg::model::run_lane;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9670 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(
-      id_tag
-      tag
-    );
+    id_tag
+    tag
+  );
 }
 
 sub init {
   my $self = shift;
 
-  if($self->{'tag'} &&
-     !$self->{'id_tag'}) {
+  if ( $self->{'tag'}
+    && !$self->{'id_tag'} )
+  {
     my $query = q(SELECT id_tag
                   FROM   tag
                   WHERE  tag = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->tag());
+      $ref = $self->util->dbh->selectall_arrayref( $query, {}, $self->tag() );
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_tag'} = $ref->[0]->[0];
     }
   }
@@ -51,16 +52,16 @@ sub init {
 
 sub all_tags {
   my $self = shift;
-  if (!$self->{all_tags}) {
+  if ( !$self->{all_tags} ) {
     my $query = q{SELECT id_tag, tag FROM tag ORDER BY tag};
-    $self->{all_tags} = $self->gen_getarray(ref$self, $query);
+    $self->{all_tags} = $self->gen_getarray( ref $self, $query );
   }
   return $self->{all_tags};
 }
 
 sub runs {
   my ($self) = @_;
-  if(!$self->{runs}) {
+  if ( !$self->{runs} ) {
     my $query = q{SELECT tr.id_run,
                          DATE(tr.date) AS date,
                          tr.id_user,
@@ -69,14 +70,15 @@ sub runs {
                   WHERE  t.id_tag = ?
                   AND    t.id_tag = tr.id_tag
                   ORDER BY tr.id_run};
-    $self->{runs} = $self->gen_getarray('npg::model::run', $query, $self->id_tag());
+    $self->{runs} =
+      $self->gen_getarray( 'npg::model::run', $query, $self->id_tag() );
   }
   return $self->{runs};
 }
 
 sub run_lanes {
   my ($self) = @_;
-  if(!$self->{run_lanes}) {
+  if ( !$self->{run_lanes} ) {
     my $query = q{SELECT trl.id_run_lane AS id_run_lane,
                          DATE(trl.date) AS date,
                          trl.id_user AS id_user,
@@ -85,7 +87,8 @@ sub run_lanes {
                   WHERE  t.id_tag = ?
                   AND    t.id_tag = trl.id_tag
                   ORDER BY trl.id_run_lane};
-    $self->{run_lanes} = $self->gen_getarray('npg::model::run_lane', $query, $self->id_tag());
+    $self->{run_lanes} =
+      $self->gen_getarray( 'npg::model::run_lane', $query, $self->id_tag() );
   }
   return $self->{run_lanes};
 }

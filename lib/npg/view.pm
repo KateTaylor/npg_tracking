@@ -25,54 +25,65 @@ use base qw(ClearPress::view);
 our $VERSION = '0';
 
 sub new {
-  my ($class, @args) = @_;
-  my $self           = $class->SUPER::new(@args);
-  my $util           = $self->util();
-  my $username       = $util->username();
-  my $cgi            = $util->cgi();
-  my $rfid           = q{};
-  my $req_method     = $cgi->request_method() || q{GET};
+  my ( $class, @args ) = @_;
+  my $self       = $class->SUPER::new(@args);
+  my $util       = $self->util();
+  my $username   = $util->username();
+  my $cgi        = $util->cgi();
+  my $rfid       = q{};
+  my $req_method = $cgi->request_method() || q{GET};
   if ( uc $req_method ne q{GET} ) {
     $rfid = $util->cgi->param('rfid') || q{};
   }
 
-  if (!$username) {
-    my $cookie = $cgi ? $cgi->cookie(sanger_cookie_name()) : q();
-    if($cookie) {
-      $username = sanger_username($cookie, $self->util()->decription_key());
+  if ( !$username ) {
+    my $cookie = $cgi ? $cgi->cookie( sanger_cookie_name() ) : q();
+    if ($cookie) {
+      $username = sanger_username( $cookie, $self->util()->decription_key() );
     }
   }
 
-  my $requestor      = $util->requestor() || npg::model::user->new({
-     util     => $util,
-     username => $username || 'public',
-     rfid     => $rfid,
-  });
+  my $requestor = $util->requestor() || npg::model::user->new(
+    {
+      util     => $util,
+      username => $username || 'public',
+      rfid     => $rfid,
+    }
+  );
   #########
   # Force load (and cache) of requestor's memberships
   # and tack on the virtual 'public' group if it's not there already
   #
-  if(!scalar grep { $_->groupname() eq 'public' } @{$requestor->usergroups()||[]}) {
-    push @{ $requestor->{usergroups} }, npg::model::usergroup->new({
-      util         => $util,
-      groupname    => 'public',
-    });
+  if ( !scalar grep { $_->groupname() eq 'public' }
+    @{ $requestor->usergroups() || [] } )
+  {
+    push @{ $requestor->{usergroups} },
+      npg::model::usergroup->new(
+      {
+        util      => $util,
+        groupname => 'public',
+      }
+      );
   }
 
   $self->util->requestor($requestor);
 
-  if ($self->model()) {
+  if ( $self->model() ) {
     my $model = $self->model();
-    $model->aspect($self->aspect());
+    $model->aspect( $self->aspect() );
 
-    if ( $model->location_is_instrument() &&
-         $requestor->username() eq q{public} &&
-	 $self->method_name() !~ m/\A(?:create|update|delete)/xms ) {
+    if ( $model->location_is_instrument()
+      && $requestor->username() eq q{public}
+      && $self->method_name() !~ m/\A(?:create|update|delete)/xms )
+    {
       my $usergroups = $requestor->usergroups();
-      push @{ $usergroups }, npg::model::usergroup->new({
-        util => $self->util(),
-	groupname => q{loaders},
-      });
+      push @{$usergroups},
+        npg::model::usergroup->new(
+        {
+          util      => $self->util(),
+          groupname => q{loaders},
+        }
+        );
     }
 
   }
@@ -81,31 +92,31 @@ sub new {
 }
 
 sub get_inst_format {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  my $inst_format = $self->util->cgi->param( q{inst_format} ) || q{HK};
-  $self->model->{inst_format} = $self->model->sanitise_input( $inst_format );
+  my $inst_format = $self->util->cgi->param(q{inst_format}) || q{HK};
+  $self->model->{inst_format} = $self->model->sanitise_input($inst_format);
   return $self->model->{inst_format};
 }
 
 sub authorised {
-  my ( $self ) = @_;
-  if ( $self->model() && $self->model->location_is_instrument()
-         &&
-       $self->action() ne q{create}
-         &&
-       $self->action() ne q{update} ) {
+  my ($self) = @_;
+  if ( $self->model()
+    && $self->model->location_is_instrument()
+    && $self->action() ne q{create}
+    && $self->action() ne q{update} )
+  {
     return 1;
   }
   return $self->SUPER::authorised();
 }
 
 sub realname {
-  my ($self, $username) = @_;
-  if (!$username) {
+  my ( $self, $username ) = @_;
+  if ( !$username ) {
     $username = $self->util->requestor->username();
   }
-  if (!$username || $username eq q[pipeline] || $username eq q[public]) {
+  if ( !$username || $username eq q[pipeline] || $username eq q[public] ) {
     return $username;
   }
 
@@ -117,15 +128,15 @@ sub realname {
   } or do {
     carp $EVAL_ERROR;
   };
-  if (!$realname) {
+  if ( !$realname ) {
     $realname = $username;
   }
-  return $realname ;
+  return $realname;
 }
 
 sub person {
-  my ($self, $username) = @_;
-  if (!$username) {
+  my ( $self, $username ) = @_;
+  if ( !$username ) {
     $username = $self->util->requestor->username();
   }
 
@@ -150,12 +161,11 @@ sub time_rendered {
 
 sub is_prod {
   my $self = shift;
-  my $db =  lc $self->util->dbsection;
+  my $db   = lc $self->util->dbsection;
   return $db eq q[live] ? 1 : 0;
 }
 
 1;
-
 
 __END__
 

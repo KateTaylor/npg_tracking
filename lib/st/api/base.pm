@@ -19,20 +19,20 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15277 
 
 sub live_url { return q{http://psd-support.internal.sanger.ac.uk:6600}; }
 
-sub dev_url  { return q{http://psd-dev.internal.sanger.ac.uk:6800}; }
+sub dev_url { return q{http://psd-dev.internal.sanger.ac.uk:6800}; }
 
 sub new {
-  my ($class, $ref) = @_;
+  my ( $class, $ref ) = @_;
   $ref ||= {};
   bless $ref, $class;
   return $ref;
 }
 
 sub new_from_xml {
-  my ($self, $pkg, $xmlfrag, $util) = @_;
-  my $obj = $pkg->new(ref $self ? { util      => $self->util(),} : {});
+  my ( $self, $pkg, $xmlfrag, $util ) = @_;
+  my $obj = $pkg->new( ref $self ? { util => $self->util(), } : {} );
 
-  if($util) {
+  if ($util) {
     $obj->util($util);
   }
 
@@ -46,28 +46,28 @@ sub fields {
 
 sub primary_key {
   my $self = shift;
-  return ($self->fields())[0];
+  return ( $self->fields() )[0];
 }
 
 sub util {
-  my ($self, $util) = @_;
-  if($util) {
+  my ( $self, $util ) = @_;
+  if ($util) {
     $self->{util} = $util;
   }
-  if (!$self->{util}) {
+  if ( !$self->{util} ) {
     $self->{util} = npg::api::util->new();
   }
   return $self->{util};
 }
 
 sub get {
-  my ($self, $field) = @_;
+  my ( $self, $field ) = @_;
 
   $field = lc $field;
-  if($self->{$field}) {
+  if ( $self->{$field} ) {
     return $self->{$field};
   }
-  if($self->{id}) {
+  if ( $self->{id} ) {
     $self->parse();
   }
   return $self->{$field};
@@ -83,16 +83,16 @@ sub entity_name {
 sub parse {
   my $self = shift;
 
-  if(!$self->{parsed}) {
-    if(!$self->{id}) {
+  if ( !$self->{parsed} ) {
+    if ( !$self->{id} ) {
       carp q[Not going to parse - no id given];
       return;
     }
 
     my $doc = $self->read();
-    my $el  = $doc->getElementsByTagName($self->entity_name())->[0];
+    my $el  = $doc->getElementsByTagName( $self->entity_name() )->[0];
 
-    if(!$el) {
+    if ( !$el ) {
       return;
     }
 
@@ -105,41 +105,44 @@ sub parse {
 }
 
 sub _init_from_xml_node {
-    my ($self, $el) = @_;
+  my ( $self, $el ) = @_;
 
-    my @descriptors = @{$el->getElementsByTagName('descriptor')};
-    if (!@descriptors) {@descriptors= @{$el->getElementsByTagName('property')};}
+  my @descriptors = @{ $el->getElementsByTagName('descriptor') };
+  if ( !@descriptors ) {
+    @descriptors = @{ $el->getElementsByTagName('property') };
+  }
 
-    for my $desc (@descriptors) {
-      my $namec;
+  for my $desc (@descriptors) {
+    my $namec;
+    eval {
+      $namec = $desc->getElementsByTagName('parameter')->[0]->getFirstChild();
+    } or do {
       eval {
-        $namec  = $desc->getElementsByTagName('parameter')->[0]->getFirstChild();
+        $namec = $desc->getElementsByTagName('name')->[0]->getFirstChild();
       } or do {
-        eval {
-          $namec  = $desc->getElementsByTagName('name')->[0]->getFirstChild();
-        } or do {
-          carp q{unable to obtain name via name or parameter};
-        };
+        carp q{unable to obtain name via name or parameter};
       };
-      my $name   = $namec?$namec->getData():undef;
-      $name = lc $name;
-      my $valuec = $desc->getElementsByTagName('value')->[0]->getFirstChild();
-      my $value  = $valuec?$valuec->getData():undef;
-      if (defined $value) {
-        chomp $value;
-      }
-
-      $self->{$name} ||= [];
-      push @{$self->{$name}}, $value;
+    };
+    my $name = $namec ? $namec->getData() : undef;
+    $name = lc $name;
+    my $valuec = $desc->getElementsByTagName('value')->[0]->getFirstChild();
+    my $value = $valuec ? $valuec->getData() : undef;
+    if ( defined $value ) {
+      chomp $value;
     }
 
-    for my $f ($self->fields()) {
-      my $ea = $el->getElementsByTagName($f);
-      if (scalar @{$ea} and $ea->[0]->getFirstChild()) {
-        $self->{$f} = $el->getElementsByTagName($f)->[0]->getFirstChild->getData();
-      }
+    $self->{$name} ||= [];
+    push @{ $self->{$name} }, $value;
+  }
+
+  for my $f ( $self->fields() ) {
+    my $ea = $el->getElementsByTagName($f);
+    if ( scalar @{$ea} and $ea->[0]->getFirstChild() ) {
+      $self->{$f} =
+        $el->getElementsByTagName($f)->[0]->getFirstChild->getData();
     }
-    return;
+  }
+  return;
 }
 
 sub obj_uri {
@@ -150,27 +153,29 @@ sub obj_uri {
 sub read {    ## no critic (ProhibitBuiltinHomonyms)
   my $self = shift;
 
-  if(exists $self->{read}) {
+  if ( exists $self->{read} ) {
     return $self->{read};
   }
 
-  if(!$self->{id}) {
+  if ( !$self->{id} ) {
     carp qq[@{[ref $self]} cannot read without an id];
     $self->{read} = undef;
     return;
   }
 
-  my $obj_uri = $self->obj_uri();
+  my $obj_uri          = $self->obj_uri();
   my $response_content = $self->util->request('text/xml')->make($obj_uri);
   my $doc;
   eval {
-   $doc = $self->util->parser->parse_string($response_content);
+    $doc = $self->util->parser->parse_string($response_content);
 
   } or do {
-    my $error_message  = $response_content . qq{\n parsing $obj_uri\n\n};
-    $error_message    .= qq{This could be due to Sequencescape problems such as a dead mongrel node,\n};
-    $error_message    .= qq{as this response has come from the st::api modules.\n};
-    $error_message    .= qq{Please quote this in an email to seq-help\@sanger.ac.uk\n\n};
+    my $error_message = $response_content . qq{\n parsing $obj_uri\n\n};
+    $error_message .=
+qq{This could be due to Sequencescape problems such as a dead mongrel node,\n};
+    $error_message .= qq{as this response has come from the st::api modules.\n};
+    $error_message .=
+      qq{Please quote this in an email to seq-help\@sanger.ac.uk\n\n};
 
     croak $error_message;
   };
@@ -179,7 +184,7 @@ sub read {    ## no critic (ProhibitBuiltinHomonyms)
   my $e_name = $self->entity_name();
   my $r_name = $root->nodeName();
 
-  if($r_name ne $e_name) {
+  if ( $r_name ne $e_name ) {
     $self->{read} = undef;
     return;
   }
@@ -190,10 +195,12 @@ sub read {    ## no critic (ProhibitBuiltinHomonyms)
 
 sub service {
   my ($self) = @_;
-  if($ENV{dev}) {
+  if ( $ENV{dev} ) {
     $self->{service} = $ENV{dev};
   }
-  return (!$self->{service} || $self->{service} eq 'live') ? $self->live():$self->dev();
+  return ( !$self->{service} || $self->{service} eq 'live' )
+    ? $self->live()
+    : $self->dev();
 }
 
 1;

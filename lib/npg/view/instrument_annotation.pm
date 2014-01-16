@@ -18,9 +18,9 @@ use npg::model::instrument_annotation;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
 sub add_ajax {
-  my $self    = shift;
-  my $cgi     = $self->util->cgi();
-  my $model   = $self->model();
+  my $self  = shift;
+  my $cgi   = $self->util->cgi();
+  my $model = $self->model();
   $model->{id_instrument} = $cgi->param('id_instrument');
   return;
 }

@@ -18,18 +18,18 @@ use npg::model::run_lane_annotation;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15265 $ =~ /(\d+)/smx; $r; };
 
 sub new {
-  my ($class, @args) = @_;
-  my $self   = $class->SUPER::new(@args);
+  my ( $class, @args ) = @_;
+  my $self = $class->SUPER::new(@args);
   my $aspect = $self->aspect() || q();
 
-  if($aspect eq 'read_attachment_xml') {
+  if ( $aspect eq 'read_attachment_xml' ) {
     $aspect = 'read_attachment';
     $self->aspect($aspect);
   }
 
-  if($aspect eq 'read_attachment') {
+  if ( $aspect eq 'read_attachment' ) {
     my $data = $self->model->annotation->attachment() || q();
-    my $ft   = File::Type->new();
+    my $ft = File::Type->new();
     $self->{'content_type'} = $ft->checktype_contents($data);
   }
 
@@ -37,10 +37,10 @@ sub new {
 }
 
 sub decor {
-  my $self   = shift;
+  my $self = shift;
   my $aspect = $self->aspect() || q();
 
-  if($aspect eq 'read_attachment') {
+  if ( $aspect eq 'read_attachment' ) {
     return 0;
   }
 
@@ -48,21 +48,29 @@ sub decor {
 }
 
 sub authorised {
-  my $self   = shift;
-  my $util   = $self->util();
-  my $aspect = $self->aspect() || q{};
-  my $action = $self->action();
+  my $self      = shift;
+  my $util      = $self->util();
+  my $aspect    = $self->aspect() || q{};
+  my $action    = $self->action();
   my $requestor = $util->requestor();
 
   #########
   # Allow pipeline group access to the create_xml interface of run_annotation
   #
-  if ($aspect eq 'create_xml' &&
-     $requestor->is_member_of('pipeline')) {
+  if ( $aspect eq 'create_xml'
+    && $requestor->is_member_of('pipeline') )
+  {
     return 1;
   }
 
-  if (($action eq 'create' || $action eq 'read') && ($requestor->is_member_of('annotators') || $requestor->is_member_of('engineers') || $requestor->is_member_of('loaders') || $requestor->is_member_of('manual_qc'))) {
+  if (
+    ( $action eq 'create' || $action eq 'read' )
+    && ( $requestor->is_member_of('annotators')
+      || $requestor->is_member_of('engineers')
+      || $requestor->is_member_of('loaders')
+      || $requestor->is_member_of('manual_qc') )
+    )
+  {
     return 1;
   }
 
@@ -70,19 +78,19 @@ sub authorised {
 }
 
 sub add_ajax {
-  my $self                = shift;
-  my $cgi                 = $self->util->cgi();
-  my $model               = $self->model();
-  my $id_run_lane         = $cgi->param('id_run_lane');
+  my $self        = shift;
+  my $cgi         = $self->util->cgi();
+  my $model       = $self->model();
+  my $id_run_lane = $cgi->param('id_run_lane');
   $model->{id_run_lane} = $id_run_lane;
   return;
 }
 
 sub render {
-  my ($self, @args) = @_;
+  my ( $self, @args ) = @_;
   my $aspect = $self->aspect() || q();
 
-  if($aspect eq 'read_attachment') {
+  if ( $aspect eq 'read_attachment' ) {
     return $self->model->annotation->attachment();
   }
 
@@ -100,28 +108,32 @@ sub create {
   # setup to influence what is rendered in template
   #
   $model->{last_lane} = $cgi->param('last_lane');
-  $model->{bad_lane} = $cgi->param('bad_lane');
+  $model->{bad_lane}  = $cgi->param('bad_lane');
 
-  if($requestor->username() eq 'pipeline') {
+  if ( $requestor->username() eq 'pipeline' ) {
     my $username       = $cgi->param('username');
-    my $pipe_requestor = npg::model::user->new({
-						util     => $util,
-						username => $username,
-					       });
+    my $pipe_requestor = npg::model::user->new(
+      {
+        util     => $util,
+        username => $username,
+      }
+    );
 
-    $model->annotation->id_user($pipe_requestor->id_user());
+    $model->annotation->id_user( $pipe_requestor->id_user() );
 
-  } else {
-    $model->annotation->id_user($util->requestor->id_user());
+  }
+  else {
+    $model->annotation->id_user( $util->requestor->id_user() );
   }
 
-  $model->annotation->comment($cgi->param('comment'));
+  $model->annotation->comment( $cgi->param('comment') );
 
-  if($cgi->param('attachment')) {
-    my $fh    = $cgi->param('attachment');
+  if ( $cgi->param('attachment') ) {
+    my $fh = $cgi->param('attachment');
     local $RS = undef;
     $model->annotation->attachment(<$fh>);
-    $model->annotation->attachment_name($cgi->param('attachment_name')||"$fh");
+    $model->annotation->attachment_name( $cgi->param('attachment_name')
+        || "$fh" );
   }
 
   return $self->SUPER::create();

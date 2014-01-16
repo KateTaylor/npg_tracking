@@ -11,19 +11,18 @@ use base qw(st::api::base);
 use strict;
 use warnings;
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15277 $ =~ /(\d+)/smx; $r; };
 
-
 sub live {
-    my $self = shift;
-    return $self->live_url()  . q{/batches};
+  my $self = shift;
+  return $self->live_url() . q{/batches};
 }
 
 sub dev {
-    my $self = shift;
-    return $self->dev_url()   . q{/batches};
+  my $self = shift;
+  return $self->dev_url() . q{/batches};
 }
 
 sub fields { return qw(id); }

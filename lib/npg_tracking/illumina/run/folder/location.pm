@@ -18,49 +18,57 @@ use File::Spec::Functions;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16549 $ =~ /(\d+)/mxs; $r; };
 
 Readonly::Array our @STAGING_AREAS_INDEXES => 18 .. 55;
-Readonly::Array our @STAGING_AREAS => map { "/nfs/sf$_" } @STAGING_AREAS_INDEXES;
+Readonly::Array our @STAGING_AREAS => map { "/nfs/sf$_" }
+  @STAGING_AREAS_INDEXES;
 
-Readonly::Scalar our $HOST_GLOB_PATTERN => q[/nfs/sf{].join(q(,), @STAGING_AREAS_INDEXES).q[}];
-Readonly::Scalar our $DIR_GLOB_PATTERN  => q[{IL,HS}*/*/]; #'/staging/IL*/*/'; #
-Readonly::Scalar our $FOLDER_PATH_PREFIX_GLOB_PATTERN
-    => "$HOST_GLOB_PATTERN/$DIR_GLOB_PATTERN";
+Readonly::Scalar our $HOST_GLOB_PATTERN => q[/nfs/sf{]
+  . join( q(,), @STAGING_AREAS_INDEXES ) . q[}];
+Readonly::Scalar our $DIR_GLOB_PATTERN => q[{IL,HS}*/*/];  #'/staging/IL*/*/'; #
+Readonly::Scalar our $FOLDER_PATH_PREFIX_GLOB_PATTERN =>
+  "$HOST_GLOB_PATTERN/$DIR_GLOB_PATTERN";
 
 with q[npg_tracking::illumina::run];
 
 ##############
 # public methods
 
-has q{runfolder_path}     => ( isa => q{Str}, is => q{ro}, lazy_build => 1,
-                                 documentation => 'Path to and including the run folder',);
+has q{runfolder_path} => (
+  isa           => q{Str},
+  is            => q{ro},
+  lazy_build    => 1,
+  documentation => 'Path to and including the run folder',
+);
 
 #############
 # private methods
 
-has q{_folder_path_glob_pattern}  => ( isa => q{Str}, is => q{ro}, lazy_build => 1 );
+has q{_folder_path_glob_pattern} =>
+  ( isa => q{Str}, is => q{ro}, lazy_build => 1 );
 
 # works out by 'glob'ing the filesystem, the path to the run_folder based on short_reference string
 sub _get_path_from_short_reference {
   my ($self) = @_;
   my $sr = $self->short_reference();
-  if ($sr =~ /\a(\d+)\z/xms) {
+  if ( $sr =~ /\a(\d+)\z/xms ) {
     $sr = q{_{r,}} . $sr;
   }
 
-  return $self->_get_path_from_glob_pattern($self->_folder_path_glob_pattern() . q{*} . $sr . q[{,_*}]);
+  return $self->_get_path_from_glob_pattern(
+    $self->_folder_path_glob_pattern() . q{*} . $sr . q[{,_*}] );
 }
 
 sub _get_path_from_glob_pattern {
-  my ($self, $glob_pattern) = @_;
+  my ( $self, $glob_pattern ) = @_;
 
   my @dir = glob $glob_pattern;
-  @dir = grep {-d $_} @dir;
+  @dir = grep { -d $_ } @dir;
 
   if ( @dir == 0 ) {
     croak q{No paths to run folder found.};
   }
 
-  my %fs_inode_hash; #ignore multiple paths point to the same folder
-  @dir = grep { not $fs_inode_hash { join q(,), stat $_ }++ } @dir;
+  my %fs_inode_hash;    #ignore multiple paths point to the same folder
+  @dir = grep { not $fs_inode_hash{ join q(,), stat $_ }++ } @dir;
 
   if ( @dir > 1 ) {
     croak q{Ambiguous paths for run folder found: } . join qq{\n}, @dir;
@@ -73,21 +81,30 @@ sub _get_path_from_glob_pattern {
 # builders
 
 sub _build_runfolder_path {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  if ( $self->can(q(get_path_from_given_path)) and $self->can(q(_given_path)) and  $self->_given_path() ) {
+  if (  $self->can(q(get_path_from_given_path))
+    and $self->can(q(_given_path))
+    and $self->_given_path() )
+  {
     return $self->get_path_from_given_path();
   }
 
   # get info form DB if there - could be better integrated....
-  if ($self->can(q(npg_tracking_schema)) and  $self->npg_tracking_schema() and
-      $self->can(q(id_run))              and  $self->id_run() ) {
-    if (! $self->tracking_run->is_tag_set(q(staging))) {
-      croak q{NPG tracking reports run }.$self->id_run().q{ no longer on staging}
+  if (  $self->can(q(npg_tracking_schema))
+    and $self->npg_tracking_schema()
+    and $self->can(q(id_run))
+    and $self->id_run() )
+  {
+    if ( !$self->tracking_run->is_tag_set(q(staging)) ) {
+      croak q{NPG tracking reports run }
+        . $self->id_run()
+        . q{ no longer on staging};
     }
-    if (my $gpath = $self->tracking_run->folder_path_glob and
-           my $fname = $self->tracking_run->folder_name) {
-      return $self->_get_path_from_glob_pattern(catfile($gpath, $fname));
+    if (  my $gpath = $self->tracking_run->folder_path_glob
+      and my $fname = $self->tracking_run->folder_name )
+    {
+      return $self->_get_path_from_glob_pattern( catfile( $gpath, $fname ) );
     }
   }
 
@@ -102,8 +119,6 @@ sub _build__folder_path_glob_pattern {
   my $test_dir = $ENV{TEST_DIR} || q{};
   return $test_dir . $FOLDER_PATH_PREFIX_GLOB_PATTERN;
 }
-
-
 
 1;
 __END__

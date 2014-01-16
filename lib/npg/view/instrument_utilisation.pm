@@ -23,22 +23,24 @@ Readonly::Scalar our $PLOTTER_HEIGHT => 400;
 Readonly::Scalar our $PERCENTAGE     => 100;
 
 sub authorised {
-  my ($self, @args) = @_;
+  my ( $self, @args ) = @_;
   my $requestor = $self->util->requestor();
 
-  if ($requestor->username() eq 'pipeline') {
+  if ( $requestor->username() eq 'pipeline' ) {
     return 1;
   }
   return $self->SUPER::authorised(@args);
 }
 
 sub read {    ## no critic (ProhibitBuiltinHomonyms)
-  my ($self, @args) = @_;
-  if ($self->model->id_instrument_utilisation() eq 'graphical') {
+  my ( $self, @args ) = @_;
+  if ( $self->model->id_instrument_utilisation() eq 'graphical' ) {
     return $self->list_graphical();
-  } elsif ($self->model->id_instrument_utilisation() eq 'text90') {
+  }
+  elsif ( $self->model->id_instrument_utilisation() eq 'text90' ) {
     return $self->list_text90();
-  }  elsif ($self->model->id_instrument_utilisation() eq 'line90') {
+  }
+  elsif ( $self->model->id_instrument_utilisation() eq 'line90' ) {
     return $self->list_line90();
   }
   return $self->SUPER::read();
@@ -59,62 +61,67 @@ sub list_text90 {
   return 1;
 }
 
-
 sub list_graphical_line90 {
   my ($self) = @_;
   return 1;
 }
-
 
 sub list_graph_png {
 
   my ($self) = @_;
   my $model = $self->model();
 
-  my $cgi = $self->util->cgi();
-  my $type = $cgi->param( q{type} );
-  $type = $model->sanitise_input( $type );
-  my $graph_type = $cgi->param( q{graph_type} ) || 'bars';
-  $graph_type = $model->sanitise_input( $graph_type );
-  my $instrument_format = $cgi->param( q{inst_format} ) || q{HK};
-  $instrument_format = $model->sanitise_input( $instrument_format );
+  my $cgi  = $self->util->cgi();
+  my $type = $cgi->param(q{type});
+  $type = $model->sanitise_input($type);
+  my $graph_type = $cgi->param(q{graph_type}) || 'bars';
+  $graph_type = $model->sanitise_input($graph_type);
+  my $instrument_format = $cgi->param(q{inst_format}) || q{HK};
+  $instrument_format = $model->sanitise_input($instrument_format);
   my $default_num_days = $model->default_num_days();
   my $num_days = $cgi->param('num_days') || $default_num_days;
-  $num_days = $model->sanitise_input( $num_days );
+  $num_days = $model->sanitise_input($num_days);
 
-  my $data = $model->graph_data($type, $num_days, $instrument_format);
+  my $data = $model->graph_data( $type, $num_days, $instrument_format );
 
   my $graph = npg::util::image::graph->new();
 
-  $instrument_format = $instrument_format eq 'HK' ? q{GAIIx}
-                     :                              $instrument_format
-                     ;
+  $instrument_format =
+    $instrument_format eq 'HK'
+    ? q{GAIIx}
+    : $instrument_format;
 
-  my $title = $type eq 'utilisation' ? 'Daily Percentage Utilisation (Seconds of the Day) - ' . $instrument_format
-            : $type eq 'uptime'      ? 'Daily Percentage Uptime (Seconds of the Day) - ' . $instrument_format
-            :                          'Utilisation as a Percentage of Uptime - ' . $instrument_format
-            ;
+  my $title =
+    $type eq 'utilisation'
+    ? 'Daily Percentage Utilisation (Seconds of the Day) - '
+    . $instrument_format
+    : $type eq 'uptime'
+    ? 'Daily Percentage Uptime (Seconds of the Day) - ' . $instrument_format
+    : 'Utilisation as a Percentage of Uptime - ' . $instrument_format;
 
-  my $x_label_skip = round($num_days/$default_num_days);
+  my $x_label_skip = round( $num_days / $default_num_days );
 
-
-  return $graph->plotter($data, {
-				 width             => $PLOTTER_WIDTH,
-				 height            => $PLOTTER_HEIGHT,
-				 x_label           => 'date',
-				 y_label           => 'percentage',
-				 y_min_value       => 0,
-				 y_max_value       => $PERCENTAGE,
-				 title             => $title,
-				 legend            => ['Total', 'Less Hot Spare', 'Production'],
-				 x_labels_vertical => 1,
-                                 x_label_skip      => $x_label_skip,
-			}, $graph_type);
+  return $graph->plotter(
+    $data,
+    {
+      width             => $PLOTTER_WIDTH,
+      height            => $PLOTTER_HEIGHT,
+      x_label           => 'date',
+      y_label           => 'percentage',
+      y_min_value       => 0,
+      y_max_value       => $PERCENTAGE,
+      title             => $title,
+      legend            => [ 'Total', 'Less Hot Spare', 'Production' ],
+      x_labels_vertical => 1,
+      x_label_skip      => $x_label_skip,
+    },
+    $graph_type
+  );
 }
 
 sub list_gantt_run_timeline_png {
-  my ($self) = @_;
-  my $model = $self->model();
+  my ($self)      = @_;
+  my $model       = $self->model();
   my $inst_format = $self->get_inst_format();
   return $model->gantt_run_timeline_png( 0, $inst_format );
 }

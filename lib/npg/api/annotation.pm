@@ -20,7 +20,7 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 # we'll handle 'attachment' ourselves
 # so don't autogenerate an accessor for it
 #
-__PACKAGE__->mk_accessors(grep { $_ ne 'attachment' } fields());
+__PACKAGE__->mk_accessors( grep { $_ ne 'attachment' } fields() );
 
 sub fields {
   return qw(id_annotation id_user date comment attachment_name attachment);
@@ -32,42 +32,46 @@ sub large_fields {
 
 sub init {
   my $self = shift;
-  if(ref $self->{'attachment'}) {
+  if ( ref $self->{'attachment'} ) {
     local $RS = undef;
-    my $fh    = $self->{'attachment'};
+    my $fh = $self->{'attachment'};
     $self->{'attachment'} = <$fh>;
   }
   return;
 }
 
 sub attachment {
-  my ($self, $blob) = @_;
+  my ( $self, $blob ) = @_;
 
-  if($blob) {
+  if ($blob) {
     $self->{'attachment'} = $blob;
 
-  } elsif(!defined $self->{'attachment'} &&
-	  $self->attachment_name() &&
-	  $self->id_annotation()) {
+  }
+  elsif ( !defined $self->{'attachment'}
+    && $self->attachment_name()
+    && $self->id_annotation() )
+  {
     #########
     # If we've no attachment cached
     # but we do have an attachment name
     # and we've been assigned an id so presumably exist in the database
     #
     my $util       = $self->util();
-    my ($obj_type) = (ref $self) =~ /([^:]+)$/smx;
+    my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
     my $obj_pk     = $self->primary_key();
     my $obj_pk_val = $self->{$obj_pk};
-    my $obj_uri    = sprintf '%s/%s/%s;read_attachment', $util->base_uri(), $obj_type, $obj_pk_val;
-    $self->{'attachment'} = $util->get($obj_uri, []);
+    my $obj_uri    = sprintf '%s/%s/%s;read_attachment', $util->base_uri(),
+      $obj_type, $obj_pk_val;
+    $self->{'attachment'} = $util->get( $obj_uri, [] );
 
-  } elsif(ref $self->{'attachment'}) {
+  }
+  elsif ( ref $self->{'attachment'} ) {
     #########
     # attachment is a file handle on a local file
     # read it in and cache it (though it may be big)
     #
     local $RS = undef;
-    my $fh    = $self->{'attachment'};
+    my $fh = $self->{'attachment'};
     $self->{'attachment'} = <$fh>;
   }
 
@@ -75,36 +79,38 @@ sub attachment {
 }
 
 sub create {
-  my ($self, @args) = @_;
-  eval {
-    $self->check_user($self->username());
-  } or do {
-    croak $self->username() . ' does not have permission to create an annotation. Please email seq-help if you feel that you should be able to do this';
+  my ( $self, @args ) = @_;
+  eval { $self->check_user( $self->username() ); } or do {
+    croak $self->username()
+      . ' does not have permission to create an annotation. Please email seq-help if you feel that you should be able to do this';
   };
   return $self->SUPER::create(@args);
 }
 
 sub check_user {
-    my ( $self, $username ) = @_;
+  my ( $self, $username ) = @_;
 
-    my $user = npg::api::user->new( { util => $self->util,
-                                      username => $username,
-                                  } );
-
-    if (!$user->id_user()) { return 0; }
-
-    my $valid_groups = {
-         q{admin}      => 1,
-         q{annotators} => 1,
-         q{engineers}  => 1,
-         q{loaders}    => 1,
-       };
-
-    foreach my $group ( @{ $user->usergroups() } ) {
-        if ($valid_groups->{$group->groupname()}) { return 1; }
+  my $user = npg::api::user->new(
+    {
+      util     => $self->util,
+      username => $username,
     }
+  );
 
-    return 0;
+  if ( !$user->id_user() ) { return 0; }
+
+  my $valid_groups = {
+    q{admin}      => 1,
+    q{annotators} => 1,
+    q{engineers}  => 1,
+    q{loaders}    => 1,
+  };
+
+  foreach my $group ( @{ $user->usergroups() } ) {
+    if ( $valid_groups->{ $group->groupname() } ) { return 1; }
+  }
+
+  return 0;
 }
 
 1;

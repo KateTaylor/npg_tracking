@@ -15,14 +15,15 @@ use npg::api::request;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15277 $ =~ /(\d+)/smx; $r; };
 
-Readonly::Scalar our $LIVE_BASE_URI => 'http://sfweb.internal.sanger.ac.uk:9000/perl/npg';
-Readonly::Scalar our $DEV_BASE_URI  => 'http://npg.dev.sanger.ac.uk/perl/npg';
+Readonly::Scalar our $LIVE_BASE_URI =>
+  'http://sfweb.internal.sanger.ac.uk:9000/perl/npg';
+Readonly::Scalar our $DEV_BASE_URI => 'http://npg.dev.sanger.ac.uk/perl/npg';
 
-Readonly::Scalar our $MAX_RETRIES      => 3;
-Readonly::Scalar our $RETRY_DELAY      => 5;
+Readonly::Scalar our $MAX_RETRIES => 3;
+Readonly::Scalar our $RETRY_DELAY => 5;
 
 sub new {
-  my ($class, $ref) = @_;
+  my ( $class, $ref ) = @_;
   $ref ||= {};
   bless $ref, $class;
   return $ref;
@@ -35,16 +36,16 @@ sub parser {
 }
 
 sub max_retries {
-  my ($self, $v) = @_;
-  if(defined $v) {
+  my ( $self, $v ) = @_;
+  if ( defined $v ) {
     $self->{max_retries} = $v;
   }
   return $self->{max_retries} || $MAX_RETRIES;
 }
 
 sub retry_delay {
-  my ($self, $v) = @_;
-  if(defined $v) {
+  my ( $self, $v ) = @_;
+  if ( defined $v ) {
     $self->{retry_delay} = $v;
   }
   return $self->{retry_delay} || $RETRY_DELAY;
@@ -53,7 +54,7 @@ sub retry_delay {
 sub useragent {
   my $self = shift;
 
-  if(!$self->{'useragent'}) {
+  if ( !$self->{'useragent'} ) {
     my $ua = LWP::UserAgent->new();
     $ua->agent("npg::api::util/$VERSION ");
     $ua->env_proxy();
@@ -63,22 +64,22 @@ sub useragent {
 }
 
 sub request {
-  my ($self, $content_type) = @_;
+  my ( $self, $content_type ) = @_;
   my $h = {};
   $h->{max_retries} = $self->max_retries;
   $h->{retry_delay} = $self->retry_delay;
   if ($content_type) {
     $h->{content_type} = $content_type;
   }
-  if ($self->{useragent}) {
+  if ( $self->{useragent} ) {
     $h->{useragent} = $self->{useragent};
   }
-  return  npg::api::request->new($h);
+  return npg::api::request->new($h);
 }
 
 sub base_uri {
   my $self = shift;
-  if ($self->{base_uri}) {
+  if ( $self->{base_uri} ) {
     return $self->{base_uri};
   }
   my $dev = $ENV{dev} || q{live};
@@ -88,18 +89,18 @@ sub base_uri {
 }
 
 sub get {
-  my ($self, $uri, $args) = @_;
-  return  $self->request('text/xml')->make($uri, q[GET], $args);
+  my ( $self, $uri, $args ) = @_;
+  return $self->request('text/xml')->make( $uri, q[GET], $args );
 }
 
 sub post {
-  my ($self, $uri, $args) = @_;
-  return  $self->request('text/xml')->make($uri, q[POST], $args);
+  my ( $self, $uri, $args ) = @_;
+  return $self->request('text/xml')->make( $uri, q[POST], $args );
 }
 
 sub post_non_xml {
-  my ($self, $uri, $args) = @_;
-  return  $self->request()->make($uri, q[POST], $args);
+  my ( $self, $uri, $args ) = @_;
+  return $self->request()->make( $uri, q[POST], $args );
 }
 
 1;

@@ -24,18 +24,18 @@ use Readonly;
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15357 $ =~ /(\d+)/smx; $r; };
 
-Readonly::Scalar our $PERCENTAGE    => 100;
-Readonly::Scalar our $DATE          => 0;
-Readonly::Scalar our $TOTAL_PERC    => 1;
-Readonly::Scalar our $OFFICIAL_PERC => 2;
-Readonly::Scalar our $PROD_PERC     => 3;
+Readonly::Scalar our $PERCENTAGE                         => 100;
+Readonly::Scalar our $DATE                               => 0;
+Readonly::Scalar our $TOTAL_PERC                         => 1;
+Readonly::Scalar our $OFFICIAL_PERC                      => 2;
+Readonly::Scalar our $PROD_PERC                          => 3;
 Readonly::Scalar our $DEFAULT_INSTRUMENT_UPTIME_INTERVAL => 90;
-Readonly::Scalar our $THIRTY_DAYS          => 30;
-Readonly::Scalar our $DEFAULT_GANTT_WIDTH  => 1_000;
-Readonly::Scalar our $DEFAULT_GANTT_HEIGHT => 400;
-Readonly::Scalar our $DEFAULT_GANTT_Y_TICK => 9;
+Readonly::Scalar our $THIRTY_DAYS                        => 30;
+Readonly::Scalar our $DEFAULT_GANTT_WIDTH                => 1_000;
+Readonly::Scalar our $DEFAULT_GANTT_HEIGHT               => 400;
+Readonly::Scalar our $DEFAULT_GANTT_Y_TICK               => 9;
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_all();
 
 sub fields {
@@ -58,22 +58,23 @@ sub fields {
 sub init {
   my $self = shift;
 
-  if($self->{'date'} &&
-     !$self->{'id_instrument_utilisation'}) {
+  if ( $self->{'date'}
+    && !$self->{'id_instrument_utilisation'} )
+  {
     my $field_string = join q{,}, $self->fields();
     my $query = q(SELECT id_instrument_utilisation
                   FROM   instrument_utilisation
                   WHERE  date = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->date());
+      $ref = $self->util->dbh->selectall_arrayref( $query, {}, $self->date() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_instrument_utilisation'} = $ref->[0]->[0];
       $self->read();
     }
@@ -86,12 +87,12 @@ sub default_num_days {
   return $THIRTY_DAYS;
 }
 
-
 sub last_30_days {
 
-  my ($self, $insts) = @_;
-  carp q[npg::model::instrument_utilisation->last_30_days() is deprecated, use npg::model::instrument_utilisation->last_X_days() instead];
-  if (!$insts) {
+  my ( $self, $insts ) = @_;
+  carp
+q[npg::model::instrument_utilisation->last_30_days() is deprecated, use npg::model::instrument_utilisation->last_X_days() instead];
+  if ( !$insts ) {
     croak 'no instrument grouping provided';
   }
 
@@ -101,20 +102,20 @@ sub last_30_days {
 sub last_x_days {
 
   my ( $self, $arg_refs ) = @_;
-  my $insts = $arg_refs->{insts};
+  my $insts    = $arg_refs->{insts};
   my $num_days = $arg_refs->{num_days};
 
   my $instrument_format = $arg_refs->{instrument_format} || q{HK};
-  $instrument_format = $self->sanitise_input( $instrument_format );
+  $instrument_format = $self->sanitise_input($instrument_format);
 
-  if (!$insts) {
+  if ( !$insts ) {
     croak 'no instrument grouping provided';
   }
 
-  if (!$num_days) {$num_days = $THIRTY_DAYS;}
+  if ( !$num_days ) { $num_days = $THIRTY_DAYS; }
 
-  my $utilisation_column = 'iu.perc_utilisation_'.$insts;
-  my $uptime_column = 'iu.perc_uptime_'.$insts;
+  my $utilisation_column = 'iu.perc_utilisation_' . $insts;
+  my $uptime_column      = 'iu.perc_uptime_' . $insts;
   my $q = qq{SELECT iu.date, $insts, $utilisation_column, $uptime_column
              FROM   instrument_utilisation iu,
                     instrument_format instf
@@ -125,7 +126,8 @@ sub last_x_days {
   my $dbh = $self->util->dbh();
   my @data;
   eval {
-    @data = reverse @{$dbh->selectall_arrayref($q, {}, $instrument_format)}; # reverse, so that when read will be in ascending date order
+    @data = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format ) }
+      ;    # reverse, so that when read will be in ascending date order
     1;
   } or do {
     croak $EVAL_ERROR;
@@ -134,76 +136,93 @@ sub last_x_days {
 }
 
 sub table_data_total_insts {
-  my ($self, $num_days, $instrument_format) = @_;
-  if (!$num_days) {$num_days = $THIRTY_DAYS;}
-  return $self->last_x_days({
-    insts => 'total_insts',
-    num_days => $num_days,
-    instrument_format => $instrument_format,
-  });
+  my ( $self, $num_days, $instrument_format ) = @_;
+  if ( !$num_days ) { $num_days = $THIRTY_DAYS; }
+  return $self->last_x_days(
+    {
+      insts             => 'total_insts',
+      num_days          => $num_days,
+      instrument_format => $instrument_format,
+    }
+  );
 }
 
 sub table_data_official_insts {
-  my ($self, $num_days, $instrument_format) = @_;
-  if (!$num_days) {$num_days = $THIRTY_DAYS;}
-  return $self->last_x_days({
-    insts => 'official_insts',
-    num_days => $num_days,
-    instrument_format => $instrument_format,
-  });
+  my ( $self, $num_days, $instrument_format ) = @_;
+  if ( !$num_days ) { $num_days = $THIRTY_DAYS; }
+  return $self->last_x_days(
+    {
+      insts             => 'official_insts',
+      num_days          => $num_days,
+      instrument_format => $instrument_format,
+    }
+  );
 }
 
 sub table_data_prod_insts {
-  my ($self, $num_days, $instrument_format) = @_;
-  if (!$num_days) {$num_days = $THIRTY_DAYS;}
-  return $self->last_x_days({
-    insts => 'prod_insts',
-    num_days => $num_days,
-    instrument_format => $instrument_format,
-  });
+  my ( $self, $num_days, $instrument_format ) = @_;
+  if ( !$num_days ) { $num_days = $THIRTY_DAYS; }
+  return $self->last_x_days(
+    {
+      insts             => 'prod_insts',
+      num_days          => $num_days,
+      instrument_format => $instrument_format,
+    }
+  );
 }
 
 sub graph_data {
-  my ($self, $type, $num_days, $instrument_format) = @_;
+  my ( $self, $type, $num_days, $instrument_format ) = @_;
 
-  if (!$num_days) {$num_days = $THIRTY_DAYS;}
+  if ( !$num_days ) { $num_days = $THIRTY_DAYS; }
   my $types;
-  if ($type eq 'utilisation_uptime') {
+  if ( $type eq 'utilisation_uptime' ) {
     @{$types} = split /_/xms, $type;
-  } else {
+  }
+  else {
     $types = [$type];
   }
   my $data;
-  foreach my $t (@{$types}) {
-    push @{$data}, $self->obtain_graph_data($t, $num_days, $instrument_format);
+  foreach my $t ( @{$types} ) {
+    push @{$data},
+      $self->obtain_graph_data( $t, $num_days, $instrument_format );
   }
-  if (scalar@{$data} == 1) {
+  if ( scalar @{$data} == 1 ) {
     return $data->[0];
   }
   my $utilisation_data = $data->[0];
-  my $uptime_data = $data->[1];
-  my $i = 0;
-  my $return = [];
-  foreach my $utilisation (@{$utilisation_data}) {
-    if ($utilisation->[$DATE] ne $uptime_data->[$i]->[$DATE]) { croak q{dates do not match, unable to calculate utilisation as a percentage of up-time}; }
+  my $uptime_data      = $data->[1];
+  my $i                = 0;
+  my $return           = [];
+  foreach my $utilisation ( @{$utilisation_data} ) {
+    if ( $utilisation->[$DATE] ne $uptime_data->[$i]->[$DATE] ) {
+      croak
+q{dates do not match, unable to calculate utilisation as a percentage of up-time};
+    }
     my $temp = [];
 
-    my $total_perc    = $uptime_data->[$i]->[$TOTAL_PERC]    ? $utilisation->[$TOTAL_PERC] * $PERCENTAGE / $uptime_data->[$i]->[$TOTAL_PERC]
-                      :                                        '0.00'
-                      ;
+    my $total_perc =
+        $uptime_data->[$i]->[$TOTAL_PERC]
+      ? $utilisation->[$TOTAL_PERC] * $PERCENTAGE /
+      $uptime_data->[$i]->[$TOTAL_PERC]
+      : '0.00';
 
-    my $official_perc = $uptime_data->[$i]->[$OFFICIAL_PERC] ? $utilisation->[$OFFICIAL_PERC] * $PERCENTAGE / $uptime_data->[$i]->[$OFFICIAL_PERC]
-                      :                                        '0.00'
-                      ;
+    my $official_perc =
+        $uptime_data->[$i]->[$OFFICIAL_PERC]
+      ? $utilisation->[$OFFICIAL_PERC] * $PERCENTAGE /
+      $uptime_data->[$i]->[$OFFICIAL_PERC]
+      : '0.00';
 
-    my $prod_perc     = $uptime_data->[$i]->[$PROD_PERC]     ? $utilisation->[$PROD_PERC] * $PERCENTAGE / $uptime_data->[$i]->[$PROD_PERC]
-                      :                                        '0.00'
-                      ;
+    my $prod_perc =
+        $uptime_data->[$i]->[$PROD_PERC]
+      ? $utilisation->[$PROD_PERC] * $PERCENTAGE /
+      $uptime_data->[$i]->[$PROD_PERC]
+      : '0.00';
 
-    push @{$temp}, $utilisation->[$DATE];
-    push @{$temp}, sprintf '%.2f', $total_perc;
-    push @{$temp}, sprintf '%.2f', $official_perc;
-    push @{$temp}, sprintf '%.2f', $prod_perc;
+    push @{$temp},   $utilisation->[$DATE];
+    push @{$temp},   sprintf '%.2f', $total_perc;
+    push @{$temp},   sprintf '%.2f', $official_perc;
+    push @{$temp},   sprintf '%.2f', $prod_perc;
     push @{$return}, $temp;
     $i++;
   }
@@ -217,10 +236,10 @@ sub obtain_graph_data {
     $num_days = $THIRTY_DAYS;
   }
 
-  my $total     = q{iu.perc_} . $type . q{_total_insts};
-  my $official  = q{iu.perc_} . $type . q{_official_insts};
-  my $prod      = q{iu.perc_} . $type . q{_prod_insts};
-  my $q = qq{SELECT iu.date, $total, $official, $prod
+  my $total    = q{iu.perc_} . $type . q{_total_insts};
+  my $official = q{iu.perc_} . $type . q{_official_insts};
+  my $prod     = q{iu.perc_} . $type . q{_prod_insts};
+  my $q        = qq{SELECT iu.date, $total, $official, $prod
              FROM   instrument_utilisation iu,
                     instrument_format instf
              WHERE iu.id_instrument_format = instf.id_instrument_format
@@ -229,7 +248,8 @@ sub obtain_graph_data {
   my $dbh = $self->util->dbh();
   my @data;
   eval {
-    @data = reverse @{$dbh->selectall_arrayref($q, {}, $instrument_format)}; # reverse, so that when read will be in ascending date order
+    @data = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format ) }
+      ;    # reverse, so that when read will be in ascending date order
     1;
   } or do {
     croak $EVAL_ERROR;
@@ -238,59 +258,70 @@ sub obtain_graph_data {
 }
 
 sub create {
-  my ($self, @args) = @_;
+  my ( $self, @args ) = @_;
   $self->SUPER::create(@args);
   $self->read();
   return 1;
 }
 
 sub gantt_map {
-  my ($self, $chart_id, $url) = @_;
-  my $refs = $self->gantt_run_timeline_png(1);
+  my ( $self, $chart_id, $url ) = @_;
+  my $refs      = $self->gantt_run_timeline_png(1);
   my $image_map = npg::util::image::image_map->new();
-  my $data = [];
+  my $data      = [];
 
-  foreach my $gantt_box (@{$refs->{gantt_boxes}}) {
+  foreach my $gantt_box ( @{ $refs->{gantt_boxes} } ) {
     push @{$data}, $gantt_box;
   }
 
-  my $map = $image_map->render_map({
-    data => $data,
-    image_url => $ENV{SCRIPT_NAME}.$url,
-    id => $chart_id,
-  });
+  my $map = $image_map->render_map(
+    {
+      data      => $data,
+      image_url => $ENV{SCRIPT_NAME} . $url,
+      id        => $chart_id,
+    }
+  );
 
   return $map;
 }
 
 sub gantt_run_timeline_png {
   my ( $self, $ref_points, $instrument_model ) = @_;
-  my $stripe_across_for_gantt = $self->_run_time_stripe_across_for_gantt( $instrument_model );
-  my $merge = npg::util::image::merge->new();
+  my $stripe_across_for_gantt =
+    $self->_run_time_stripe_across_for_gantt($instrument_model);
+  my $merge    = npg::util::image::merge->new();
   my $arg_refs = {
-    format        => 'gantt_chart_vertical',
-    x_label       => 'Instrument',
-    y_label       => 'Date',
-    y_tick_number => $DEFAULT_GANTT_Y_TICK,
-    y_max_value   => $stripe_across_for_gantt->{y_max_value},
-    y_min_value   => $stripe_across_for_gantt->{y_min_value},
-    x_axis        => $stripe_across_for_gantt->{instruments},
-    data_points   => $stripe_across_for_gantt->{data},
-    height        => $DEFAULT_GANTT_HEIGHT,
-    width         => $DEFAULT_GANTT_WIDTH,
-    borderclrs    => [qw{lgray}],
+    format          => 'gantt_chart_vertical',
+    x_label         => 'Instrument',
+    y_label         => 'Date',
+    y_tick_number   => $DEFAULT_GANTT_Y_TICK,
+    y_max_value     => $stripe_across_for_gantt->{y_max_value},
+    y_min_value     => $stripe_across_for_gantt->{y_min_value},
+    x_axis          => $stripe_across_for_gantt->{instruments},
+    data_points     => $stripe_across_for_gantt->{data},
+    height          => $DEFAULT_GANTT_HEIGHT,
+    width           => $DEFAULT_GANTT_WIDTH,
+    borderclrs      => [qw{lgray}],
     y_number_format => $stripe_across_for_gantt->{code},
-    get_anno_refs => 1,
+    get_anno_refs   => 1,
     colour_of_block => q{green},
   };
 
   my $png;
-  eval { $png = $merge->merge_images($arg_refs); } or do { croak qq{Unable to create gantt_chart_png:\n\n}.$EVAL_ERROR; };
+  eval { $png = $merge->merge_images($arg_refs); }
+    or do { croak qq{Unable to create gantt_chart_png:\n\n} . $EVAL_ERROR; };
 
   if ($ref_points) {
     my $image_map = npg::util::image::image_map->new();
-    my $href = {};
-    $href->{gantt_boxes} = $image_map->process_instrument_gantt_values({additional_info => q{RUNNING}, data_points => $merge->gantt_refs(), data_values => $stripe_across_for_gantt->{data}, convert => $stripe_across_for_gantt->{code}});
+    my $href      = {};
+    $href->{gantt_boxes} = $image_map->process_instrument_gantt_values(
+      {
+        additional_info => q{RUNNING},
+        data_points     => $merge->gantt_refs(),
+        data_values     => $stripe_across_for_gantt->{data},
+        convert         => $stripe_across_for_gantt->{code}
+      }
+    );
     return $href;
   }
 
@@ -299,93 +330,99 @@ sub gantt_run_timeline_png {
 
 sub instruments {
   my ($self) = @_;
-  return npg::model::instrument->new({util => $self->util()})->instruments();
+  return npg::model::instrument->new( { util => $self->util() } )
+    ->instruments();
 }
 
 sub _run_time_stripe_across_for_gantt {
   my ( $self, $instrument_model ) = @_;
   $instrument_model = $instrument_model || $self->{inst_format} || q{HK};
-  my $instrument_run_times = $self->_instrument_run_times( q{}, $instrument_model);
+  my $instrument_run_times =
+    $self->_instrument_run_times( q{}, $instrument_model );
 
-  foreach my $i (sort {$a <=> $b} keys %{$instrument_run_times}) {
-    my $inst_object = npg::model::instrument->new({
-      util => $self->util(), id_instrument => $i,
-    });
-    if ( ! $inst_object->iscurrent()
-         ||
-         $inst_object->model() ne $instrument_model
-       ) {
+  foreach my $i ( sort { $a <=> $b } keys %{$instrument_run_times} ) {
+    my $inst_object = npg::model::instrument->new(
+      {
+        util          => $self->util(),
+        id_instrument => $i,
+      }
+    );
+    if (!$inst_object->iscurrent()
+      || $inst_object->model() ne $instrument_model )
+    {
       delete $instrument_run_times->{$i};
     }
 
   }
 
-  my $all_insts = $self->instruments();
-  my $instruments = [];
+  my $all_insts      = $self->instruments();
+  my $instruments    = [];
   my $stripe_indices = {};
-  my $stripe_index = 0;
-  foreach my $inst ( @{ $all_insts } ) {
-    if ( ! $inst->iscurrent()
-         ||
-         $inst->model() ne $instrument_model
-       ) {
+  my $stripe_index   = 0;
+  foreach my $inst ( @{$all_insts} ) {
+    if (!$inst->iscurrent()
+      || $inst->model() ne $instrument_model )
+    {
       next;
     }
     push @{$instruments}, $inst->name();
-    $stripe_indices->{$inst->id_instrument()} = $stripe_index;
+    $stripe_indices->{ $inst->id_instrument() } = $stripe_index;
     $stripe_index++;
   }
 
   my $max_number_of_changes = 0;
-  my $stripe = [];
-  my $dt = DateTime->now();
-  my $dt_less_ninety = DateTime->now()->subtract( days => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL );
+  my $stripe                = [];
+  my $dt                    = DateTime->now();
+  my $dt_less_ninety =
+    DateTime->now()->subtract( days => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL );
 
-
-  foreach my $i (sort {$a <=> $b} keys %{$instrument_run_times}) {
+  foreach my $i ( sort { $a <=> $b } keys %{$instrument_run_times} ) {
     my $array_of_runs = $instrument_run_times->{$i};
 
-    my $no_changes = scalar@{$instruments} * 2;
-    if ($no_changes > $max_number_of_changes) {
+    my $no_changes = scalar @{$instruments} * 2;
+    if ( $no_changes > $max_number_of_changes ) {
       $max_number_of_changes = $no_changes;
     }
 
     my $change_dates = [];
-    foreach my $run (@{$array_of_runs}) {
-      my ($y,$m,$d) = $run->{run_end} =~ /(\d+)-(\d+)-(\d+)/xms;
-      my $temp_dt = DateTime->new(year => $y, month => $m, day => $d);
+    foreach my $run ( @{$array_of_runs} ) {
+      my ( $y, $m, $d ) = $run->{run_end} =~ /(\d+)-(\d+)-(\d+)/xms;
+      my $temp_dt = DateTime->new( year => $y, month => $m, day => $d );
       my $day = DateTime->compare( $temp_dt, $dt_less_ninety );
-      if ($day >= 0) {
-        push @{$change_dates}, $dt_less_ninety->delta_days($temp_dt)->in_units(q{days});
+      if ( $day >= 0 ) {
+        push @{$change_dates},
+          $dt_less_ninety->delta_days($temp_dt)->in_units(q{days});
       }
-      ($y,$m,$d) = $run->{run_start} =~ /(\d+)-(\d+)-(\d+)/xms;
-      $temp_dt = DateTime->new(year => $y, month => $m, day => $d);
+      ( $y, $m, $d ) = $run->{run_start} =~ /(\d+)-(\d+)-(\d+)/xms;
+      $temp_dt = DateTime->new( year => $y, month => $m, day => $d );
       $day = DateTime->compare( $temp_dt, $dt_less_ninety );
-      if ($day >= 0) {
-        push @{$change_dates}, $dt_less_ninety->delta_days($temp_dt)->in_units(q{days});
+      if ( $day >= 0 ) {
+        push @{$change_dates},
+          $dt_less_ninety->delta_days($temp_dt)->in_units(q{days});
       }
     }
     $instrument_run_times->{$i} = $change_dates;
   }
 
-  for my $count (1..$max_number_of_changes) {
+  for my $count ( 1 .. $max_number_of_changes ) {
     push @{$stripe}, [];
   }
 
   my $date_ninety_days_ago = $dt_less_ninety->dmy();
-  my $date_now = $dt->dmy();
-  foreach my $i (sort {$a <=> $b} keys %{$instrument_run_times}) {
-    foreach my $array (@{$stripe}) {
-      $array->[$stripe_indices->{$i}] = shift@{$instrument_run_times->{$i}};
+  my $date_now             = $dt->dmy();
+  foreach my $i ( sort { $a <=> $b } keys %{$instrument_run_times} ) {
+    foreach my $array ( @{$stripe} ) {
+      $array->[ $stripe_indices->{$i} ] =
+        shift @{ $instrument_run_times->{$i} };
     }
   }
-  foreach my $array (@{$stripe}) {
-    foreach my $i (0..$max_number_of_changes) {
+  foreach my $array ( @{$stripe} ) {
+    foreach my $i ( 0 .. $max_number_of_changes ) {
       $array->[$i] ||= 0;
     }
   }
   my @graph_columns;
-  foreach my $i (@{$instruments}) {
+  foreach my $i ( @{$instruments} ) {
     push @graph_columns, $DEFAULT_INSTRUMENT_UPTIME_INTERVAL;
   }
 
@@ -393,7 +430,13 @@ sub _run_time_stripe_across_for_gantt {
   unshift @{$stripe}, \@graph_columns;
 
   my $convert_to_date_code = $self->_convert_to_date_code();
-  return {instruments => $instruments, data => $stripe, y_max_value => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL, y_min_value => 0, code => $convert_to_date_code};
+  return {
+    instruments => $instruments,
+    data        => $stripe,
+    y_max_value => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL,
+    y_min_value => 0,
+    code        => $convert_to_date_code
+  };
 }
 
 sub _convert_to_date_code {
@@ -409,7 +452,8 @@ sub _instrument_run_times {
   my ( $self, $no_of_days, $instrument_model ) = @_;
   $no_of_days ||= $DEFAULT_INSTRUMENT_UPTIME_INTERVAL;
   $no_of_days++;
-  $instrument_model = $instrument_model || $self->{inst_format} || q{HK}; # default to GAIIx
+  $instrument_model =
+    $instrument_model || $self->{inst_format} || q{HK};    # default to GAIIx
 
   my $q = qq{SELECT i.id_instrument AS id_instrument,
                     i.name AS name,
@@ -442,22 +486,22 @@ sub _instrument_run_times {
              ORDER BY i.id_instrument, rs.date DESC};
 
   my $dbh = $self->util->dbh();
-  my $sth = $dbh->prepare( $q );
-  $sth->execute( $instrument_model );
+  my $sth = $dbh->prepare($q);
+  $sth->execute($instrument_model);
 
-  my $seen = {};
+  my $seen                 = {};
   my $instrument_run_times = {};
-  while (my $href = $sth->fetchrow_hashref()) {
-    next if ($seen->{$href->{id_run}});
-    $seen->{$href->{id_run}}++;
-    push @{$instrument_run_times->{$href->{id_instrument}}}, \%{$href};
+  while ( my $href = $sth->fetchrow_hashref() ) {
+    next if ( $seen->{ $href->{id_run} } );
+    $seen->{ $href->{id_run} }++;
+    push @{ $instrument_run_times->{ $href->{id_instrument} } }, \%{$href};
   }
   return $instrument_run_times;
 }
 
 sub instrument_model {
-  my ( $self ) = @_;
-  if ( ! $self->{instrument_model} ) {
+  my ($self) = @_;
+  if ( !$self->{instrument_model} ) {
     $self->{instrument_model} = $self->util->cgi->param('inst_format');
   }
   return $self->{instrument_model} || q{};

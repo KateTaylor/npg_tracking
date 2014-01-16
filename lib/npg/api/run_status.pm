@@ -16,12 +16,12 @@ use Readonly;
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9207 $ =~ /(\d+)/smx; $r; };
 
-
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->hasa('run');
 
 sub fields {
-  return qw(id_run_status id_run date id_run_status_dict id_user iscurrent description);
+  return
+    qw(id_run_status id_run date id_run_status_dict id_user iscurrent description);
 }
 
 1;

@@ -42,11 +42,13 @@ Returns an instrument resultset object based on the instrument name provided
 has q{get_instrument} => ( is => q{ro}, init_arg => undef, lazy_build => 1 );
 
 sub _build_get_instrument {
-  my ($self, $id_instrument) = @_;
+  my ( $self, $id_instrument ) = @_;
   $id_instrument ||= $self->id_instrument();
-  return $self->schema_connection()->resultset(q{Instrument})->find( {
-    id_instrument => $id_instrument,
-  } );
+  return $self->schema_connection()->resultset(q{Instrument})->find(
+    {
+      id_instrument => $id_instrument,
+    }
+  );
 }
 
 =head2 name
@@ -56,13 +58,13 @@ Returns the instrument name out of the database
 =cut
 
 has q{name} => (
-  isa => q{Str},
-  is  => q{ro},
+  isa        => q{Str},
+  is         => q{ro},
   lazy_build => 1,
 );
 
 sub _build_name {
-  my ( $self ) = @_;
+  my ($self) = @_;
   return $self->get_instrument()->name();
 }
 

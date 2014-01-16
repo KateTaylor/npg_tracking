@@ -18,12 +18,12 @@ use Readonly;
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9207 $ =~ /(\d+)/mxs; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_instrument_status_annotation
-            id_instrument_status
-            id_annotation);
+    id_instrument_status
+    id_annotation);
 }
 
 sub instrument_status {
@@ -44,7 +44,7 @@ sub create {
 
   $util->transactions(0);
 
-  if(!$annotation->id_annotation()) {
+  if ( !$annotation->id_annotation() ) {
     $annotation->create();
   }
 

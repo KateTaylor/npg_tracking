@@ -13,14 +13,15 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 use npg_tracking::util::types;
 
-has 'position'    => (isa       => 'NpgTrackingLaneNumber',
-                      is        => 'rw',
-                      required  => 1,
-                     );
+has 'position' => (
+  isa      => 'NpgTrackingLaneNumber',
+  is       => 'rw',
+  required => 1,
+);
 
 sub lane_archive {
-    my $self = shift;
-    return q[lane].$self->position;
+  my $self = shift;
+  return q[lane] . $self->position;
 }
 
 1;

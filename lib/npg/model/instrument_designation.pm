@@ -13,14 +13,14 @@ use base qw(npg::model);
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a('instrument','designation');
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a( 'instrument', 'designation' );
 __PACKAGE__->has_all();
 
 sub fields {
   return qw(id_instrument_designation
-            id_instrument
-            id_designation);
+    id_instrument
+    id_designation);
 }
 
 #

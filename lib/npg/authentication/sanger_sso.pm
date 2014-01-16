@@ -19,31 +19,34 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 our @EXPORT_OK = qw(sanger_cookie_name sanger_username);
 
-Readonly::Scalar our $COOKIE_NAME  => 'WTSISignOn';
+Readonly::Scalar our $COOKIE_NAME => 'WTSISignOn';
 
 sub sanger_cookie_name {
   return $COOKIE_NAME;
 }
 
 sub sanger_username {
-  my ($cookie, $enc_key) = @_;
-  my $username = q[];
+  my ( $cookie, $enc_key ) = @_;
+  my $username  = q[];
   my $at_domain = q[];
-  if ($cookie && $enc_key) {
+  if ( $cookie && $enc_key ) {
+
     # Alternatively: use URI::Escape; my $decoded = uri_unescape($cookie);
     my $unescaped = CGI::unescape($cookie);
     ##no critic (RequireDotMatchAnything)
     $unescaped =~ s/\ /+/mxg;
     ##use critic
     my $decoded = decode_base64($unescaped);
-    my $crypt = Crypt::CBC->new(-key         => $enc_key,
-	                        -literal_key => 1,
-	                        -cipher      => 'Blowfish',
-	                        -header      => 'randomiv',
-	                        -padding     => 'space');
+    my $crypt   = Crypt::CBC->new(
+      -key         => $enc_key,
+      -literal_key => 1,
+      -cipher      => 'Blowfish',
+      -header      => 'randomiv',
+      -padding     => 'space'
+    );
     my $decrypted = $crypt->decrypt($decoded);
-    ($username, $at_domain) = $decrypted =~ /<<<<(\w+)(@[\w|\.]+)?/xms;
-    if ($username && $at_domain) {
+    ( $username, $at_domain ) = $decrypted =~ /<<<<(\w+)(@[\w|\.]+)?/xms;
+    if ( $username && $at_domain ) {
       $username .= $at_domain;
     }
   }

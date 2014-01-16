@@ -16,7 +16,7 @@ use npg::model::run_status;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15220 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_all();
 
 sub fields {
@@ -26,21 +26,24 @@ sub fields {
 sub init {
   my $self = shift;
 
-  if($self->{description} &&
-     !$self->{id_run_status_dict}) {
+  if ( $self->{description}
+    && !$self->{id_run_status_dict} )
+  {
     my $query = q(SELECT id_run_status_dict
                   FROM   run_status_dict
                   WHERE  description = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->description());
+      $ref =
+        $self->util->dbh->selectall_arrayref( $query, {},
+        $self->description() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{id_run_status_dict} = $ref->[0]->[0];
     }
   }
@@ -48,7 +51,7 @@ sub init {
 }
 
 sub runs {
-  my ($self, $params ) = @_;
+  my ( $self, $params ) = @_;
   $params ||= {};
   $params->{id_instrument_format} ||= q{all};
 
@@ -62,27 +65,31 @@ sub runs {
 
   if ( $params->{id_instrument} && $params->{id_instrument} =~ /\d+/xms ) {
     $query .= qq[ AND id_instrument = $params->{id_instrument}];
-  } else {
-    if ( $params->{id_instrument_format} ne q{all} && $params->{id_instrument_format} =~ /\A\d+\z/xms ) {
-      $query .= qq[ AND r.id_instrument_format = $params->{id_instrument_format}];
+  }
+  else {
+    if ( $params->{id_instrument_format} ne q{all}
+      && $params->{id_instrument_format} =~ /\A\d+\z/xms )
+    {
+      $query .=
+        qq[ AND r.id_instrument_format = $params->{id_instrument_format}];
     }
   }
   $query .= q( ORDER BY r.id_run DESC);
 
-  $query    = $self->util->driver->bounded_select($query,
-						  $params->{len},
-						  $params->{start});
+  $query =
+    $self->util->driver->bounded_select( $query, $params->{len},
+    $params->{start} );
 
-  return $self->gen_getarray($pkg, $query, $self->id_run_status_dict());
+  return $self->gen_getarray( $pkg, $query, $self->id_run_status_dict() );
 }
 
 sub count_runs {
   my ( $self, $params ) = @_;
-  $params ||= {};
+  $params                         ||= {};
   $params->{id_instrument_format} ||= q{all};
-  $self->{count_runs} ||= {};
+  $self->{count_runs}             ||= {};
 
-  if ( ! defined $self->{count_runs}->{id_instrument_format} ) {
+  if ( !defined $self->{count_runs}->{id_instrument_format} ) {
 
     my $pkg   = 'npg::model::run';
     my $query = qq(SELECT COUNT(*)
@@ -94,16 +101,23 @@ sub count_runs {
 
     if ( $params->{id_instrument} && $params->{id_instrument} =~ /\d+/xms ) {
       $query .= qq[ AND id_instrument = $params->{id_instrument}];
-    } else {
-      if ( $params->{id_instrument_format} ne q{all} && $params->{id_instrument_format} =~ /\A\d+\z/xms ) {
-        $query .= qq[ AND r.id_instrument_format = $params->{id_instrument_format}];
+    }
+    else {
+      if ( $params->{id_instrument_format} ne q{all}
+        && $params->{id_instrument_format} =~ /\A\d+\z/xms )
+      {
+        $query .=
+          qq[ AND r.id_instrument_format = $params->{id_instrument_format}];
       }
     }
 
-    my $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->id_run_status_dict());
+    my $ref =
+      $self->util->dbh->selectall_arrayref( $query, {},
+      $self->id_run_status_dict() );
 
-    if ( defined $ref->[0] &&
-         defined $ref->[0]->[0] ) {
+    if ( defined $ref->[0]
+      && defined $ref->[0]->[0] )
+    {
       $self->{count_runs}->{ $params->{id_instrument_format} } = $ref->[0]->[0];
     }
   }
@@ -112,15 +126,16 @@ sub count_runs {
 }
 
 sub run_status_dicts_sorted {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
   my $pkg = __PACKAGE__;
-  my $query = q(SELECT id_run_status_dict, description, temporal_index FROM ) .
-                  $pkg->table().
-                  q( WHERE iscurrent = 1
+  my $query =
+      q(SELECT id_run_status_dict, description, temporal_index FROM )
+    . $pkg->table()
+    . q( WHERE iscurrent = 1
                   ORDER BY temporal_index);
 
-  return $self->gen_getarray($pkg, $query);
+  return $self->gen_getarray( $pkg, $query );
 }
 
 1;

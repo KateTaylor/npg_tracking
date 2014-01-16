@@ -14,48 +14,53 @@ use npg::model::instrument;
 use Readonly;
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
-Readonly::Scalar our $FUDGE_FACTOR => 12_000_000_000_000; # 12 Gbytes per PE lane (most common case)
+Readonly::Scalar our $FUDGE_FACTOR =>
+  12_000_000_000_000;    # 12 Gbytes per PE lane (most common case)
 
 sub current_repositories {
-  my $self = shift;
-  my $instrument = npg::model::instrument->new({
-						util => $self->util(),
-					       });
+  my $self       = shift;
+  my $instrument = npg::model::instrument->new(
+    {
+      util => $self->util(),
+    }
+  );
   my $repositories = {};
 
-  for my $i (@{$instrument->current_instruments()}) {
+  for my $i ( @{ $instrument->current_instruments() } ) {
     my $r = $i->current_run();
-    if(!$r) {
+    if ( !$r ) {
       next;
     }
 
-    if($r->current_run_status->run_status_dict->description() =~ /archived|qc|discarded/smx) {
+    if ( $r->current_run_status->run_status_dict->description() =~
+      /archived|qc|discarded/smx )
+    {
       next;
     }
 
     my $is_paired = $r->is_paired() || 0;
 
-    for my $rl (@{$r->run_lanes()}) {
+    for my $rl ( @{ $r->run_lanes() } ) {
       my $p = $rl->project();
-      if(!$p) {
+      if ( !$p ) {
         next;
       }
 
       my $proj_dir = $p->projectname();
       my $repo_dir = $p->repository_directory();
       my ($repo)   = $repo_dir =~ /(.*)$proj_dir/smx;
-      if(!$repo) {
+      if ( !$repo ) {
         next;
       }
 
-      $repositories->{$repo} += $FUDGE_FACTOR*($is_paired+1);
+      $repositories->{$repo} += $FUDGE_FACTOR * ( $is_paired + 1 );
     }
   }
 
-  return [map { {
-                 name     => $_,
-                 required => $repositories->{$_},
-	        } } sort keys %{$repositories}];
+  return [
+    map { { name => $_, required => $repositories->{$_}, } }
+    sort keys %{$repositories}
+  ];
 }
 
 1;

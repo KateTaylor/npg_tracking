@@ -15,38 +15,41 @@ use Carp;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(
-      id_tag_run_lane
-      id_tag
-      id_run_lane
-      id_user
-      date
-    );
+    id_tag_run_lane
+    id_tag
+    id_run_lane
+    id_user
+    date
+  );
 }
 
 sub init {
   my $self = shift;
 
-  if($self->{'id_tag'} &&
-     $self->{'id_run_lane'} &&
-     !$self->{'id_tag_run_lane'}) {
+  if ( $self->{'id_tag'}
+    && $self->{'id_run_lane'}
+    && !$self->{'id_tag_run_lane'} )
+  {
     my $query = q(SELECT id_tag_run_lane, id_user, date
                   FROM   tag_run_lane
                   WHERE  id_tag = ?
                   AND    id_run_lane = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->id_tag(), $self->id_run_lane());
+      $ref =
+        $self->util->dbh->selectall_arrayref( $query, {}, $self->id_tag(),
+        $self->id_run_lane() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{id_tag_run_lane} = $ref->[0]->[0];
       $self->{id_user}         = $ref->[0]->[1];
       $self->{date}            = $ref->[0]->[2];

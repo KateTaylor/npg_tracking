@@ -17,34 +17,37 @@ use npg::model::event;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_many('event_type');
 __PACKAGE__->has_all();
 
 sub fields {
   return qw(id_entity_type
-            description
-            iscurrent);
+    description
+    iscurrent);
 }
 
 sub init {
   my $self = shift;
 
-  if($self->{'description'} &&
-     !$self->{'id_entity_type'}) {
+  if ( $self->{'description'}
+    && !$self->{'id_entity_type'} )
+  {
     my $query = q(SELECT id_entity_type
                   FROM   entity_type
                   WHERE  description = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->description());
+      $ref =
+        $self->util->dbh->selectall_arrayref( $query, {},
+        $self->description() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_entity_type'} = $ref->[0]->[0];
     }
   }
@@ -54,14 +57,15 @@ sub init {
 sub events {
   my $self = shift;
 
-  if(!$self->{events}) {
-    my $pkg = 'npg::model::event';
+  if ( !$self->{events} ) {
+    my $pkg   = 'npg::model::event';
     my $query = qq[SELECT @{[join q[, ], map { "e.$_" } $pkg->fields()]}
                    FROM event e,
                         event_type et
                    WHERE e.id_event_type   = et.id_event_type
                    AND   et.id_entity_type = ?];
-    $self->{events} = $self->gen_getarray($pkg, $query, $self->id_entity_type());
+    $self->{events} =
+      $self->gen_getarray( $pkg, $query, $self->id_entity_type() );
   }
   return $self->{events};
 }
@@ -69,12 +73,12 @@ sub events {
 sub current_entity_types {
   my $self = shift;
 
-  if(!$self->{'current_entity_types'}) {
+  if ( !$self->{'current_entity_types'} ) {
     my $pkg   = ref $self;
     my $query = qq(SELECT @{[join q(, ), $pkg->fields()]}
                    FROM   @{[$pkg->table()]}
                    WHERE  iscurrent = 1);
-    $self->{'current_entity_types'} = $self->gen_getarray($pkg, $query);
+    $self->{'current_entity_types'} = $self->gen_getarray( $pkg, $query );
   }
 
   return $self->{'current_entity_types'};

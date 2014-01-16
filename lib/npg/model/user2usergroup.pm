@@ -17,30 +17,34 @@ use npg::model::usergroup;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15395 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a([qw(user usergroup)]);
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a( [qw(user usergroup)] );
 
 sub fields {
   return qw(id_user_usergroup id_user id_usergroup);
 }
 
 sub init {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  if ( ! $self->{id_user_usergroup} &&
-       $self->{id_user} &&
-       $self->{id_usergroup} ) {
+  if (!$self->{id_user_usergroup}
+    && $self->{id_user}
+    && $self->{id_usergroup} )
+  {
 
-    my $query = q{SELECT id_user_usergroup FROM user2usergroup WHERE id_user = ? AND id_usergroup = ?};
-    my $ref   = [];
+    my $query =
+q{SELECT id_user_usergroup FROM user2usergroup WHERE id_user = ? AND id_usergroup = ?};
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->id_user(), $self->id_usergroup());
+      $ref =
+        $self->util->dbh->selectall_arrayref( $query, {}, $self->id_user(),
+        $self->id_usergroup() );
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if( @{ $ref } ) {
+    if ( @{$ref} ) {
       $self->{id_user_usergroup} = $ref->[0]->[0];
     }
   }

@@ -16,7 +16,7 @@ use Readonly;
 
 Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_usergroup groupname is_public description);
@@ -26,9 +26,8 @@ sub users {
   my $self  = shift;
   my $users = $self->read->getElementsByTagName('users')->[0];
 
-  return [map {
-    $self->new_from_xml('npg::api::user', $_);
-  } $users->getElementsByTagName('user')];
+  return [ map { $self->new_from_xml( 'npg::api::user', $_ ); }
+      $users->getElementsByTagName('user') ];
 }
 
 1;

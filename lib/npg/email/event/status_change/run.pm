@@ -19,7 +19,12 @@ extends qw{npg::email::run};
 
 Readonly::Scalar my $TEMPLATE => 'run_status_change.tt2';
 
-has q{_entity_check} => ( isa => q{Str}, init_arg => undef, is => q{ro}, default => q{npg_tracking::Schema::Result::RunStatus} );
+has q{_entity_check} => (
+  isa      => q{Str},
+  init_arg => undef,
+  is       => q{ro},
+  default  => q{npg_tracking::Schema::Result::RunStatus}
+);
 
 sub _build_template {
   my ($self) = @_;
@@ -29,21 +34,21 @@ sub _build_template {
 with qw{npg::email::roles::event_attributes};
 
 Readonly::Scalar my $FAMILIES => {
-	'run pending'              => 'start',
-	'analysis pending'         => 'start',
-	'archival pending'         => 'start',
-	'analysis prelim'          => 'start',
-	'qc review pending'        => 'start',
-	'run cancelled'            => 'complete',
-	'run complete'             => 'complete',
-	'analysis complete'        => 'complete',
-	'analysis cancelled'       => 'complete',
-	'run archived'             => 'complete',
-	'analysis prelim complete' => 'complete',
-	'run quarantined'          => 'complete',
-	'run stopped early'        => 'complete',
-	'qc complete'              => 'complete',
-	'data discarded'           => 'complete',
+  'run pending'              => 'start',
+  'analysis pending'         => 'start',
+  'archival pending'         => 'start',
+  'analysis prelim'          => 'start',
+  'qc review pending'        => 'start',
+  'run cancelled'            => 'complete',
+  'run complete'             => 'complete',
+  'analysis complete'        => 'complete',
+  'analysis cancelled'       => 'complete',
+  'run archived'             => 'complete',
+  'analysis prelim complete' => 'complete',
+  'run quarantined'          => 'complete',
+  'run stopped early'        => 'complete',
+  'qc complete'              => 'complete',
+  'data discarded'           => 'complete',
 };
 
 =head1 NAME
@@ -85,10 +90,12 @@ sub run {
   $self->compose_email();
   $self->send_email(
     {
-      body => $self->next_email(),
-      to   => $self->watchers(),
-      subject => q{Run } . $self->id_run()
-               . q{ is at "} . $self->status_description() . q{"},
+      body    => $self->next_email(),
+      to      => $self->watchers(),
+      subject => q{Run }
+        . $self->id_run()
+        . q{ is at "}
+        . $self->status_description() . q{"},
     }
   );
 
@@ -141,13 +148,14 @@ sub compose_email {
       status => $self->status_description(),
       dev    => $self->dev(),
     },
-  ) or do {
-    croak sprintf '%s error: %s', $template_obj->error->type(), $template_obj->error->info();
-  };
+    )
+    or do {
+    croak sprintf '%s error: %s', $template_obj->error->type(),
+      $template_obj->error->info();
+    };
 
   return $template_obj;
 }
-
 
 =head2 compose_st_reports
 
@@ -168,14 +176,14 @@ sub compose_st_reports {
   my @reports;
   foreach my $lane ( @{ $self->batch_details->{lanes} } ) {
     my $ref = {
-	    eventful_id   => $lane->{request_id},
-	    eventful_type => ucfirst $lane->{req_ent_name},
-	    location      => $lane->{position},
-	    identifier    => $id_run,
-	    key           => $status,
-	    message       => $message,
-	    family        => $FAMILIES->{$status} || 'update',
-	  };
+      eventful_id   => $lane->{request_id},
+      eventful_type => ucfirst $lane->{req_ent_name},
+      location      => $lane->{position},
+      identifier    => $id_run,
+      key           => $status,
+      message       => $message,
+      family        => $FAMILIES->{$status} || 'update',
+    };
 
     # We could send each lane report here, but I've chosen to separate the
     # steps so that testing is easier. A consequence is that this step is
@@ -188,7 +196,6 @@ sub compose_st_reports {
   return \@reports;
 }
 
-
 =head2 understands
 
 This method is used by the npg::email::event factory to determine if it is the correct one to
@@ -200,14 +207,17 @@ sub understands {
   my ( $class, $data ) = @_;
 
   if (
-      (    $data->{event_row}
-        && $data->{event_row}->event_type->description() eq q{status change}
-        && $data->{event_row}->event_type->entity_type->description() eq q{run_status} )
-         ||
-      (    $data->{entity_type} eq q{run_status}
-        && $data->{event_type}  eq q{status_change} )
-     ) {
-    return $class->new( $data );
+    (
+         $data->{event_row}
+      && $data->{event_row}->event_type->description() eq q{status change}
+      && $data->{event_row}->event_type->entity_type->description() eq
+      q{run_status}
+    )
+    || ( $data->{entity_type} eq q{run_status}
+      && $data->{event_type} eq q{status_change} )
+    )
+  {
+    return $class->new($data);
   }
 
   return;

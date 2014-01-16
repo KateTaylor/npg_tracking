@@ -17,27 +17,28 @@ use npg::model::instrument_status;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15220 $ =~ /(\d+)/smx; $r; };
 
 sub authorised {
-  my $self   = shift;
+  my $self = shift;
 
-  my $action = $self->action();
-  my $aspect = $self->aspect();
+  my $action    = $self->action();
+  my $aspect    = $self->aspect();
   my $requestor = $self->util->requestor();
 
   #########
   # Allow pipeline group access to the create_xml interface of instrument_status
   #
-  if ( $aspect eq 'create_xml' &&
-       $requestor->is_member_of( 'pipeline' ) ) {
+  if ( $aspect eq 'create_xml'
+    && $requestor->is_member_of('pipeline') )
+  {
     return 1;
   }
 
   if (
-      ( $action eq 'create' || $action eq 'read' )
-      &&
-      ( $requestor->is_member_of( 'engineers' ) ||
-        $requestor->is_member_of( 'annotators' ) ||
-        $requestor->is_member_of( 'loaders' ) )
-     ) {
+    ( $action eq 'create' || $action eq 'read' )
+    && ( $requestor->is_member_of('engineers')
+      || $requestor->is_member_of('annotators')
+      || $requestor->is_member_of('loaders') )
+    )
+  {
     return 1;
   }
 
@@ -45,18 +46,18 @@ sub authorised {
 }
 
 sub add_ajax {
-  my $self                  = shift;
-  my $cgi                   = $self->util->cgi();
-  my $model                 = $self->model();
-  my $id_instrument         = $cgi->param('id_instrument');
+  my $self          = shift;
+  my $cgi           = $self->util->cgi();
+  my $model         = $self->model();
+  my $id_instrument = $cgi->param('id_instrument');
   $model->{'id_instrument'} = $id_instrument;
   return;
 }
 
 sub create {
-  my $self            = shift;
-  my $model           = $self->model();
-  my $requestor       = $self->util->requestor();
+  my $self      = shift;
+  my $model     = $self->model();
+  my $requestor = $self->util->requestor();
   $model->{'id_user'} = $requestor->id_user();
   return $self->SUPER::create();
 }
@@ -67,27 +68,29 @@ sub list_up_down_xml {
 }
 
 sub list_graphical {
-  my ($self, @args) = @_;
+  my ( $self, @args ) = @_;
   $self->get_inst_format();
   return 1;
 }
+
 sub list_gantt_chart_legend_png {
   my ($self) = @_;
   my $png;
   return $png;
 }
+
 sub list_gantt_chart_png {
-  my ($self) = @_;
-  my $model = $self->model();
+  my ($self)      = @_;
+  my $model       = $self->model();
   my $inst_format = $self->get_inst_format();
   return $model->gantt_chart_png( q{}, $inst_format );
 }
 
 sub list_combined_utilisation_and_uptime_gantt_png {
-  my ($self) = @_;
-  my $model = $self->model();
+  my ($self)      = @_;
+  my $model       = $self->model();
   my $inst_format = $self->get_inst_format();
-  return $model->combined_utilisation_and_uptime_gantt_png( $inst_format );
+  return $model->combined_utilisation_and_uptime_gantt_png($inst_format);
 }
 
 1;

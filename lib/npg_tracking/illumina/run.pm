@@ -15,26 +15,30 @@ use Carp qw(croak );
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16549 $ =~ /(\d+)/mxs; $r; };
 
-
 ##############
 # public methods
 
-has q{tracking_run}     => ( isa => q{npg_tracking::Schema::Result::Run}, is => q{ro}, lazy_build => 1,
-                                 documentation => 'NPG tracking DBIC object for a run',);
+has q{tracking_run} => (
+  isa           => q{npg_tracking::Schema::Result::Run},
+  is            => q{ro},
+  lazy_build    => 1,
+  documentation => 'NPG tracking DBIC object for a run',
+);
 
 #############
 # builders
 
 sub _build_tracking_run {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  if ( $self->can(q(npg_tracking_schema)) and  $self->npg_tracking_schema() ) {
+  if ( $self->can(q(npg_tracking_schema)) and $self->npg_tracking_schema() ) {
 
     if ( !$self->can(q(id_run)) || !$self->id_run() ) {
       croak q{Need id_run to obtain NPG tracking database run information};
     }
 
-    return $self->npg_tracking_schema()->resultset(q(Run))->find($self->id_run());
+    return $self->npg_tracking_schema()->resultset(q(Run))
+      ->find( $self->id_run() );
   }
 
   croak q{Need NPG tracking schema to get a run object from it};

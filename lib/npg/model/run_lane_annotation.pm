@@ -19,12 +19,12 @@ use npg::model::entity_type;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 13390 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(id_run_lane_annotation
-            id_run_lane
-            id_annotation);
+    id_run_lane
+    id_annotation);
 }
 
 sub run_lane {
@@ -34,7 +34,7 @@ sub run_lane {
 
 sub annotation {
   my ( $self, $annotation ) = @_;
-  if ( ! $self->{annotation} ) {
+  if ( !$self->{annotation} ) {
     $self->{annotation} = $self->gen_getobj('npg::model::annotation');
   }
   return $self->{annotation};
@@ -48,7 +48,7 @@ sub create {
 
   $util->transactions(0);
 
-  if(!$annotation->id_annotation()) {
+  if ( !$annotation->id_annotation() ) {
     $annotation->create();
   }
 
@@ -57,17 +57,26 @@ sub create {
   $self->{'id_annotation'} = $annotation->id_annotation();
   $self->SUPER::create();
 
-  my $en_type = npg::model::entity_type->new({
-					      util        => $util,
-					      description => 'run_lane_annotation',
-					     });
-  my $event = npg::model::event->new({
-				      util                   => $util,
-				      event_type_description => 'annotation',
-				      entity_id              => $self->id_run_lane_annotation(),
-				      description            => $annotation->user->username() .q{ annotated run lane position } . $self->run_lane->position() . q{ of run } . $self->run_lane->run->name() . qq{\n} . $annotation->comment(),
-				      id_entity_type => $en_type->id_entity_type(),
-				     });
+  my $en_type = npg::model::entity_type->new(
+    {
+      util        => $util,
+      description => 'run_lane_annotation',
+    }
+  );
+  my $event = npg::model::event->new(
+    {
+      util                   => $util,
+      event_type_description => 'annotation',
+      entity_id              => $self->id_run_lane_annotation(),
+      description            => $annotation->user->username()
+        . q{ annotated run lane position }
+        . $self->run_lane->position()
+        . q{ of run }
+        . $self->run_lane->run->name() . qq{\n}
+        . $annotation->comment(),
+      id_entity_type => $en_type->id_entity_type(),
+    }
+  );
   $event->create();
 
   return 1;

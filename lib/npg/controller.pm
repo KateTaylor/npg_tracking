@@ -61,14 +61,14 @@ use npg::view::usage;
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 14928 $ =~ /(\d+)/smx; $r; };
 
 sub session {
-  my ($self, $util) = @_;
-  if($self->{session}) {
+  my ( $self, $util ) = @_;
+  if ( $self->{session} ) {
     return $self->{session};
   }
 
-  my $session   = $self->decorator($util)->session();
-  my $pkg       = $util->config->val('application', 'namespace');
-  my $appname   = $pkg || $ENV{SCRIPT_NAME};
+  my $session = $self->decorator($util)->session();
+  my $pkg     = $util->config->val( 'application', 'namespace' );
+  my $appname = $pkg || $ENV{SCRIPT_NAME};
   $session->{$appname} ||= {};
   $self->{session} = $session->{$appname};
 
@@ -76,24 +76,25 @@ sub session {
 }
 
 sub decorator {
-  my ($self, $util) = @_;
+  my ( $self, $util ) = @_;
 
-  if($self->{decorator}) {
+  if ( $self->{decorator} ) {
     return $self->{decorator};
   }
-  my $decorator   = npg::decorator->new({ cgi => $util->cgi(),});
+  my $decorator = npg::decorator->new( { cgi => $util->cgi(), } );
   #########
   # support unauthenticated pipeline user
   #
-  if(!$decorator->username() && $util->cgi->param('pipeline')) {
+  if ( !$decorator->username() && $util->cgi->param('pipeline') ) {
     #########
-    # Casually bypass all security for pipeline purposes.
-    # Should probably be coupled with a hostname test for il\d+\-win or il\d+proc
-    # Or IP-based restrictions
-    #
+   # Casually bypass all security for pipeline purposes.
+   # Should probably be coupled with a hostname test for il\d+\-win or il\d+proc
+   # Or IP-based restrictions
+   #
     $decorator->username('pipeline');
-  } else {
-    $decorator->username(lc $decorator->username());
+  }
+  else {
+    $decorator->username( lc $decorator->username() );
   }
   $self->{decorator} = $decorator;
   return $decorator;

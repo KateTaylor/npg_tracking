@@ -19,7 +19,7 @@ use npg::model::event_type_subscriber;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_many_through('usergroup|event_type_subscriber');
 __PACKAGE__->has_many('event');
 __PACKAGE__->has_a('entity_type');
@@ -27,16 +27,17 @@ __PACKAGE__->has_all();
 
 sub fields {
   return qw(id_event_type
-            id_entity_type
-            description);
+    id_entity_type
+    description);
 }
 
 sub init {
   my $self = shift;
 
-  if($self->{id_entity_type} &&
-     $self->{description} &&
-     !$self->{id_event_type}) {
+  if ( $self->{id_entity_type}
+    && $self->{description}
+    && !$self->{id_event_type} )
+  {
     my $query = q(SELECT id_event_type
                   FROM   event_type
                   WHERE  description    = ?
@@ -44,19 +45,20 @@ sub init {
 
     my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->{description}, $self->{id_entity_type});
+      $ref =
+        $self->util->dbh->selectall_arrayref( $query, {}, $self->{description},
+        $self->{id_entity_type} );
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
+    if ( @{$ref} ) {
       $self->{'id_event_type'} = $ref->[0]->[0];
     }
   }
   return 1;
 }
-
 
 1;
 __END__

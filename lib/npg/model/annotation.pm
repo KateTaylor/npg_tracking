@@ -17,17 +17,17 @@ use npg::model::user;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 15220 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 __PACKAGE__->has_all();
 __PACKAGE__->has_a('user');
 
 sub fields {
   return qw(id_annotation
-            id_user
-            date
-            comment
-            attachment_name
-            attachment);
+    id_user
+    date
+    comment
+    attachment_name
+    attachment);
 }
 
 sub create {
@@ -35,12 +35,12 @@ sub create {
 
   $self->{date} = strftime q(%Y-%m-%d %H:%M:%S), localtime;
 
-  if ( ! $self->id_user() ) {
+  if ( !$self->id_user() ) {
     $self->id_user( $self->util()->requestor()->id_user() );
   }
 
-  if ( ! defined $self->comment() ) {
-    $self->comment( ( $self->util()->cgi()->param( 'comment' ) || q{} ) );
+  if ( !defined $self->comment() ) {
+    $self->comment( ( $self->util()->cgi()->param('comment') || q{} ) );
   }
 
   return $self->SUPER::create();

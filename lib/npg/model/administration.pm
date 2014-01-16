@@ -20,17 +20,18 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 sub instrument_mod_dict_descriptions {
   my $self = shift;
-  return npg::model::instrument_mod_dict->new({util => $self->util()})->descriptions();
+  return npg::model::instrument_mod_dict->new( { util => $self->util() } )
+    ->descriptions();
 }
 
 sub users {
   my $self = shift;
-  return npg::model::user->new({util => $self->util()})->users();
+  return npg::model::user->new( { util => $self->util() } )->users();
 }
 
 sub usergroups {
   my $self = shift;
-  return npg::model::usergroup->new({util => $self->util()})->usergroups();
+  return npg::model::usergroup->new( { util => $self->util() } )->usergroups();
 }
 
 1;

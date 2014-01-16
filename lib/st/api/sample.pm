@@ -11,98 +11,103 @@ use warnings;
 use Carp;
 use Data::Dumper;
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16477 $ =~ /(\d+)/smx; $r; };
 
 sub _parse_taxon_id {
-    my ($self, $taxon_id) = @_;
-    # sometimes taxon ids are floats ending with .0; it's a result of uploading data from
-    # Excel spreadsheets without checking the type. Safe to extract the integer part.
-    if ($taxon_id) {
-        my ($int_taxon_id) = $taxon_id =~ /^(\d+)\.0$/sxm;
-        if ($int_taxon_id) {
-	   carp q[Sample ] . $self->id . qq[: taxon id is a float $taxon_id];
-           return $int_taxon_id;
-        }
+  my ( $self, $taxon_id ) = @_;
+
+# sometimes taxon ids are floats ending with .0; it's a result of uploading data from
+# Excel spreadsheets without checking the type. Safe to extract the integer part.
+  if ($taxon_id) {
+    my ($int_taxon_id) = $taxon_id =~ /^(\d+)\.0$/sxm;
+    if ($int_taxon_id) {
+      carp q[Sample ] . $self->id . qq[: taxon id is a float $taxon_id];
+      return $int_taxon_id;
     }
-    return $taxon_id;
+  }
+  return $taxon_id;
 }
 
 sub live {
-    my $self = shift;
-    return $self->live_url()  . q{/samples};
+  my $self = shift;
+  return $self->live_url() . q{/samples};
 }
 
 sub dev {
-    my $self = shift;
-    return $self->dev_url()   . q{/samples};
+  my $self = shift;
+  return $self->dev_url() . q{/samples};
 }
 
-sub fields { return qw( id name gc-content organism scientific-rationale concentration consent_withdrawn ); }
+sub fields {
+  return
+    qw( id name gc-content organism scientific-rationale concentration consent_withdrawn );
+}
 
 sub consent_withdrawn {
-    my $self = shift;
-    $self->parse();
-    my $consent_withdrawn = $self->get( q(consent_withdrawn) );
-    return $consent_withdrawn && $consent_withdrawn eq q{true};
+  my $self = shift;
+  $self->parse();
+  my $consent_withdrawn = $self->get(q(consent_withdrawn));
+  return $consent_withdrawn && $consent_withdrawn eq q{true};
 }
 
 sub description {
-    my $self = shift;
-    $self->parse();
-	my $result = $self->get('Sample Description');
-	return ref $result ? $result->[0] : $result;
+  my $self = shift;
+  $self->parse();
+  my $result = $self->get('Sample Description');
+  return ref $result ? $result->[0] : $result;
 }
 
 sub organism {
-    my $self = shift;
-    $self->parse();
-    my $result = $self->get(q(organism));
-    return ref $result ? $result->[0] : $result
+  my $self = shift;
+  $self->parse();
+  my $result = $self->get(q(organism));
+  return ref $result ? $result->[0] : $result;
 }
 
 sub taxon_id {
-    my $self = shift;
-    $self->parse();
-    return $self->_parse_taxon_id($self->get(q[TAXON ID])->[0]);
+  my $self = shift;
+  $self->parse();
+  return $self->_parse_taxon_id( $self->get(q[TAXON ID])->[0] );
 }
 
 sub common_name {
-    my $self = shift;
-    $self->parse();
-    return $self->get(q[Common Name])->[0];
+  my $self = shift;
+  $self->parse();
+  return $self->get(q[Common Name])->[0];
 }
 
 sub public_name {
-    my $self = shift;
-    $self->parse();
-    return $self->get(q[Public Name])->[0];
+  my $self = shift;
+  $self->parse();
+  return $self->get(q[Public Name])->[0];
 }
 
 sub accession_number {
-    my ( $self ) = @_;
-    my $a_n = $self->get( 'ENA Sample Accession Number' ) || [];
-    return $a_n->[0];
+  my ($self) = @_;
+  my $a_n = $self->get('ENA Sample Accession Number') || [];
+  return $a_n->[0];
 }
 
 sub strain {
-    my $self = shift;
-    $self->parse();
-    return $self->get(q[Strain])->[0];
+  my $self = shift;
+  $self->parse();
+  return $self->get(q[Strain])->[0];
 }
 
 sub reference_genome {
-    my $self = shift;
-    $self->parse();
-    return ($self->get(q[Sample reference genome])||[])->[0] || $self->get(q[Reference Genome])->[0];
+  my $self = shift;
+  $self->parse();
+  return ( $self->get(q[Sample reference genome]) || [] )->[0]
+    || $self->get(q[Reference Genome])->[0];
 }
 
 sub contains_nonconsented_human {
-    my ( $self ) = @_;
-    return $self->study()->contains_nonconsented_human();
+  my ($self) = @_;
+  return $self->study()->contains_nonconsented_human();
 }
-*contains_unconsented_human = \&contains_nonconsented_human; #Backward compat
+*contains_unconsented_human = \&contains_nonconsented_human;    #Backward compat
 
 1;
 __END__

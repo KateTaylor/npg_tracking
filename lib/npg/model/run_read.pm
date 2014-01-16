@@ -15,16 +15,16 @@ use Carp;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9670 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a([qw(run)]);
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a( [qw(run)] );
 
 sub fields {
   return qw(id_run_read
-            id_run
-            intervention
-            read_order
-            expected_cycle_count
-           );
+    id_run
+    intervention
+    read_order
+    expected_cycle_count
+  );
 }
 
 1;

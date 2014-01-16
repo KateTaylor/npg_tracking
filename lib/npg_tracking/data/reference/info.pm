@@ -32,31 +32,36 @@ A wrapper class for information about a reference
 Reference path
 
 =cut
-has 'ref_path' => (isa             => 'Maybe[Str]',
-                   is              => 'rw',
-                   required        => 0,
-                  );
+
+has 'ref_path' => (
+  isa      => 'Maybe[Str]',
+  is       => 'rw',
+  required => 0,
+);
 
 =head2 aligner
 
 Aligner/tool name
 
 =cut
-has 'aligner' => (isa             => 'Str',
-               is              => 'rw',
-               required        => 0,
-              );
+
+has 'aligner' => (
+  isa      => 'Str',
+  is       => 'rw',
+  required => 0,
+);
 
 =head2 aligner_options
 
 Aligner/tool options specific to this reference
 
 =cut
-has 'aligner_options' => (isa             => 'Maybe[Str]',
-                          is              => 'rw',
-                          required        => 0,
-                         );
 
+has 'aligner_options' => (
+  isa      => 'Maybe[Str]',
+  is       => 'rw',
+  required => 0,
+);
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

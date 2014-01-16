@@ -19,23 +19,23 @@ use npg::api::run;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 9380 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->hasmany([qw(run instrument_status)]);
-__PACKAGE__->hasa({current_instrument_status => 'instrument_status'});
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->hasmany( [qw(run instrument_status)] );
+__PACKAGE__->hasa( { current_instrument_status => 'instrument_status' } );
 
 sub fields {
   return qw(id_instrument
-            name
-            id_instrument_format
-            external_name
-            serial
-            iscurrent
-            ipaddr
-            instrument_comp
-            mirroring_host
-            staging_dir
-            model
-            latest_contact);
+    name
+    id_instrument_format
+    external_name
+    serial
+    iscurrent
+    ipaddr
+    instrument_comp
+    mirroring_host
+    staging_dir
+    model
+    latest_contact);
 }
 
 sub instruments {
@@ -43,18 +43,21 @@ sub instruments {
   my $instruments = $self->list->getElementsByTagName('instruments')->[0];
   my $pkg         = ref $self;
 
-  $self->{instruments} = [map { $self->new_from_xml($pkg, $_); } $instruments->getElementsByTagName('instrument')];
+  $self->{instruments} = [ map { $self->new_from_xml( $pkg, $_ ); }
+      $instruments->getElementsByTagName('instrument') ];
 
   return $self->{instruments};
 }
 
 sub new_from_xml {
-  my ($self, $pkg, $xml_frag ) = @_;
-  my $obj = $self->SUPER::new_from_xml($pkg, $xml_frag);
+  my ( $self, $pkg, $xml_frag ) = @_;
+  my $obj = $self->SUPER::new_from_xml( $pkg, $xml_frag );
 
   my $designations = $xml_frag->getElementsByTagName('designations')->[0];
   if ($designations) {
-    $obj->{designations} = [map { $self->SUPER::new_from_xml('npg::api::designation', $_); } $designations->getElementsByTagName('designation')];
+    $obj->{designations} =
+      [ map { $self->SUPER::new_from_xml( 'npg::api::designation', $_ ); }
+        $designations->getElementsByTagName('designation') ];
   }
 
   return $obj;
@@ -63,19 +66,19 @@ sub new_from_xml {
 sub designations {
   my $self = shift;
 
-  if($self->{designations}) {
+  if ( $self->{designations} ) {
     return $self->{designations};
   }
 
   my $designations = $self->read->getElementsByTagName('designations')->[0];
-  my $desig_list = [ map { $self->SUPER::new_from_xml('npg::api::designation', $_); }
-                    $designations->getElementsByTagName('designation')
-                   ];
+  my $desig_list =
+    [ map { $self->SUPER::new_from_xml( 'npg::api::designation', $_ ); }
+      $designations->getElementsByTagName('designation') ];
 
   $self->{designations} = [];
 
   foreach my $i ( @{$desig_list} ) {
-    push @{$self->{designations}}, $i->{'description'};
+    push @{ $self->{designations} }, $i->{'description'};
   }
 
   return $self->{designations};

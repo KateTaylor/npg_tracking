@@ -17,8 +17,8 @@ use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevis
 
 sub fields {
   return qw(id_event_type_subscriber
-            id_event_type
-            id_usergroup);
+    id_event_type
+    id_usergroup);
 }
 
 1;

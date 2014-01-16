@@ -15,37 +15,42 @@ use Carp;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
-__PACKAGE__->mk_accessors(fields());
+__PACKAGE__->mk_accessors( fields() );
 
 sub fields {
   return qw(
-      id_tag_frequency
-      id_tag
-      id_entity_type
-      frequency
-    );
+    id_tag_frequency
+    id_tag
+    id_entity_type
+    frequency
+  );
 }
+
 sub init {
   my $self = shift;
 
-  if($self->{'id_tag'} && $self->{'id_entity_type'} &&
-     !$self->{'id_tag_frequency'}) {
+  if ( $self->{'id_tag'}
+    && $self->{'id_entity_type'}
+    && !$self->{'id_tag_frequency'} )
+  {
     my $query = q(SELECT id_tag_frequency, frequency
                   FROM   tag_frequency
                   WHERE  id_tag = ?
                   AND    id_entity_type = ?);
-    my $ref   = [];
+    my $ref = [];
     eval {
-      $ref = $self->util->dbh->selectall_arrayref($query, {}, $self->id_tag(), $self->id_entity_type());
+      $ref =
+        $self->util->dbh->selectall_arrayref( $query, {}, $self->id_tag(),
+        $self->id_entity_type() );
 
     } or do {
       carp $EVAL_ERROR;
       return;
     };
 
-    if(@{$ref}) {
-      $self->{id_tag_frequency}    = $ref->[0]->[0];
-      $self->{frequency} = $ref->[0]->[1];
+    if ( @{$ref} ) {
+      $self->{id_tag_frequency} = $ref->[0]->[0];
+      $self->{frequency}        = $ref->[0]->[1];
     }
   }
 

@@ -34,69 +34,75 @@ use JSON;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$Revision: 16269 $ =~ /(\d+)/smx; $r; };
 
-Readonly::Scalar our $DEFAULT_SUMMARY_DAYS => 14;
-Readonly::Scalar our $MAX_LANES => 8;
+Readonly::Scalar our $DEFAULT_SUMMARY_DAYS        => 14;
+Readonly::Scalar our $MAX_LANES                   => 8;
 Readonly::Scalar our $SCS_VERSION_FIVE_DIGITS_RUN => 2.8;
 
-Readonly::Hash   our %TEAMS => ('5' => 'joint', '4' => 'RAD', '1' => 'A', '2' => 'B', '3' => 'C',);
+Readonly::Hash our %TEAMS =>
+  ( '5' => 'joint', '4' => 'RAD', '1' => 'A', '2' => 'B', '3' => 'C', );
 
-__PACKAGE__->mk_accessors(fields());
-__PACKAGE__->has_a([qw(instrument instrument_format)]);
-__PACKAGE__->has_many([qw(run_annotation)]);
-__PACKAGE__->has_many_through([qw(annotation|run_annotation)]);
+__PACKAGE__->mk_accessors( fields() );
+__PACKAGE__->has_a(            [qw(instrument instrument_format)] );
+__PACKAGE__->has_many(         [qw(run_annotation)] );
+__PACKAGE__->has_many_through( [qw(annotation|run_annotation)] );
 
 sub fields {
   return qw(id_run
-            batch_id
-            id_instrument
-            expected_cycle_count
-            actual_cycle_count
-            priority
-            id_run_pair
-            is_paired
-            team
-            id_instrument_format
-            flowcell_id
-            folder_name
-            folder_path_glob
-	    );
+    batch_id
+    id_instrument
+    expected_cycle_count
+    actual_cycle_count
+    priority
+    id_run_pair
+    is_paired
+    team
+    id_instrument_format
+    flowcell_id
+    folder_name
+    folder_path_glob
+  );
 }
 
 sub scs28 {
   my $self = shift;
 
-  if(! exists $self->{scs28}){
+  if ( !exists $self->{scs28} ) {
 
     my $instrument = $self->instrument();
-    if(! $instrument) {
-       $self->{scs28} = 0;
-       return $self->{scs28};
+    if ( !$instrument ) {
+      $self->{scs28} = 0;
+      return $self->{scs28};
     }
     my $instrument_mods = $instrument->instrument_mods;
-    foreach my $mod (@{$instrument_mods}){
+    foreach my $mod ( @{$instrument_mods} ) {
 
       my $des = $mod->instrument_mod_dict->description();
       my $rev = $mod->instrument_mod_dict->revision();
 
-      my $loader_info = $self->loader_info(1) ||{};
-      my $loading_date = $loader_info->{date};
+      my $loader_info    = $self->loader_info(1) || {};
+      my $loading_date   = $loader_info->{date};
       my $scs_date_added = $mod->date_added;
-      my $strptime =DateTime::Format::Strptime->new(pattern => '%Y-%m-%d%t%T');
-      my $loading_date_strptime = $strptime->parse_datetime($loading_date);
+      my $strptime =
+        DateTime::Format::Strptime->new( pattern => '%Y-%m-%d%t%T' );
+      my $loading_date_strptime   = $strptime->parse_datetime($loading_date);
       my $scs_date_added_strptime = $strptime->parse_datetime($scs_date_added);
 
-      if($loading_date_strptime && $scs_date_added && DateTime->compare($loading_date_strptime, $scs_date_added_strptime) < 0){
-          next;
+      if ( $loading_date_strptime
+        && $scs_date_added
+        && DateTime->compare( $loading_date_strptime, $scs_date_added_strptime )
+        < 0 )
+      {
+        next;
       }
 
-      if($des eq q{SCS}){
+      if ( $des eq q{SCS} ) {
 
-         ($rev)  = $rev =~ /(\d+\.?\d*)/mxs;
+        ($rev) = $rev =~ /(\d+\.?\d*)/mxs;
 
-         if($self->_cmp_version($rev, $SCS_VERSION_FIVE_DIGITS_RUN) >= 0){
-            $self->{scs28} = 1;
-            return $self->{scs28};
-         }
+        if ( $self->_cmp_version( $rev, $SCS_VERSION_FIVE_DIGITS_RUN ) >= 0 ) {
+          $self->{scs28} = 1;
+          return $self->{scs28};
+        }
       }
     }
     $self->{scs28} = 0;
@@ -105,32 +111,34 @@ sub scs28 {
 }
 
 sub _cmp_version {
-  my ($self, $v1, $v2) = @_;
+  my ( $self, $v1, $v2 ) = @_;
 
-  my ($whole_v1, $point_v1) = $self->_parse_version($v1);
-  my ($whole_v2, $point_v2) = $self->_parse_version($v2);
+  my ( $whole_v1, $point_v1 ) = $self->_parse_version($v1);
+  my ( $whole_v2, $point_v2 ) = $self->_parse_version($v2);
 
-  if($whole_v1 > $whole_v2){
-     return 1;
-  }elsif($whole_v1 < $whole_v2){
-     return -1; ## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
+  if ( $whole_v1 > $whole_v2 ) {
+    return 1;
+  }
+  elsif ( $whole_v1 < $whole_v2 ) {
+    return -1;    ## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
   }
 
-  if($point_v1 > $point_v2){
+  if ( $point_v1 > $point_v2 ) {
     return 1;
-  }elsif($point_v1 < $point_v2){
-    return -1; ## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
+  }
+  elsif ( $point_v1 < $point_v2 ) {
+    return -1;    ## no critic (ValuesAndExpressions::ProhibitMagicNumbers)
   }
 
   return 0;
 }
 
 sub _parse_version {
-  my ($self, $v) = @_;
+  my ( $self, $v ) = @_;
 
-  my ($whole_v, $point_v)  = $v =~ /(\d+)\.?(\d*)/mxs;
+  my ( $whole_v, $point_v ) = $v =~ /(\d+)\.?(\d*)/mxs;
 
-  if(!defined $whole_v && !defined $point_v ){
+  if ( !defined $whole_v && !defined $point_v ) {
     croak "Given version number is not valid: $v";
   }
 
@@ -139,13 +147,14 @@ sub _parse_version {
   $whole_v += 0;
   $point_v += 0;
 
-  return ($whole_v, $point_v);
+  return ( $whole_v, $point_v );
 }
 
 sub tags {
   my $self = shift;
-  if(!$self->{tags}) {
-    my $query = q{SELECT tf.frequency, t.tag, t.id_tag, tr.id_user, DATE(tr.date) AS date
+  if ( !$self->{tags} ) {
+    my $query =
+      q{SELECT tf.frequency, t.tag, t.id_tag, tr.id_user, DATE(tr.date) AS date
                   FROM   tag_frequency tf, tag t, tag_run tr, entity_type e
                   WHERE  tr.id_run         = ?
                   AND    t.id_tag          = tr.id_tag
@@ -153,59 +162,65 @@ sub tags {
                   AND    tf.id_entity_type = e.id_entity_type
                   AND    e.description     = ?
                   ORDER BY t.tag};
-    $self->{tags} = $self->gen_getarray('npg::model::tag', $query, $self->id_run(), $self->model_type());
+    $self->{tags} =
+      $self->gen_getarray( 'npg::model::tag', $query, $self->id_run(),
+      $self->model_type() );
   }
   return $self->{tags};
 }
 
 sub init {
   my $self = shift;
-  my $id   = $self->id_run() || q();
+  my $id = $self->id_run() || q();
 
-  if(!$id && $self->{'name'}) {
+  if ( !$id && $self->{'name'} ) {
     $id = $self->{'name'};
   }
 
-  if($id && $id =~ /^(IL|HS)\d+_\d+/smx ) {
+  if ( $id && $id =~ /^(IL|HS)\d+_\d+/smx ) {
     my ($id_match) = $id =~ /(\d+)$/smx;
-    $self->id_run(0+$id_match);
+    $self->id_run( 0 + $id_match );
   }
   return $self;
 }
 
 sub name {
-  my $self     = shift;
-  my $ins_name = $self->instrument->name() || q(unknown);
+  my $self          = shift;
+  my $ins_name      = $self->instrument->name() || q(unknown);
   my $id_run_format = q(%s_%05d);
-  my $model = $self->instrument_format->model;
-  if ( $model ) {
-    if ( {'HK'=>1, '1G'=>1}->{$model} and not $self->scs28() ){
+  my $model         = $self->instrument_format->model;
+  if ($model) {
+    if ( { 'HK' => 1, '1G' => 1 }->{$model} and not $self->scs28() ) {
       $id_run_format = q(%s_%04d);
-    }elsif($model eq 'MiSeq'){
+    }
+    elsif ( $model eq 'MiSeq' ) {
       $id_run_format = q(%s_%d);
     }
   }
-  return sprintf $id_run_format, (uc $ins_name), ($self->id_run()||0);
+  return sprintf $id_run_format, ( uc $ins_name ), ( $self->id_run() || 0 );
 }
 
 sub run_folder {
   my ($self) = @_;
-  if (my $folder_name = $self->folder_name()) {
+  if ( my $folder_name = $self->folder_name() ) {
     return $folder_name;
   }
-  my $loader_info = $self->loader_info() || {};
+  my $loader_info  = $self->loader_info() || {};
   my $loading_date = $loader_info->{date} || q{0000-00-00};
-  my ($year, $month, $day) = $loading_date =~ /\d{2}(\d{2})-(\d{2})-(\d{2})/xms;
+  my ( $year, $month, $day ) =
+    $loading_date =~ /\d{2}(\d{2})-(\d{2})-(\d{2})/xms;
   $year  = sprintf '%02d', $year;
   $month = sprintf '%02d', $month;
   $day   = sprintf '%02d', $day;
-  my $runfolder = $year.$month.$day.q{_}.$self->name();
-  my $model = $self->instrument_format->model;
-  if ($model eq 'HiSeq'){
-    if ($self->hiseq_slot()) { $runfolder .= q(_) . $self->hiseq_slot(); }
-    if ($self->flowcell_id()) { $runfolder .= q(_) . $self->flowcell_id(); }
-  }elsif($model eq 'MiSeq'){
-    if ($self->flowcell_id()) { $runfolder .= q(_A_) . $self->flowcell_id(); }
+  my $runfolder = $year . $month . $day . q{_} . $self->name();
+  my $model     = $self->instrument_format->model;
+
+  if ( $model eq 'HiSeq' ) {
+    if ( $self->hiseq_slot() )  { $runfolder .= q(_) . $self->hiseq_slot(); }
+    if ( $self->flowcell_id() ) { $runfolder .= q(_) . $self->flowcell_id(); }
+  }
+  elsif ( $model eq 'MiSeq' ) {
+    if ( $self->flowcell_id() ) { $runfolder .= q(_A_) . $self->flowcell_id(); }
   }
   return $runfolder;
 }
@@ -215,9 +230,10 @@ sub end {
   my $is_paired   = $self->is_paired();
   my $id_run_pair = $self->id_run_pair();
 
-  if($is_paired && !$id_run_pair) {
+  if ( $is_paired && !$id_run_pair ) {
     return 1;
-  } elsif($is_paired && $id_run_pair) {
+  }
+  elsif ( $is_paired && $id_run_pair ) {
     return 2;
   }
 
@@ -229,12 +245,12 @@ sub runs {
 
   $params->{id_instrument_format} ||= q{all};
 
-  # once we have determined this, we will set the runs to be what has been requested for the templates benefit
+# once we have determined this, we will set the runs to be what has been requested for the templates benefit
   if ( $self->{runs} && ref $self->{runs} eq q{ARRAY} ) {
     return $self->{runs};
   }
 
-  if ( ! $self->{runs} || ref $self->{runs} ne q{HASH} ) {
+  if ( !$self->{runs} || ref $self->{runs} ne q{HASH} ) {
     $self->{runs} = {};
   }
 
@@ -248,20 +264,25 @@ sub runs {
 
   if ( $params->{id_instrument} && $params->{id_instrument} =~ /\d+/xms ) {
     $query .= qq[ WHERE id_instrument = $params->{id_instrument}];
-  } else {
-    if ( $params->{id_instrument_format} ne q{all} && $params->{id_instrument_format} =~ /\A\d+\z/xms ) {
-      $query .= qq[ WHERE id_instrument_format = $params->{id_instrument_format}];
+  }
+  else {
+    if ( $params->{id_instrument_format} ne q{all}
+      && $params->{id_instrument_format} =~ /\A\d+\z/xms )
+    {
+      $query .=
+        qq[ WHERE id_instrument_format = $params->{id_instrument_format}];
     }
   }
   $query .= q[ ORDER BY id_run DESC];
 
-  if ( $params ) {
-    $query = $self->util->driver->bounded_select( $query,
-						 $params->{len},
-						 $params->{start});
+  if ($params) {
+    $query =
+      $self->util->driver->bounded_select( $query, $params->{len},
+      $params->{start} );
   }
 
-  $self->{runs}->{ $params->{id_instrument_format} } = $self->gen_getarray( $pkg, $query );
+  $self->{runs}->{ $params->{id_instrument_format} } =
+    $self->gen_getarray( $pkg, $query );
   return $self->{runs}->{ $params->{id_instrument_format} };
 }
 
@@ -270,12 +291,12 @@ sub count_runs {
   $params ||= {};
   $params->{id_instrument_format} ||= q{all};
 
-  # once we have determined this, we will set the runs to be what has been requested for the templates benefit
-  if ( defined $self->{count_runs} && ! ref $self->{count_runs} ) {
+# once we have determined this, we will set the runs to be what has been requested for the templates benefit
+  if ( defined $self->{count_runs} && !ref $self->{count_runs} ) {
     return $self->{count_runs};
   }
 
-  if ( ! $self->{count_runs} || ref $self->{count_runs} ne q{HASH} ) {
+  if ( !$self->{count_runs} || ref $self->{count_runs} ne q{HASH} ) {
     $self->{count_runs} = {};
   }
 
@@ -289,15 +310,20 @@ sub count_runs {
 
   if ( $params->{id_instrument} && $params->{id_instrument} =~ /\d+/xms ) {
     $query .= qq[ WHERE id_instrument = $params->{id_instrument}];
-  } else {
-    if ( $params->{id_instrument_format} ne q{all} && $params->{id_instrument_format} =~ /\A\d+\z/xms ) {
-      $query .= qq[ WHERE id_instrument_format = $params->{id_instrument_format}];
+  }
+  else {
+    if ( $params->{id_instrument_format} ne q{all}
+      && $params->{id_instrument_format} =~ /\A\d+\z/xms )
+    {
+      $query .=
+        qq[ WHERE id_instrument_format = $params->{id_instrument_format}];
     }
   }
 
-  my $ref = $self->util->dbh->selectall_arrayref( $query );
-  if( defined $ref->[0] &&
-      defined $ref->[0]->[0] ) {
+  my $ref = $self->util->dbh->selectall_arrayref($query);
+  if ( defined $ref->[0]
+    && defined $ref->[0]->[0] )
+  {
     $self->{count_runs}->{ $params->{id_instrument_format} } = $ref->[0]->[0];
     return $ref->[0]->[0];
   }
@@ -308,7 +334,7 @@ sub count_runs {
 sub current_run_status {
   my $self = shift;
 
-  if(!$self->{current_status}) {
+  if ( !$self->{current_status} ) {
     my $util  = $self->util();
     my $pkg   = 'npg::model::run_status';
     my $query = qq(SELECT @{[join q(, ), map { "rs.$_" } $pkg->fields()]},
@@ -322,7 +348,7 @@ sub current_run_status {
     eval {
       my $dbh = $util->dbh();
       my $sth = $dbh->prepare($query);
-      $sth->execute($self->id_run());
+      $sth->execute( $self->id_run() );
       $ref = $sth->fetchrow_hashref();
       1;
 
@@ -331,7 +357,7 @@ sub current_run_status {
       return;
     };
 
-    $ref->{util} = $util;
+    $ref->{util}            = $util;
     $self->{current_status} = $pkg->new($ref);
   }
 
@@ -339,14 +365,14 @@ sub current_run_status {
 }
 
 sub run_status_dict {
-  my ( $self ) = @_;
+  my ($self) = @_;
   return $self->current_run_status()->run_status_dict();
 }
 
 sub run_statuses {
-  my $self  = shift;
+  my $self = shift;
 
-  if(!$self->{run_statuses}) {
+  if ( !$self->{run_statuses} ) {
     my $pkg   = 'npg::model::run_status';
     my $query = qq(SELECT @{[join q(, ), map { "rs.$_" } $pkg->fields()]},
                           rsd.description AS description
@@ -355,29 +381,32 @@ sub run_statuses {
                    WHERE  rs.id_run             = ?
                    AND    rs.id_run_status_dict = rsd.id_run_status_dict
                    ORDER BY date DESC);
-    $self->{run_statuses} = $self->gen_getarray($pkg, $query, $self->id_run());
+    $self->{run_statuses} =
+      $self->gen_getarray( $pkg, $query, $self->id_run() );
   }
 
   return $self->{run_statuses};
 }
 
 sub attach_annotation {
-  my ($self, $annotation) = @_;
+  my ( $self, $annotation ) = @_;
   my $util     = $self->util();
   my $dbh      = $util->dbh();
   my $tr_state = $util->transactions();
 
-  if(!$annotation) {
+  if ( !$annotation ) {
     croak q(No annotation to save);
   }
 
-  my $run_annotation = npg::model::run_annotation->new({
-							'util'       => $util,
-							'id_run'     => $self->id_run(),
-							'annotation' => $annotation,
-						       });
-  if(!$self->id_run()) {
-    push @{$self->{'annotations'}}, $annotation;
+  my $run_annotation = npg::model::run_annotation->new(
+    {
+      'util'       => $util,
+      'id_run'     => $self->id_run(),
+      'annotation' => $annotation,
+    }
+  );
+  if ( !$self->id_run() ) {
+    push @{ $self->{'annotations'} }, $annotation;
     return 1;
   }
 
@@ -408,19 +437,19 @@ sub attach_annotation {
 }
 
 sub run_lanes {
-  my $self  = shift;
+  my $self = shift;
 
-  if(!$self->{run_lanes}) {
+  if ( !$self->{run_lanes} ) {
     $self->{run_lanes} = [];
     my $pkg   = 'npg::model::run_lane';
     my $query = qq(SELECT @{[join q(, ), $pkg->fields()]}
                    FROM   @{[$pkg->table()]}
                    WHERE  id_run = ?
                    ORDER BY position);
-    my $rls = $self->gen_getarray($pkg, $query, $self->id_run());
-    for my $rl (@{$rls}) {
-      $rl->{run}    = isweak($self) ? $self : weaken($self);
-      push @{$self->{run_lanes}}, $rl;
+    my $rls = $self->gen_getarray( $pkg, $query, $self->id_run() );
+    for my $rl ( @{$rls} ) {
+      $rl->{run} = isweak($self) ? $self : weaken($self);
+      push @{ $self->{run_lanes} }, $rl;
     }
   }
 
@@ -428,19 +457,20 @@ sub run_lanes {
 }
 
 sub runs_on_batch {
-  my ($self, $batch_id) = @_;
+  my ( $self, $batch_id ) = @_;
   $batch_id ||= $self->batch_id();
 
-  if(!$batch_id) {
+  if ( !$batch_id ) {
     return [];
   }
 
-  if(!$self->{runs_on_batch}->{$batch_id}) {
+  if ( !$self->{runs_on_batch}->{$batch_id} ) {
     my $pkg   = 'npg::model::run';
     my $query = qq(SELECT @{[join q(, ), $pkg->fields()]}
                    FROM   @{[$pkg->table()]}
                    WHERE  batch_id = ?);
-    $self->{runs_on_batch}->{$batch_id} = $self->gen_getarray($pkg, $query, $batch_id);
+    $self->{runs_on_batch}->{$batch_id} =
+      $self->gen_getarray( $pkg, $query, $batch_id );
   }
 
   return $self->{runs_on_batch}->{$batch_id};
@@ -452,7 +482,7 @@ sub runs_on_batch {
 sub recent_runs {
   my $self = shift;
 
-  if(!$self->{recent_runs}) {
+  if ( !$self->{recent_runs} ) {
     my $days  = $self->{'days'} || $DEFAULT_SUMMARY_DAYS;
     my $pkg   = ref $self;
     my $query = qq(SELECT rs.id_run,
@@ -465,14 +495,19 @@ sub recent_runs {
                    ORDER BY priority,date,id_run);
     my $seen = {};
 
-    my $db_runs = $self->gen_getarray($pkg, $query);
-    my $runs    = [sort { $a->id_run() <=> $b->id_run() }
-		   grep { defined $_ }
-		   map  { ($_, $_->run_pair()?$_->run_pair():undef) } @{$db_runs}];
+    my $db_runs = $self->gen_getarray( $pkg, $query );
+    my $runs = [
+      sort { $a->id_run() <=> $b->id_run() }
+      grep { defined $_ }
+      map { ( $_, $_->run_pair() ? $_->run_pair() : undef ) } @{$db_runs}
+    ];
 
-    $self->{recent_runs} = [grep { !$seen->{$_->id_run()}++ &&
-				     (!$_->run_pair() || !$seen->{$_->run_pair->id_run()}++) }
-			      @{$runs}];
+    $self->{recent_runs} = [
+      grep {
+        !$seen->{ $_->id_run() }++
+          && ( !$_->run_pair() || !$seen->{ $_->run_pair->id_run() }++ )
+      } @{$runs}
+    ];
   }
   return $self->{recent_runs};
 }
@@ -480,7 +515,7 @@ sub recent_runs {
 sub recent_mirrored_runs {
   my ($self) = @_;
 
-  if(!$self->{recent_mirrored_runs}) {
+  if ( !$self->{recent_mirrored_runs} ) {
     my $days  = $self->{'days'} || $DEFAULT_SUMMARY_DAYS;
     my $pkg   = ref $self;
     my $query = qq(SELECT rs.id_run,
@@ -496,22 +531,27 @@ sub recent_mirrored_runs {
                    ORDER BY priority,date,id_run);
     my $seen = {};
 
-    my $db_runs = $self->gen_getarray($pkg, $query);
-    my $runs    = [sort { $a->id_run() <=> $b->id_run() }
-		   grep { defined $_ }
-		   map  { ($_, $_->run_pair()?$_->run_pair():undef) } @{$db_runs}];
+    my $db_runs = $self->gen_getarray( $pkg, $query );
+    my $runs = [
+      sort { $a->id_run() <=> $b->id_run() }
+      grep { defined $_ }
+      map { ( $_, $_->run_pair() ? $_->run_pair() : undef ) } @{$db_runs}
+    ];
 
-    $self->{recent_mirrored_runs} = [grep { !$seen->{$_->id_run()}++ &&
-					    (!$_->run_pair() || !$seen->{$_->run_pair->id_run()}++) }
-				     @{$runs}];
+    $self->{recent_mirrored_runs} = [
+      grep {
+        !$seen->{ $_->id_run() }++
+          && ( !$_->run_pair() || !$seen->{ $_->run_pair->id_run() }++ )
+      } @{$runs}
+    ];
   }
 
   return $self->{recent_mirrored_runs};
 }
 
 sub recent_pending_runs {
-  my ($self, $return_all) = @_;
-  if(!$self->{recent_pending_runs} || $return_all) {
+  my ( $self, $return_all ) = @_;
+  if ( !$self->{recent_pending_runs} || $return_all ) {
     my $days  = $self->{'days'} || $DEFAULT_SUMMARY_DAYS;
     my $pkg   = ref $self;
     my $query = qq(SELECT rs.id_run,
@@ -527,17 +567,23 @@ sub recent_pending_runs {
                    ORDER BY priority,date,id_run);
     my $seen = {};
 
-    my $db_runs = $self->gen_getarray($pkg, $query);
+    my $db_runs = $self->gen_getarray( $pkg, $query );
     if ($return_all) {
       return $db_runs;
-    } else {
-      my $runs    = [sort { $a->id_run() <=> $b->id_run() }
-                     grep { defined $_ }
-                     map  { ($_, $_->run_pair()?$_->run_pair():undef) } @{$db_runs}];
+    }
+    else {
+      my $runs = [
+        sort { $a->id_run() <=> $b->id_run() }
+        grep { defined $_ }
+        map { ( $_, $_->run_pair() ? $_->run_pair() : undef ) } @{$db_runs}
+      ];
 
-      $self->{recent_pending_runs} = [grep { !$seen->{$_->id_run()}++ &&
-                                             (!$_->run_pair() || !$seen->{$_->run_pair->id_run()}++) }
-                                           @{$runs}];
+      $self->{recent_pending_runs} = [
+        grep {
+          !$seen->{ $_->id_run() }++
+            && ( !$_->run_pair() || !$seen->{ $_->run_pair->id_run() }++ )
+        } @{$runs}
+      ];
     }
   }
 
@@ -557,15 +603,16 @@ sub run_finished_on_instrument {
 
   my $dbh = $self->util->dbh();
   my $sth = $dbh->prepare($query);
-  $sth->execute($self->id_run());
+  $sth->execute( $self->id_run() );
   my $date;
   my $datenum;
-  while (my @row = $sth->fetchrow_array()) {
-    my ($y,$m,$d,$h,$min,$s) = $row[0] =~ /(\d{4})-(\d{2})-(\d{2})[ ](\d{2}):(\d{2}):(\d{2})/xms;
-    my $temp_datenum = $y.$m.$d.$h.$min.$s;
-    if (!$datenum || $datenum > $temp_datenum) {
+  while ( my @row = $sth->fetchrow_array() ) {
+    my ( $y, $m, $d, $h, $min, $s ) =
+      $row[0] =~ /(\d{4})-(\d{2})-(\d{2})[ ](\d{2}):(\d{2}):(\d{2})/xms;
+    my $temp_datenum = $y . $m . $d . $h . $min . $s;
+    if ( !$datenum || $datenum > $temp_datenum ) {
       $datenum = $temp_datenum;
-      $date = $row[0];
+      $date    = $row[0];
     }
   }
 
@@ -576,32 +623,33 @@ sub run_finished_on_instrument {
 
 sub recent_running_runs {
   my ($self) = @_;
-  my $pending   = $self->recent_pending_runs('return_all');
+  my $pending = $self->recent_pending_runs('return_all');
 
   my $run_info = [];
-  foreach my $run (@{$pending}) {
-    push @{$run_info}, {
-      id_run => $run->id_run(),
-      start => $run->loader_info(1)->{date},
-      end => $run->run_finished_on_instrument(),
+  foreach my $run ( @{$pending} ) {
+    push @{$run_info},
+      {
+      id_run        => $run->id_run(),
+      start         => $run->loader_info(1)->{date},
+      end           => $run->run_finished_on_instrument(),
       id_instrument => $run->id_instrument(),
-    };
+      };
   }
 
   return $run_info;
 }
 
 sub id_user {
-  my ($self, $id_op) = @_;
-  if(defined $id_op) {
+  my ( $self, $id_op ) = @_;
+  if ( defined $id_op ) {
     $self->{id_user} = $id_op;
   }
 
-  if($self->{id_user}) {
+  if ( $self->{id_user} ) {
     return $self->{id_user};
   }
 
-  if($self->current_run_status()) {
+  if ( $self->current_run_status() ) {
     return $self->current_run_status->id_user();
   }
 
@@ -611,7 +659,7 @@ sub id_user {
 sub run_pair {
   my $self = shift;
 
-  if(!$self->{run_pair}) {
+  if ( !$self->{run_pair} ) {
     my $pkg   = ref $self;
     my $query = qq[SELECT @{[join q(, ), map { "r.$_" } $self->fields()]}
                    FROM   @{[$self->table()]} r,
@@ -624,10 +672,9 @@ sub run_pair {
                    AND    rs.iscurrent          = 1
                    AND    rsd.description NOT IN ('run cancelled', 'data discarded')];
 
-    $self->{run_pair} = $self->gen_getarray($pkg,
-					    $query,
-					    $self->id_run_pair(),
-					    $self->id_run())->[0];
+    $self->{run_pair} =
+      $self->gen_getarray( $pkg, $query, $self->id_run_pair(), $self->id_run() )
+      ->[0];
   }
 
   return $self->{run_pair};
@@ -636,26 +683,27 @@ sub run_pair {
 sub is_paired_read {
   my $self = shift;
 
-  if(!exists $self->{is_paired_read}) {
+  if ( !exists $self->{is_paired_read} ) {
 
-    if($self->is_paired()){
+    if ( $self->is_paired() ) {
       $self->{is_paired_read} = 1;
       return $self->{is_paired_read};
     }
 
     my $tags_ref = $self->tags();
-    foreach my $tag (@{$tags_ref}){
+    foreach my $tag ( @{$tags_ref} ) {
       my $tag_value = $tag->tag();
 
-      if($tag_value eq q{paired_read}){
+      if ( $tag_value eq q{paired_read} ) {
         $self->{is_paired_read} = 1;
         last;
-      }elsif($tag_value eq q{single_read}){
+      }
+      elsif ( $tag_value eq q{single_read} ) {
         $self->{is_paired_read} = 0;
         last;
       }
     }
-    if(!exists $self->{is_paired_read}){
+    if ( !exists $self->{is_paired_read} ) {
 
       $self->{is_paired_read} = undef;
     }
@@ -676,7 +724,9 @@ sub create {
   $util->transactions(0);
 
   eval {
-    if (!$self->validate_team($self->{team})) { croak 'Invalid team name ' . $self->{team}; }
+    if ( !$self->validate_team( $self->{team} ) ) {
+      croak 'Invalid team name ' . $self->{team};
+    }
     $self->{is_paired}          ||= 0;
     $self->{actual_cycle_count} ||= 0;
     $self->{id_instrument_format} = $self->instrument->id_instrument_format();
@@ -688,25 +738,29 @@ sub create {
     #########
     # save any annotations
     #
-    for my $annotation (@{$self->{annotations}||[]}) {
-      $annotation->id_run($self->id_run());
+    for my $annotation ( @{ $self->{annotations} || [] } ) {
+      $annotation->id_run( $self->id_run() );
       $annotation->create();
     }
 
     #########
     # create a new status
     #
-    my $run_status_dict = npg::model::run_status_dict->new({
-							    util        => $util,
-							    description => 'run pending',
-							   });
-    my $run_status      = npg::model::run_status->new({
-						       util               => $util,
-						       id_run             => $id,
-						       id_run_status_dict => $run_status_dict->id_run_status_dict(),
-						       iscurrent          => 1,
-						       id_user            => $self->id_user(),
-						      });
+    my $run_status_dict = npg::model::run_status_dict->new(
+      {
+        util        => $util,
+        description => 'run pending',
+      }
+    );
+    my $run_status = npg::model::run_status->new(
+      {
+        util               => $util,
+        id_run             => $id,
+        id_run_status_dict => $run_status_dict->id_run_status_dict(),
+        iscurrent          => 1,
+        id_user            => $self->id_user(),
+      }
+    );
     $run_status->create();
 
     #########
@@ -716,24 +770,25 @@ sub create {
     my $multiplex   = $self->{multiplex_run};
     my $fc_slot     = $self->{fc_slot};
     my @tags;
-    if($paired_read){
+    if ($paired_read) {
       push @tags, q{paired_read};
-    }else{
-      push  @tags, q{single_read};
     }
-    if($multiplex){
+    else {
+      push @tags, q{single_read};
+    }
+    if ($multiplex) {
       push @tags, q{multiplex};
     }
 
     # radio button selection for flowcell slots (if any)
-    if($fc_slot){
+    if ($fc_slot) {
       push @tags, $fc_slot;
     }
-    $self->save_tags(\@tags);
+    $self->save_tags( \@tags );
 
     #########
     # create run_reads
-    #    
+    #
     $self->_create_run_reads();
 
     1;
@@ -744,7 +799,7 @@ sub create {
     #
     $util->transactions($tr_state);
 
-    if($tr_state) {
+    if ($tr_state) {
       $dbh->rollback();
     }
     croak $EVAL_ERROR;
@@ -763,20 +818,22 @@ sub create {
   return 1;
 }
 
-sub _create_run_reads{
+sub _create_run_reads {
   my $self = shift;
 
-  my $num_reads = $self->num_reads();
+  my $num_reads        = $self->num_reads();
   my $read_cycle_count = $self->{read_cycle_count};
 
-  foreach my $read_order (1..$num_reads){
-     my $run_read = npg::model::run_read->new({
-                   util                 => $self->util,
-                   id_run               => $self->id_run,
-                         read_order           => $read_order,
-                         expected_cycle_count => $read_cycle_count->{$read_order},
-                         intervention         => 0,
-                  });
+  foreach my $read_order ( 1 .. $num_reads ) {
+    my $run_read = npg::model::run_read->new(
+      {
+        util                 => $self->util,
+        id_run               => $self->id_run,
+        read_order           => $read_order,
+        expected_cycle_count => $read_cycle_count->{$read_order},
+        intervention         => 0,
+      }
+    );
     $run_read->create();
   }
 
@@ -786,90 +843,89 @@ sub _create_run_reads{
 sub num_reads {
   my $self = shift;
 
-  if(!exists $self->{num_reads}){
-      my $num_reads = 1;
-      if($self->{paired_read}){
-         $num_reads++;
-      }
+  if ( !exists $self->{num_reads} ) {
+    my $num_reads = 1;
+    if ( $self->{paired_read} ) {
+      $num_reads++;
+    }
 
-      if($self->{multiplex_run}){
-         $num_reads++;
-      }
-      $self->{num_reads} = $num_reads;
+    if ( $self->{multiplex_run} ) {
+      $num_reads++;
+    }
+    $self->{num_reads} = $num_reads;
   }
   return $self->{num_reads};
 }
 
 sub calculate_expected_cycle_count_by_read_cycle {
-    my $self = shift;
+  my $self = shift;
 
-    my $num_reads = $self->num_reads();
-    my $read_cycle_count_href = $self->{read_cycle_count};
-    my $expected_cycle_count = 0;
-    foreach my $read_order (1..$num_reads){
-      my $read_cycle_count = $read_cycle_count_href->{$read_order};
-      if($read_cycle_count){
-          $expected_cycle_count +=$read_cycle_count;
-      }else{
-         $self->expected_cycle_count(0);
-         return $self->expected_cycle_count();
-      }
+  my $num_reads             = $self->num_reads();
+  my $read_cycle_count_href = $self->{read_cycle_count};
+  my $expected_cycle_count  = 0;
+  foreach my $read_order ( 1 .. $num_reads ) {
+    my $read_cycle_count = $read_cycle_count_href->{$read_order};
+    if ($read_cycle_count) {
+      $expected_cycle_count += $read_cycle_count;
     }
-    $self->expected_cycle_count($expected_cycle_count);
-    return $expected_cycle_count;
+    else {
+      $self->expected_cycle_count(0);
+      return $self->expected_cycle_count();
+    }
+  }
+  $self->expected_cycle_count($expected_cycle_count);
+  return $expected_cycle_count;
 }
 
 sub _create_lanes {
-  my $self     = shift;
-  my $util     = $self->util();
-  my $dbh = $util->dbh();
+  my $self = shift;
+  my $util = $self->util();
+  my $dbh  = $util->dbh();
 
   #########
   # save lane information
   #
-  if($self->{'run_lanes'}) {
+  if ( $self->{'run_lanes'} ) {
     my $library_names_json = $self->{library_names} || q{{}};
-    my $study_names_json =  $self->{study_names} || q{{}};
-    my $st_library_names  = from_json($library_names_json);
-    my $st_study_names = from_json($study_names_json);
+    my $study_names_json   = $self->{study_names}   || q{{}};
+    my $st_library_names   = from_json($library_names_json);
+    my $st_study_names     = from_json($study_names_json);
 
-    for my $run_lane (@{$self->{'run_lanes'}}) {
-      $run_lane->id_run($self->id_run());
+    for my $run_lane ( @{ $self->{'run_lanes'} } ) {
+      $run_lane->id_run( $self->id_run() );
       $run_lane->create();
     }
 
     #########
-    # Cache library & study names from the sample-tracking database so we can search on them
-    #
-    for my $st_library_name (keys %{$st_library_names}) {
-      $dbh->do(q(INSERT INTO st_cache(id_run,type,content) VALUES(?,'library',?)),
-	       {},
-	       $self->id_run(),
-	       $st_library_name);
+# Cache library & study names from the sample-tracking database so we can search on them
+#
+    for my $st_library_name ( keys %{$st_library_names} ) {
+      $dbh->do(
+        q(INSERT INTO st_cache(id_run,type,content) VALUES(?,'library',?)),
+        {}, $self->id_run(), $st_library_name );
     }
 
-    for my $st_study_name (keys %{$st_study_names}) {
-      $dbh->do(q(INSERT INTO st_cache(id_run,type,content) VALUES(?,'project',?)),
-	       {},
-	       $self->id_run(),
-	       $st_study_name);
+    for my $st_study_name ( keys %{$st_study_names} ) {
+      $dbh->do(
+        q(INSERT INTO st_cache(id_run,type,content) VALUES(?,'project',?)),
+        {}, $self->id_run(), $st_study_name );
     }
   }
   return 1;
 }
 
-
 sub loader_info {
-  my ($self, $full_date) = @_;
+  my ( $self, $full_date ) = @_;
 
-  my $date_format = $full_date ? 'rs.date'
-                  :              'DATE(rs.date)'
-                  ;
-  if(!defined $full_date){
+  my $date_format =
+    $full_date
+    ? 'rs.date'
+    : 'DATE(rs.date)';
+  if ( !defined $full_date ) {
     $full_date = q{};
   }
-  if(!$self->{loader_info}->{$full_date}) {
-    my $dbh = $self->util->dbh();
+  if ( !$self->{loader_info}->{$full_date} ) {
+    my $dbh   = $self->util->dbh();
     my $query = qq{
       SELECT u.username AS loader,
              $date_format AS date
@@ -882,7 +938,7 @@ sub loader_info {
       AND    rs.id_user = u.id_user
     };
     my $sth = $dbh->prepare(qq{$query});
-    $sth->execute($self->id_run());
+    $sth->execute( $self->id_run() );
     my $href = $sth->fetchrow_hashref();
     $self->{loader_info}->{$full_date} = $href;
 
@@ -890,10 +946,12 @@ sub loader_info {
     $href->{loaded_r2} = q{};
     foreach my $tag ( @{ $self->tags() } ) {
       if ( $tag->tag() eq 'loaded_r2' ) {
-        $href->{r2_loader} = npg::model::user->new({
-          id_user => $tag->{id_user},
-          util => $self->util(),
-        })->username();
+        $href->{r2_loader} = npg::model::user->new(
+          {
+            id_user => $tag->{id_user},
+            util    => $self->util(),
+          }
+        )->username();
         last;
       }
     }
@@ -903,42 +961,52 @@ sub loader_info {
 }
 
 sub save_tags {
-  my ($self, $tags_to_save, $requestor) = @_;
-  my $util        = $self->util();
-  $requestor    ||= $util->requestor();
+  my ( $self, $tags_to_save, $requestor ) = @_;
+  my $util = $self->util();
+  $requestor ||= $util->requestor();
   my $dbh         = $util->dbh();
-  my $entity_type = npg::model::entity_type->new({
-						  description => $self->model_type(),
-						  util => $util,
-						 });
-  my $tr_state    = $util->transactions();
+  my $entity_type = npg::model::entity_type->new(
+    {
+      description => $self->model_type(),
+      util        => $util,
+    }
+  );
+  my $tr_state = $util->transactions();
   $util->transactions(0);
 
   eval {
     my $date = strftime q(%Y-%m-%d %H:%M:%S), localtime;
-    for my $tag (@{$tags_to_save}) {
-      $tag = npg::model::tag->new({
-				   tag  => $tag,
-				   util => $util,
-				  });
-      if (!$tag->id_tag()) {
+    for my $tag ( @{$tags_to_save} ) {
+      $tag = npg::model::tag->new(
+        {
+          tag  => $tag,
+          util => $util,
+        }
+      );
+      if ( !$tag->id_tag() ) {
         $tag->create();
       }
 
-      my $tag_run = npg::model::tag_run->new({
-					      util    => $util,
-					      id_tag  => $tag->id_tag(),
-					      id_run  => $self->id_run(),
-					      date    => $date,
-					      id_user => $requestor->id_user(),
-					     });
+      my $tag_run = npg::model::tag_run->new(
+        {
+          util    => $util,
+          id_tag  => $tag->id_tag(),
+          id_run  => $self->id_run(),
+          date    => $date,
+          id_user => $requestor->id_user(),
+        }
+      );
       $tag_run->save();
-      my $tag_freq = 'npg::model::tag_frequency'->new({
-						       id_tag         => $tag->id_tag(),
-						       id_entity_type => $entity_type->id_entity_type,
-						       util           => $util,
-						      });
-      my $freq = $dbh->selectall_arrayref(q{SELECT COUNT(id_tag) FROM tag_run WHERE id_tag = ?}, {}, $tag->id_tag())->[0]->[0];
+      my $tag_freq = 'npg::model::tag_frequency'->new(
+        {
+          id_tag         => $tag->id_tag(),
+          id_entity_type => $entity_type->id_entity_type,
+          util           => $util,
+        }
+      );
+      my $freq = $dbh->selectall_arrayref(
+        q{SELECT COUNT(id_tag) FROM tag_run WHERE id_tag = ?},
+        {}, $tag->id_tag() )->[0]->[0];
       $tag_freq->frequency($freq);
       $tag_freq->save();
     }
@@ -947,7 +1015,9 @@ sub save_tags {
   } or do {
     $util->transactions($tr_state);
     $tr_state and $dbh->rollback();
-    croak $EVAL_ERROR . q{<br />rolled back attempt to save info for the tags for run } . $self->id_run();
+    croak $EVAL_ERROR
+      . q{<br />rolled back attempt to save info for the tags for run }
+      . $self->id_run();
   };
 
   $util->transactions($tr_state);
@@ -963,36 +1033,46 @@ sub save_tags {
 }
 
 sub remove_tags {
-  my ($self, $tags_to_remove, $requestor) = @_;
-  my $util     = $self->util();
+  my ( $self, $tags_to_remove, $requestor ) = @_;
+  my $util = $self->util();
   $requestor ||= $util->requestor();
   my $dbh      = $util->dbh();
   my $tr_state = $util->transactions();
   $util->transactions(0);
 
   eval {
-    my $entity_type = npg::model::entity_type->new({
-						    description => $self->model_type(),
-						    util        => $util,
-						   });
-    for my $tag (@{$tags_to_remove}) {
-      $tag = npg::model::tag->new({
-				   tag  => $tag,
-				   util => $util,
-				  });
-      my $tag_run = npg::model::tag_run->new({
-					      id_tag => $tag->id_tag(),
-					      id_run => $self->id_run(),
-					      util   => $util,
-					     });
+    my $entity_type = npg::model::entity_type->new(
+      {
+        description => $self->model_type(),
+        util        => $util,
+      }
+    );
+    for my $tag ( @{$tags_to_remove} ) {
+      $tag = npg::model::tag->new(
+        {
+          tag  => $tag,
+          util => $util,
+        }
+      );
+      my $tag_run = npg::model::tag_run->new(
+        {
+          id_tag => $tag->id_tag(),
+          id_run => $self->id_run(),
+          util   => $util,
+        }
+      );
       $tag_run->delete();
 
-      my $tag_freq = npg::model::tag_frequency->new({
-						     id_tag         => $tag->id_tag(),
-						     id_entity_type => $entity_type->id_entity_type,
-						     util           => $util,
-						    });
-      my $freq = $dbh->selectall_arrayref(q{SELECT COUNT(id_tag) FROM tag_run WHERE id_tag = ?}, {}, $tag->id_tag())->[0]->[0];
+      my $tag_freq = npg::model::tag_frequency->new(
+        {
+          id_tag         => $tag->id_tag(),
+          id_entity_type => $entity_type->id_entity_type,
+          util           => $util,
+        }
+      );
+      my $freq = $dbh->selectall_arrayref(
+        q{SELECT COUNT(id_tag) FROM tag_run WHERE id_tag = ?},
+        {}, $tag->id_tag() )->[0]->[0];
       $tag_freq->frequency($freq);
       $tag_freq->save();
     }
@@ -1001,7 +1081,9 @@ sub remove_tags {
   } or do {
     $util->transactions($tr_state);
     $tr_state and $dbh->rollback();
-    croak $EVAL_ERROR . q{Rolled back attempt to delete info for the tags for run } . $self->id_run();
+    croak $EVAL_ERROR
+      . q{Rolled back attempt to delete info for the tags for run }
+      . $self->id_run();
   };
 
   $util->transactions($tr_state);
@@ -1022,10 +1104,10 @@ sub is_in_staging {
 }
 
 sub has_tag_with_value {
-  my ($self,$value) = @_;
+  my ( $self, $value ) = @_;
   my $tags = $self->tags();
-  foreach my $tag (@{$tags}) {
-    if ($tag->tag() eq $value) {
+  foreach my $tag ( @{$tags} ) {
+    if ( $tag->tag() eq $value ) {
       return 1;
     }
   }
@@ -1035,13 +1117,14 @@ sub has_tag_with_value {
 sub hiseq_slot {
   my ($self) = @_;
 
-  if(! exists $self->{hiseq_slot}){
+  if ( !exists $self->{hiseq_slot} ) {
 
     my $hiseq_slot;
-    if( $self->has_tag_with_value(q{fc_slotA}) ){
-       $hiseq_slot = q{A};
-    }elsif( $self->has_tag_with_value(q{fc_slotB}) ){
-       $hiseq_slot = q{B};
+    if ( $self->has_tag_with_value(q{fc_slotA}) ) {
+      $hiseq_slot = q{A};
+    }
+    elsif ( $self->has_tag_with_value(q{fc_slotB}) ) {
+      $hiseq_slot = q{B};
     }
     $self->{hiseq_slot} = $hiseq_slot;
   }
@@ -1051,20 +1134,23 @@ sub hiseq_slot {
 #############
 # also if prelim complete for first end
 sub has_analysis_complete {
-  my ($self,$run_pair_check) = @_;
+  my ( $self, $run_pair_check ) = @_;
   my $statuses = $self->run_statuses();
-  foreach my $status (@{$statuses}) {
-    if ($status->{description} eq q{analysis prelim complete}) {
+  foreach my $status ( @{$statuses} ) {
+    if ( $status->{description} eq q{analysis prelim complete} ) {
       return 1;
     }
-    if ($status->{description} eq q{analysis complete}) {
+    if ( $status->{description} eq q{analysis complete} ) {
       return 1;
     }
-    if ($status->{description} eq q{secondary analysis in progress}) {
+    if ( $status->{description} eq q{secondary analysis in progress} ) {
       return 1;
     }
   }
-  if (!$run_pair_check && $self->id_run_pair() && $self->run_pair->has_analysis_complete(1)) {
+  if (!$run_pair_check
+    && $self->id_run_pair()
+    && $self->run_pair->has_analysis_complete(1) )
+  {
     return 1;
   }
   return 0;
@@ -1073,8 +1159,8 @@ sub has_analysis_complete {
 sub has_run_archived {
   my ($self) = @_;
   my $statuses = $self->run_statuses();
-  foreach my $status (@{$statuses}) {
-    if ($status->{description} eq q{run archived}) {
+  foreach my $status ( @{$statuses} ) {
+    if ( $status->{description} eq q{run archived} ) {
       return 1;
     }
   }
@@ -1084,8 +1170,8 @@ sub has_run_archived {
 sub has_analysis_in_progress {
   my ($self) = @_;
   my $statuses = $self->run_statuses();
-  foreach my $status (@{$statuses}) {
-    if ($status->{description} eq q{analysis in progress}) {
+  foreach my $status ( @{$statuses} ) {
+    if ( $status->{description} eq q{analysis in progress} ) {
       return 1;
     }
   }
@@ -1093,15 +1179,16 @@ sub has_analysis_in_progress {
 }
 
 sub potentially_stuck_runs {
-  my ( $self ) = @_;
-  if ( ! $self->{potentially_stuck_runs} ) {
-    $self->{potentially_stuck_runs} = $self->runs()->[0]->current_run_status()->potentially_stuck_runs();
+  my ($self) = @_;
+  if ( !$self->{potentially_stuck_runs} ) {
+    $self->{potentially_stuck_runs} =
+      $self->runs()->[0]->current_run_status()->potentially_stuck_runs();
   }
   return $self->{potentially_stuck_runs};
 }
 
 sub verified {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
   if ( $self->{verified} ) {
     return $self->{verified};
@@ -1115,33 +1202,41 @@ sub verified {
     if ( $tag->tag() eq 'verified' ) {
       $return_hash->{verified} = 1;
       $return_hash->{flowcell} = 1;
-      my $username = npg::model::user->new({
-        id_user => $tag->{id_user},
-        util => $self->util(),
-      })->username();
+      my $username = npg::model::user->new(
+        {
+          id_user => $tag->{id_user},
+          util    => $self->util(),
+        }
+      )->username();
       $return_hash->{username} = $username;
       $return_hash->{user_fc}  = $username;
     }
     if ( $tag->tag() eq q{verified_fc} ) {
       $return_hash->{flowcell} = 1;
-      $return_hash->{user_fc} = npg::model::user->new({
-        id_user => $tag->{id_user},
-        util => $self->util(),
-      })->username();
+      $return_hash->{user_fc}  = npg::model::user->new(
+        {
+          id_user => $tag->{id_user},
+          util    => $self->util(),
+        }
+      )->username();
     }
     if ( $tag->tag() eq q{verified_r1} ) {
       $return_hash->{reagent1} = 1;
-      $return_hash->{user_r1} = npg::model::user->new({
-        id_user => $tag->{id_user},
-        util => $self->util(),
-      })->username();
+      $return_hash->{user_r1}  = npg::model::user->new(
+        {
+          id_user => $tag->{id_user},
+          util    => $self->util(),
+        }
+      )->username();
     }
     if ( $tag->tag() eq q{verified_r2} ) {
       $return_hash->{reagent2} = 1;
-      $return_hash->{user_r2} = npg::model::user->new({
-        id_user => $tag->{id_user},
-        util => $self->util(),
-      })->username();
+      $return_hash->{user_r2}  = npg::model::user->new(
+        {
+          id_user => $tag->{id_user},
+          util    => $self->util(),
+        }
+      )->username();
     }
 
   }
@@ -1152,20 +1247,20 @@ sub verified {
 
 sub teams {
   my $self = shift;
-  return map {$TEAMS{$_}} (sort {$a <=> $b} keys %TEAMS);
+  return map { $TEAMS{$_} } ( sort { $a <=> $b } keys %TEAMS );
 }
 
 sub validate_team {
-  my ($self, $team) = @_;
-  if(!$team || (none { $team eq $_ } $self->teams())) {
+  my ( $self, $team ) = @_;
+  if ( !$team || ( none { $team eq $_ } $self->teams() ) ) {
     return 0;
   }
   return 1;
 }
 
 sub is_dev {
-  my $self= shift;
-  return ($self->team() && $self->team() eq 'RAD') ? 1 : 0;
+  my $self = shift;
+  return ( $self->team() && $self->team() eq 'RAD' ) ? 1 : 0;
 }
 
 1;

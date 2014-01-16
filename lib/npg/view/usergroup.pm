@@ -14,12 +14,12 @@ use base qw(npg::view);
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 9207 $ =~ /(\d+)/smx; $r; };
 
 sub new {
-  my ($class, @args) = @_;
+  my ( $class, @args ) = @_;
   my $self  = $class->SUPER::new(@args);
   my $model = $self->model();
   my $id    = $model->id_usergroup();
 
-  if($id && $id !~ /^\d+$/smx) {
+  if ( $id && $id !~ /^\d+$/smx ) {
     $model->groupname($id);
     $model->id_usergroup(0);
     $model->init();

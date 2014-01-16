@@ -14,7 +14,7 @@ use base qw(ClearPress::decorator);
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 15402 $ =~ /(\d+)/smx; $r; };
 
 sub username {
-  my ($self, $username) = @_;
+  my ( $self, $username ) = @_;
   if ($username) {
     $self->{username} = $username;
   }
@@ -22,7 +22,7 @@ sub username {
 }
 
 sub cgi {
-  my ($self, $cgi) = @_;
+  my ( $self, $cgi ) = @_;
   if ($cgi) {
     $self->{cgi} = $cgi;
   }

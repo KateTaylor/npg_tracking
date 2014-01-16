@@ -18,53 +18,75 @@ use English qw{-no_match_vars};
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 16549 $ =~ /(\d+)/mxs; $r; };
 
 Readonly::Scalar our $INSTRUMENT_PATTERN => '(IL|HS|MS)';
-Readonly::Scalar our $NAME_PATTERN => $INSTRUMENT_PATTERN.'(\d+_)0*(\d+)';
-Readonly::Scalar our $LONG_FOLDER_NAME_SUFFIX_PATTERN => '_(A|B)_?([0-9A-Z]{9}(?:-\d{5})?)';
+Readonly::Scalar our $NAME_PATTERN => $INSTRUMENT_PATTERN . '(\d+_)0*(\d+)';
+Readonly::Scalar our $LONG_FOLDER_NAME_SUFFIX_PATTERN =>
+  '_(A|B)_?([0-9A-Z]{9}(?:-\d{5})?)';
 
 # requires q{_build_run_folder}; Functionality not working in Moose
 
 ###############
 # public methods
 
-has q{id_run}            => ( isa => q{Int}, is => q{ro}, lazy_build => 1, writer => q{_set_id_run},
-                            documentation => 'Integer identifier for a sequencing run, (typically a suffix of the name and run_folder)',);
-has q{name}              => ( isa => q{Str}, is => q{ro}, lazy_build => 1,
-                            documentation => 'String identifier for a sequencing run, (typically containing a machine identifer and the id_run, being a suffix of the run_folder, and forming the prefix of the cluster identifier in final output sequence files)',);
-
-has q{instrument_string} => ( isa => q{Str}, is => q{ro}, lazy_build => 1,
-                            documentation => q{String of the instrument name, worked out from the run name}, );
-
-has q{slot}              => (
-  isa => q{Str},
-  is  => q{ro},
+has q{id_run} => (
+  isa        => q{Int},
+  is         => q{ro},
   lazy_build => 1,
-  documentation => q{If the machine is a HS, the slot that is used for the flowcell (or A for a MS)},
+  writer     => q{_set_id_run},
+  documentation =>
+'Integer identifier for a sequencing run, (typically a suffix of the name and run_folder)',
+);
+has q{name} => (
+  isa        => q{Str},
+  is         => q{ro},
+  lazy_build => 1,
+  documentation =>
+'String identifier for a sequencing run, (typically containing a machine identifer and the id_run, being a suffix of the run_folder, and forming the prefix of the cluster identifier in final output sequence files)',
+);
+
+has q{instrument_string} => (
+  isa        => q{Str},
+  is         => q{ro},
+  lazy_build => 1,
+  documentation =>
+    q{String of the instrument name, worked out from the run name},
+);
+
+has q{slot} => (
+  isa        => q{Str},
+  is         => q{ro},
+  lazy_build => 1,
+  documentation =>
+q{If the machine is a HS, the slot that is used for the flowcell (or A for a MS)},
   writer => q{_set_slot},
 );
 
-has q{flowcell_id}       => (
-  isa => q{Str},
-  is  => q{ro},
+has q{flowcell_id} => (
+  isa        => q{Str},
+  is         => q{ro},
   lazy_build => 1,
-  documentation => q{If the machine is a HS, the flowcell id that was used. If the machine is a MS, the reagent kit id that was used.},
+  documentation =>
+q{If the machine is a HS, the flowcell id that was used. If the machine is a MS, the reagent kit id that was used.},
   writer => q{_set_flowcell_id},
 );
 
-subtype __PACKAGE__.q(::folder)
-  => as 'Str'
-  => where {splitdir($_)==1};
-coerce __PACKAGE__.q(::folder)
-  => from 'Str'
-  => via {first {$_ ne q()} reverse splitdir($_)};
-has q{run_folder}      => ( isa => __PACKAGE__.q(::folder), is => q{ro}, lazy_build => 1,
-                            documentation => 'Folder name used for the directory containing the information produced by the sequencing machine, (does not contain any path to the folder)',);
+subtype __PACKAGE__ . q(::folder) => as 'Str' => where { splitdir($_) == 1 };
+coerce __PACKAGE__ . q(::folder) => from 'Str' => via {
+  first { $_ ne q() } reverse splitdir($_);
+};
+has q{run_folder} => (
+  isa        => __PACKAGE__ . q(::folder),
+  is         => q{ro},
+  lazy_build => 1,
+  documentation =>
+'Folder name used for the directory containing the information produced by the sequencing machine, (does not contain any path to the folder)',
+);
 
 sub short_reference {
   my ($self) = @_;
-  my $return_value = $self->has_run_folder()  ? $self->run_folder()
-                   : $self->has_id_run()      ? $self->id_run()
-                   :                            $self->name()
-                   ;
+  my $return_value =
+      $self->has_run_folder() ? $self->run_folder()
+    : $self->has_id_run()     ? $self->id_run()
+    :                           $self->name();
   return $return_value;
 }
 
@@ -74,41 +96,35 @@ sub short_reference {
 ###############
 # builders
 
-
-
 sub _build_id_run {
   my ($self) = @_;
   if ( !( $self->has_run_folder() || $self->has_name() ) ) {
-      eval {
-	  $self->name();
-      } or do {
-	  croak qq{Unable to obtain id_run from name : $EVAL_ERROR};
-      };
+    eval { $self->name(); } or do {
+      croak qq{Unable to obtain id_run from name : $EVAL_ERROR};
+    };
   }
 
-  my ($inst_t, $inst_i, $id_run) = $self->name() =~ /$NAME_PATTERN/gmsx;
+  my ( $inst_t, $inst_i, $id_run ) = $self->name() =~ /$NAME_PATTERN/gmsx;
 
   return $id_run;
 }
 
 sub _build_name {
   my ($self) = @_;
-  if( !( $self->has_id_run() || $self->has_run_folder() ) ) {
-    eval {
-	$self->run_folder();
-    } or do {
-        croak qq{Unable to obtain name from run_folder : $EVAL_ERROR};
+  if ( !( $self->has_id_run() || $self->has_run_folder() ) ) {
+    eval { $self->run_folder(); } or do {
+      croak qq{Unable to obtain name from run_folder : $EVAL_ERROR};
     };
   }
-  my ($start, $middle, $end) = $self->run_folder() =~ /$NAME_PATTERN/xms;
+  my ( $start, $middle, $end ) = $self->run_folder() =~ /$NAME_PATTERN/xms;
   croak 'Unrecognised format for run folder name: ' . $self->run_folder()
     if !( $start && $middle && $end );
 
-  return $start.$middle.$end;
+  return $start . $middle . $end;
 }
 
 sub _build_instrument_string {
-  my ( $self ) = @_;
+  my ($self) = @_;
   my $name = $self->name();
 
   my ( $start, $end ) = $name =~ /$INSTRUMENT_PATTERN(\d+)/xms;
@@ -117,34 +133,34 @@ sub _build_instrument_string {
 }
 
 sub _build_slot {
-  my ( $self ) = @_;
+  my ($self) = @_;
   $self->_hs_info();
   return $self->slot();
 }
 
 sub _build_flowcell_id {
-  my ( $self ) = @_;
+  my ($self) = @_;
   $self->_hs_info();
   return $self->flowcell_id();
 }
 
 sub _hs_info {
-  my ( $self ) = @_;
+  my ($self) = @_;
 
-  $self->_set_slot( q{} );
-  $self->_set_flowcell_id( q{} );
+  $self->_set_slot(q{});
+  $self->_set_flowcell_id(q{});
 
   my $run_folder = $self->run_folder();
 
-  my @parts = $run_folder =~ m/${NAME_PATTERN}$LONG_FOLDER_NAME_SUFFIX_PATTERN/xms;
+  my @parts =
+    $run_folder =~ m/${NAME_PATTERN}$LONG_FOLDER_NAME_SUFFIX_PATTERN/xms;
 
   my $flowcell_id = pop @parts;
-  my $slot = pop @parts;
-  if(defined $slot){ $self->_set_slot( $slot );}
-  if(defined $flowcell_id){ $self->_set_flowcell_id( $flowcell_id );}
+  my $slot        = pop @parts;
+  if ( defined $slot )        { $self->_set_slot($slot); }
+  if ( defined $flowcell_id ) { $self->_set_flowcell_id($flowcell_id); }
   return 1;
 }
-
 
 1;
 __END__

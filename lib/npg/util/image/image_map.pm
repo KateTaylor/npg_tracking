@@ -14,7 +14,7 @@ use Carp;
 
 use Readonly; Readonly::Scalar our $VERSION => do { my ($r) = q$LastChangedRevision: 16549 $ =~ /(\d+)/mxs; $r; };
 
-Readonly our $MAX_COORDINATES  => 3;
+Readonly our $MAX_COORDINATES         => 3;
 Readonly our $RETURN_FROM_GD_GRAPH_X1 => 0;
 Readonly our $RETURN_FROM_GD_GRAPH_Y1 => 1;
 Readonly our $RETURN_FROM_GD_GRAPH_X2 => 2;
@@ -22,9 +22,8 @@ Readonly our $RETURN_FROM_GD_GRAPH_Y2 => 3;
 
 __PACKAGE__->mk_accessors(qw(image_refs));
 
-
 sub new {
-  my ($class, $ref) = @_;
+  my ( $class, $ref ) = @_;
   $ref ||= {};
   bless $ref, $class;
 
@@ -32,22 +31,23 @@ sub new {
 }
 
 sub render_map {
-  my ($self, $arg_refs) = @_;
+  my ( $self, $arg_refs ) = @_;
 
-  my $data = $arg_refs->{data};
-  my $image_url  = $arg_refs->{image_url};
-  my $map = qq[<map name="$arg_refs->{id}">\n];
-  for my $box (@{$data}) {
-    my $data_information = pop@{$box};
+  my $data      = $arg_refs->{data};
+  my $image_url = $arg_refs->{image_url};
+  my $map       = qq[<map name="$arg_refs->{id}">\n];
+  for my $box ( @{$data} ) {
+    my $data_information = pop @{$box};
     my $url = $data_information->{url} || q{#};
     my $title;
-    foreach my $key (sort keys %{$data_information}) {
+    foreach my $key ( sort keys %{$data_information} ) {
       next if $key eq 'url';
-      my $name = ucfirst$key;
+      my $name = ucfirst $key;
       my $value = $data_information->{$key} || q{};
-      $title .= "$name:$value "
+      $title .= "$name:$value ";
     }
-    $map .= qq[<area coords="(@{$box})[0..$MAX_COORDINATES]" href="$url" title="$title" />];
+    $map .=
+qq[<area coords="(@{$box})[0..$MAX_COORDINATES]" href="$url" title="$title" />];
   }
   $map .= qq[</map><img src="$image_url" usemap="#$arg_refs->{id}"/>];
 
@@ -55,59 +55,67 @@ sub render_map {
 }
 
 sub process_instrument_gantt_values {
-  my ($self, $arg_refs) = @_;
+  my ( $self, $arg_refs ) = @_;
   my @real_data_point_sets;
-  foreach my $dpr (@{$arg_refs->{data_points}}) {
+  foreach my $dpr ( @{ $arg_refs->{data_points} } ) {
     if ($dpr) {
       push @real_data_point_sets, $dpr;
     }
   }
-  my $number_of_data_point_sets      = scalar@real_data_point_sets;
-  my $number_of_instrument_data_sets = scalar@{$arg_refs->{data_values}};
+  my $number_of_data_point_sets      = scalar @real_data_point_sets;
+  my $number_of_instrument_data_sets = scalar @{ $arg_refs->{data_values} };
 
-  if ($number_of_data_point_sets != $number_of_instrument_data_sets) {
-    croak "Inconsistent number of data point sets -\n\timage: $number_of_data_point_sets\n\tinstrument: $number_of_instrument_data_sets\n\n";
+  if ( $number_of_data_point_sets != $number_of_instrument_data_sets ) {
+    croak
+"Inconsistent number of data point sets -\n\timage: $number_of_data_point_sets\n\tinstrument: $number_of_instrument_data_sets\n\n";
   }
 
-  my $data_point_sets = $self->_array_rotate(\@real_data_point_sets);
-  my $instrument_sets = $self->_array_rotate($arg_refs->{data_values});
+  my $data_point_sets = $self->_array_rotate( \@real_data_point_sets );
+  my $instrument_sets = $self->_array_rotate( $arg_refs->{data_values} );
   my @boxes;
   my $previous_box;
-  foreach my $i (0..(scalar@{$data_point_sets} - 1)) {
-    foreach my $ii (0..(scalar@{$data_point_sets->[$i]} -1)) {
-      next if $ii%2 == 1;
+  foreach my $i ( 0 .. ( scalar @{$data_point_sets} - 1 ) ) {
+    foreach my $ii ( 0 .. ( scalar @{ $data_point_sets->[$i] } - 1 ) ) {
+      next if $ii % 2 == 1;
       my $box_info = [];
-      my $next = $ii+1;
-      shift @{$data_point_sets->[$i]->[$ii]};   # gets rid of the shape
-      shift @{$data_point_sets->[$i]->[$next]}; # gets rid of the shape
-      push @{$box_info}, $data_point_sets->[$i]->[$ii]->[$RETURN_FROM_GD_GRAPH_X1];
-      push @{$box_info}, $data_point_sets->[$i]->[$ii]->[$RETURN_FROM_GD_GRAPH_Y1];
-      push @{$box_info}, $data_point_sets->[$i]->[$ii]->[$RETURN_FROM_GD_GRAPH_X2];
-      push @{$box_info}, $data_point_sets->[$i]->[$next]->[$RETURN_FROM_GD_GRAPH_Y1];
+      my $next     = $ii + 1;
+      shift @{ $data_point_sets->[$i]->[$ii] };      # gets rid of the shape
+      shift @{ $data_point_sets->[$i]->[$next] };    # gets rid of the shape
+      push @{$box_info},
+        $data_point_sets->[$i]->[$ii]->[$RETURN_FROM_GD_GRAPH_X1];
+      push @{$box_info},
+        $data_point_sets->[$i]->[$ii]->[$RETURN_FROM_GD_GRAPH_Y1];
+      push @{$box_info},
+        $data_point_sets->[$i]->[$ii]->[$RETURN_FROM_GD_GRAPH_X2];
+      push @{$box_info},
+        $data_point_sets->[$i]->[$next]->[$RETURN_FROM_GD_GRAPH_Y1];
       my $start;
       my $end;
-      if ($arg_refs->{convert}) {
-        $start = $arg_refs->{convert}($instrument_sets->[$i]->[$next]);
-        $end   = $arg_refs->{convert}($instrument_sets->[$i]->[$ii]);
-      } else {
+
+      if ( $arg_refs->{convert} ) {
+        $start = $arg_refs->{convert}( $instrument_sets->[$i]->[$next] );
+        $end   = $arg_refs->{convert}( $instrument_sets->[$i]->[$ii] );
+      }
+      else {
         $start = $instrument_sets->[$i]->[$next];
         $end   = $instrument_sets->[$i]->[$ii];
       }
       my $title = qq{Start:$start, End:$end};
-      my $href = {};
-      if ($arg_refs->{additional_info}) {
-        $href->{$arg_refs->{additional_info}} = qq{$title};
-      } else {
-        $href->{title} = $title
+      my $href  = {};
+      if ( $arg_refs->{additional_info} ) {
+        $href->{ $arg_refs->{additional_info} } = qq{$title};
+      }
+      else {
+        $href->{title} = $title;
       }
       push @{$box_info}, $href;
-      if (!$previous_box) {
+      if ( !$previous_box ) {
         $previous_box = $box_info;
         push @boxes, $box_info;
-	next;
+        next;
       }
-      foreach my $ti (0..(scalar@{$previous_box} - 2)) {
-	if ($previous_box->[$ti] != $box_info->[$ti]) {
+      foreach my $ti ( 0 .. ( scalar @{$previous_box} - 2 ) ) {
+        if ( $previous_box->[$ti] != $box_info->[$ti] ) {
           push @boxes, $box_info;
           $previous_box = $box_info;
           last;
@@ -120,19 +128,19 @@ sub process_instrument_gantt_values {
 }
 
 sub _array_rotate {
-  my ($self, $in) = @_;
+  my ( $self, $in ) = @_;
 
   my $h = scalar @{$in};
   $h or return [];
-  my $w = scalar @{$in->[0]};
+  my $w = scalar @{ $in->[0] };
   $w or return [];
 
   my $out = [];
 
-  for my $j (0..$h-1) {
-    for my $i (0..$w-1) {
-      $out->[$i]       ||= [];
-      $out->[$i]->[$j]   = $in->[$j]->[$i];
+  for my $j ( 0 .. $h - 1 ) {
+    for my $i ( 0 .. $w - 1 ) {
+      $out->[$i] ||= [];
+      $out->[$i]->[$j] = $in->[$j]->[$i];
     }
   }
   return $out;
