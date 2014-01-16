@@ -44,7 +44,7 @@ sub current_repositories {
 
       my $proj_dir = $p->projectname();
       my $repo_dir = $p->repository_directory();
-      my ($repo)   = $repo_dir =~ /(.*)$proj_dir/smx;
+      my ($repo) = $repo_dir =~ /(.*)$proj_dir/smx;
       if ( !$repo ) {
         next;
       }

@@ -60,7 +60,7 @@ __END__
 
 =head1 NAME
 
-npg::model::instrument_status_annotation 
+npg::model::instrument_status_annotation
 
 =head1 VERSION
 

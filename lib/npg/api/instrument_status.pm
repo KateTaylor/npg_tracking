@@ -28,8 +28,8 @@ sub fields {
 sub uptimes {
   my ($self) = @_;
   if ( !$self->{uptimes} ) {
-    my $util       = $self->util();
-    my $pkg        = ref $self;
+    my $util = $self->util();
+    my $pkg  = ref $self;
     my ($obj_type) = ($pkg) =~ /([^:]+)$/smx;
     my $obj_uri = sprintf '%s/%s/up/down.xml', $util->base_uri(), $obj_type;
 

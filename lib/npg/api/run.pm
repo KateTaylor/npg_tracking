@@ -237,11 +237,11 @@ sub list_recent {
   my $self = shift;
 
   # used somewhere
-  my $util       = $self->util();
+  my $util = $self->util();
   my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
   my $obj_pk     = $self->primary_key();
   my $obj_pk_val = $self->$obj_pk();
-  my $obj_uri    = sprintf '%s/%s;list_summary_xml', $util->base_uri(),
+  my $obj_uri = sprintf '%s/%s;list_summary_xml', $util->base_uri(),
       $obj_type;
 
   $self->{'list_recent'}
@@ -258,9 +258,9 @@ sub recent_running_runs {
   my ($self) = @_;
 
   # used in instrument_utilisation module
-  my $util       = $self->util();
+  my $util = $self->util();
   my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
-  my $obj_uri    = sprintf '%s/%s/recent/running/runs.xml', $util->base_uri(),
+  my $obj_uri = sprintf '%s/%s/recent/running/runs.xml', $util->base_uri(),
       $obj_type;
 
   my $xml_obj = $util->parser->parse_string( $util->get( $obj_uri, [] ) );
@@ -498,7 +498,7 @@ $Revision: 15308 $
   my $arRecentRunningRuns - $oRun->recent_running_runs();
 
 =head2 lims  - returns st::api::lims batch-level object for the batch id this run relates to
- 
+
   my $limsObj = $oRun->lims();
 
 =head1 DIAGNOSTICS

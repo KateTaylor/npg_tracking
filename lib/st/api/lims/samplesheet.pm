@@ -354,7 +354,7 @@ sub _build__sschildren {
 
 Method returning a list objects that are associated with this object
 and belong to the next (one lower) level. An empty list for a non-pool lane and for a plex.
-For a pooled lane and tag zero contains plex-level objects. On a run level, when the position 
+For a pooled lane and tag zero contains plex-level objects. On a run level, when the position
 accessor is not set, returns lane level objects.
 
 =cut

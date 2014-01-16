@@ -60,7 +60,7 @@ sub get_lims {
 Provides a hashref of studys from given batch, with lanes that are in the study, and the followers who would be emailed
 
   my $hProjectLaneFollowers = $oClass->study_lane_followers();
-  
+ 
   {
     <study_name> => {
       followers => [],

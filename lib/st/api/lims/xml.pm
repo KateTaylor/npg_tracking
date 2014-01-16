@@ -738,8 +738,8 @@ sub _build_request_id {
   my $self = shift;
 
   if ( !$self->_xml_element_exists(q[entity]) ) { return; }
-  my $request_id
-      = $self->_entity_xml_element->getAttribute(q[request_id]) || undef;
+  my $request_id = $self->_entity_xml_element->getAttribute(q[request_id])
+      || undef;
   return $request_id;
 }
 
@@ -957,7 +957,7 @@ sub _build_study_contains_nonconsented_xahuman {
 
 Method returning a list of st::api::lims::xml objects that are associated with this object
 and belong to the next (one lower) level. An empty list for a non-pool lane and for a plex.
-For a pooled lane contains plex-level objects. On a batch level, when the position 
+For a pooled lane contains plex-level objects. On a batch level, when the position
 accessor is not set, returns lane level objects.
 
 =cut

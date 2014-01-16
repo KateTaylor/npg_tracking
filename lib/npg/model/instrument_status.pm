@@ -130,12 +130,9 @@ sub create {
         = q(INSERT INTO instrument_status (id_instrument,date,id_instrument_status_dict,id_user,iscurrent,comment)
                   VALUES (?,now(),?,?,1,?));
 
-    $dbh->do(
-      $query, {},
-      $self->id_instrument(),
+    $dbh->do( $query, {}, $self->id_instrument(),
       $self->id_instrument_status_dict(),
-      $self->id_user(), $self->comment()
-    );
+      $self->id_user(), $self->comment() );
 
     #########
     # Sometimes we have to change automatically to the next status
@@ -157,12 +154,9 @@ sub create {
         $self->id_instrument()
       );
 
-      $dbh->do(
-        $query, {},
-        $self->id_instrument(),
+      $dbh->do( $query, {}, $self->id_instrument(),
         $isd->id_instrument_status_dict(),
-        $self->id_user(), 'automatic status update'
-      );
+        $self->id_user(), 'automatic status update' );
     }
 
     my $idref = $dbh->selectall_arrayref('SELECT LAST_INSERT_ID()');
@@ -577,7 +571,7 @@ sub combined_utilisation_and_uptime_gantt_map {
   my $uptime_map = $self->gantt_map( $chart_id, $url );
   my $utilisation_map
       = $self->instrument_utilisation->gantt_map( $chart_id, $url );
-  $uptime_map =~ s/\<\/map\>.*\z//gxms;
+  $uptime_map      =~ s/\<\/map\>.*\z//gxms;
   $utilisation_map =~ s/\<map[ ]name=".*?"\>//gxms;
   return $uptime_map . $utilisation_map;
 }
@@ -1055,7 +1049,7 @@ found in $self->{inst_format} or default HK
 
   $iSecondsUptime = $oInstrumentStatus->seconds_uptime($oDateTime_start, $oDateTime_end, [{up => $oDateTime_up, down => $oDateTime_down},...]);
 
-=head2 instrument_up_down - returns an arrayref of all the instruments, each of which are hashrefs containing the name and a statuses arrayref of up and down statuses 
+=head2 instrument_up_down - returns an arrayref of all the instruments, each of which are hashrefs containing the name and a statuses arrayref of up and down statuses
 
   my $aInstrumentUpDown = $oInstrumentStatus->instrument_up_down();
 

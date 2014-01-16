@@ -163,7 +163,7 @@ Author: David K. Jackson E<lt>david.jackson@sanger.ac.ukE<gt>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2011 GRL, by David K. Jackson 
+Copyright (C) 2011 GRL, by David K. Jackson
 
 This file is part of NPG.
 

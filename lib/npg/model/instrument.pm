@@ -144,7 +144,7 @@ sub instrument_by_instrument_comp {
       grep {
                $_->instrument_comp()
             && $_->instrument_comp() eq $instrument_comp
-      } @{ $self->instruments() }
+          } @{ $self->instruments() }
     )[0];
   }
 
@@ -380,11 +380,8 @@ sub latest_instrument_annotation {
                                                  annotation a
                                           WHERE  id_instrument    = ?
                                           AND    ia.id_annotation = a.id_annotation)];
-    my $ref = $self->gen_getarray(
-      $pkg, $query,
-      $self->id_instrument(),
-      $self->id_instrument()
-    );
+    my $ref = $self->gen_getarray( $pkg, $query, $self->id_instrument(),
+      $self->id_instrument() );
     if ( scalar @{$ref} ) {
       $self->{latest_instrument_annotation} = $ref->[0];
     }
@@ -650,7 +647,7 @@ $Revision: 16477 $
   Clearpress model for an instrument.
   To be replaced by DBIx model. Contains duplicates of functions in
   npg_tracking::Schema::Result::Instrument. When editing the code
-  of this module consider if any changes are meeded in the other module. 
+  of this module consider if any changes are meeded in the other module.
 
 =head1 SUBROUTINES/METHODS
 
@@ -783,7 +780,7 @@ returns true if the instrument is a MiSeq, false otherwise
 =head2 is_cbot_instrument - returns true if this instrument is CBot, false otherwise
 
 =head2 current_run_by_id - returns one of current runs with teh argument id or nothing if a list of current runs does not contain a run with this id
- 
+
  my $id_run = 22;
  my $run = $oInstrument->current_run_by_id($id_run);
 

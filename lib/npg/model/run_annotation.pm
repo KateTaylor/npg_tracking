@@ -222,10 +222,10 @@ sub _single_run_annotation_create {
 
 sub _save_annotation_to_instrument {
   my ( $self, $arg_refs ) = @_;
-  my $annotation = $arg_refs->{annotation};
-  my $util       = $self->util();
-  my $id_instrument
-      = $arg_refs->{id_instrument} || $util->cgi->param('include_instrument');
+  my $annotation    = $arg_refs->{annotation};
+  my $util          = $self->util();
+  my $id_instrument = $arg_refs->{id_instrument}
+      || $util->cgi->param('include_instrument');
   if ($id_instrument) {
     my $inst_annotation = npg::model::instrument_annotation->new(
       { util          => $util,

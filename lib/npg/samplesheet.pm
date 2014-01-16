@@ -193,7 +193,7 @@ sub _build__limsreflist {
           id_run   => $self->run->id_run
             )->refs
             || []
-      };
+          };
       my $ref = shift @refs;
       $ref ||= $self->fallback_reference();
       $ref =~ s{(/fasta/).*$}{$1}smgx;
@@ -355,7 +355,7 @@ Chemistry[% separator %]Default[% separator.repeat(one_less_sep) %]
 [% separator.repeat(num_sep) -%]
 
 [Data][% separator.repeat(num_sep) %]
-[% 
+[%
    colnames = ['Sample_ID', 'Sample_Name', 'GenomeFolder'];
    IF has_index_read; colnames.push('Index') ;END;
    IF has_multiple_lanes; colnames.unshift('Lane'); END;
@@ -444,7 +444,7 @@ Author: David K. Jackson E<lt>david.jackson@sanger.ac.ukE<gt>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2011 GRL, by David K. Jackson 
+Copyright (C) 2011 GRL, by David K. Jackson
 
 This file is part of NPG.
 

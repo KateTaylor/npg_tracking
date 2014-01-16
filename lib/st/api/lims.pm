@@ -410,7 +410,9 @@ sub _entity_required_insert_size {
         my $value = $is->{$key};
         if ($value) {
           my $lib_key
-              = $lims->library_id || $lims->tag_index || $lims->sample_id;
+              = $lims->library_id
+              || $lims->tag_index
+              || $lims->sample_id;
           $is_hash->{$lib_key}->{$key} = $value;
         }
       }
@@ -552,8 +554,8 @@ sub _build__cached_children {
     foreach my $c ( $self->driver->children ) {
       my $init = { 'driver_type' => $self->driver_type, 'driver' => $c };
       foreach my $attr (qw/id_run position tag_index/) {
-        if ( my $attr_value
-          = $self->$attr || ( $c->can($attr) ? $c->$attr : undef ) )
+        if ( my $attr_value = $self->$attr
+          || ( $c->can($attr) ? $c->$attr : undef ) )
         {
           $init->{$attr} = $attr_value;
         }
@@ -571,7 +573,7 @@ sub _build__cached_children {
 
 Method returning a list of st::api::lims objects that are associated with this object
 and belong to the next (one lower) level. An empty list for a non-pool lane and for a plex.
-For a pooled lane contains plex-level objects. On a run level, when the position 
+For a pooled lane contains plex-level objects. On a run level, when the position
 accessor is not set, returns lane level objects.
 
 =cut
@@ -622,7 +624,7 @@ The same as children. Retained for backward compatibility
 Method providing fast (index-based) access to child lims object.
 Returns a hash ref of st::api::lims children objects
 An empty hash for a non-pool lane and for a plex.
-For a pooled lane contains plex-level objects. On a run level, when the position 
+For a pooled lane contains plex-level objects. On a run level, when the position
 accessor is not set, returns lane level objects. The hash keys are lane numbers (positions)
 or tag indices. _ia stands for index access.
 

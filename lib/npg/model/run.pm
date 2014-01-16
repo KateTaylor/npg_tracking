@@ -508,7 +508,7 @@ sub recent_runs {
       grep {
         !$seen->{ $_->id_run() }++
             && ( !$_->run_pair() || !$seen->{ $_->run_pair->id_run() }++ )
-      } @{$runs}
+          } @{$runs}
     ];
   }
   return $self->{recent_runs};
@@ -544,7 +544,7 @@ sub recent_mirrored_runs {
       grep {
         !$seen->{ $_->id_run() }++
             && ( !$_->run_pair() || !$seen->{ $_->run_pair->id_run() }++ )
-      } @{$runs}
+          } @{$runs}
     ];
   }
 
@@ -585,7 +585,7 @@ sub recent_pending_runs {
         grep {
           !$seen->{ $_->id_run() }++
               && ( !$_->run_pair() || !$seen->{ $_->run_pair->id_run() }++ )
-        } @{$runs}
+            } @{$runs}
       ];
     }
   }
@@ -727,7 +727,8 @@ sub create {
   $util->transactions(0);
 
   eval {
-    if ( !$self->validate_team( $self->{team} ) ) {
+    if ( !$self->validate_team( $self->{team} ) )
+    {
       croak 'Invalid team name ' . $self->{team};
     }
     $self->{is_paired}          ||= 0;
@@ -1291,7 +1292,7 @@ $Revision: 16269 $
 
 =head2 hiseq_slot - return slot number of hiseq instrument either A or B, or no slot number
 
-=head2 scs28 - check this run is on an instrument with SCS 2.8 updated 
+=head2 scs28 - check this run is on an instrument with SCS 2.8 updated
 
 =head2 instrument_format - npg::model::instrument_format used for this run
 
@@ -1364,8 +1365,8 @@ $Revision: 16269 $
   my $oComplementRun = $oRun->run_pair();
 
   For unpaired runs this returns a unpopulated run object, testable for example by checking its id_run.
-  
-=head2 is_paired_read - If paired run, return 1. If single run, check paired_read or single_read tags available or not, then return 1 or 0. For single run without single_read or paired_read tags available, return undef 
+ 
+=head2 is_paired_read - If paired run, return 1. If single run, check paired_read or single_read tags available or not, then return 1 or 0. For single run without single_read or paired_read tags available, return undef
 
 =head2 create - support for saving a cascade of run_lanes and a current run_status
 

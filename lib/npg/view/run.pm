@@ -497,7 +497,8 @@ sub update_tags {
   my $tr_state       = $self->util->transactions();
   $self->util->transactions(0);
   eval {
-    if ( scalar @tags_to_save ) {
+    if ( scalar @tags_to_save )
+    {
       $self->model->save_tags( \@tags_to_save, $self->util->requestor() );
     }
     if ( scalar @tags_to_remove ) {
@@ -556,7 +557,8 @@ sub update_statuses {
     my $tr_state = $util->transactions();
 
     eval {
-      for my $id_run (@id_runs) {
+      for my $id_run (@id_runs)
+      {
         my $run_status = npg::model::run_status->new(
           { util               => $util,
             id_run             => $id_run,

@@ -115,7 +115,8 @@ sub save_tags {
   my $tr_state = $util->transactions();
   $util->transactions(0);
   eval {
-    for my $tag ( @{$tags_to_save} ) {
+    for my $tag ( @{$tags_to_save} )
+    {
       $tag = npg::model::tag->new(
         { tag  => $tag,
           util => $util,
@@ -175,7 +176,8 @@ sub remove_tags {
   $util->transactions(0);
 
   eval {
-    for my $tag ( @{$tags_to_remove} ) {
+    for my $tag ( @{$tags_to_remove} )
+    {
       $tag = npg::model::tag->new(
         { tag  => $tag,
           util => $util,
@@ -250,7 +252,7 @@ enable object to be obtained from database if id_run and position supplied
 
   my $arRunlanes = $oRunLane->recent_run_lanes();
 
-=head2 tags - returns arrayref containing tag objects, that have been linked to this run lane, that also have 'date' the tag was saved for this run lane, 'id_user' of the person who gave this run lane this tag, and frequency this tag has been used on run lanes 
+=head2 tags - returns arrayref containing tag objects, that have been linked to this run lane, that also have 'date' the tag was saved for this run lane, 'id_user' of the person who gave this run lane this tag, and frequency this tag has been used on run lanes
 
   my $aTags = $oRun->tags();
 

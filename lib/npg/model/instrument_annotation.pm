@@ -174,9 +174,9 @@ sub dates_of_annotations_over_default_uptime {
     }
     $stat_index = 0;
     foreach my $array ( @{$stripe_annotations} ) {
-      my $date = $annotations->{ $i->name() }->[$stat_index]->{date};
-      my $comment
-          = $annotations->{ $i->name() }->[$stat_index]->{comment} || q{};
+      my $date    = $annotations->{ $i->name() }->[$stat_index]->{date};
+      my $comment = $annotations->{ $i->name() }->[$stat_index]->{comment}
+          || q{};
       my $info;
       if ($date) {
         $info = $i->name() . q{:} . $date . q{:} . $comment;

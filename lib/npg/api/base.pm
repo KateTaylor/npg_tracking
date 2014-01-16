@@ -175,9 +175,9 @@ sub primary_key {
 
 sub list {
   my ( $self, $filters ) = @_;
-  my $util       = $self->util();
+  my $util = $self->util();
   my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
-  my $obj_uri    = sprintf '%s/%s', $util->base_uri(), $obj_type;
+  my $obj_uri = sprintf '%s/%s', $util->base_uri(), $obj_type;
 
   if ($filters) {
     $obj_uri .= $filters;
@@ -189,7 +189,7 @@ sub read {    ## no critic (ProhibitBuiltinHomonyms)
   my $self = shift;
 
   if ( !$self->{read_dom} ) {
-    my $util       = $self->util();
+    my $util = $self->util();
     my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
     my $obj_pk     = $self->primary_key();
     my $obj_pk_val = $self->{$obj_pk};
@@ -225,7 +225,7 @@ sub read {    ## no critic (ProhibitBuiltinHomonyms)
 
 sub create {
   my ( $self, $xml ) = @_;
-  my $util       = $self->util();
+  my $util = $self->util();
   my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
   my $obj_pk     = $self->primary_key();
   my $obj_pk_val = $self->$obj_pk();
@@ -255,7 +255,7 @@ sub create {
             'Content_Length' => length( $self->{$_} || q() ),
             'Content'        => $self->{$_} || q(),
               ]
-        } keys %{$large_fields}
+            } keys %{$large_fields}
       ),
     ],
   ];
@@ -271,8 +271,8 @@ sub create {
 }
 
 sub update {
-  my $self       = shift;
-  my $util       = $self->util();
+  my $self = shift;
+  my $util = $self->util();
   my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
   my $obj_pk     = $self->primary_key();
   my $obj_pk_val = $self->$obj_pk();

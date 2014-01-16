@@ -87,6 +87,7 @@ sub calculate_miseq_values {
 sub _calculate_values {
   my ( $self, $arg_refs ) = @_;
   eval {
+
  # clear this object of any fields which by running it is expected to populate
     foreach my $field (
       $self->fields(), 'instruments', 'official_insts', 'prod_insts',

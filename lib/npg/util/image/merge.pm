@@ -266,8 +266,7 @@ sub draw_table_borders_tp {
   foreach my $heading ( @{$column_headings} ) {
     $im->rectangle(
       (       $WIDTH_OF_ROW_HEADINGS_TP
-            + $count * ( $width_of_image + $EXTRA_EIGHT_PIXELS )
-            - 1
+            + $count * ( $width_of_image + $EXTRA_EIGHT_PIXELS ) - 1
       ),
       0,
       (       $WIDTH_OF_ROW_HEADINGS_TP
@@ -283,13 +282,11 @@ sub draw_table_borders_tp {
     $im->rectangle(
       0,
       (       $HEIGHT_OF_COLUMN_HEADINGS_TP
-            + $count * ( $height_of_image + $EXTRA_FIVE_PIXELS )
-            - 2
+            + $count * ( $height_of_image + $EXTRA_FIVE_PIXELS ) - 2
       ),
       $width,
       (       $HEIGHT_OF_COLUMN_HEADINGS_TP
-            + $count * ( $height_of_image + $EXTRA_FIVE_PIXELS )
-            - 1
+            + $count * ( $height_of_image + $EXTRA_FIVE_PIXELS ) - 1
       ),
       $border_colour
     );
@@ -317,8 +314,7 @@ sub draw_table_borders_tl {
   foreach my $heading ( @{$column_headings} ) {
     $im->rectangle(
       (       $WIDTH_OF_ROW_HEADINGS_TL
-            + $count * ( $width_of_image + $EXTRA_EIGHT_PIXELS )
-            - 1
+            + $count * ( $width_of_image + $EXTRA_EIGHT_PIXELS ) - 1
       ),
       0,
       (       $WIDTH_OF_ROW_HEADINGS_TL
@@ -334,13 +330,11 @@ sub draw_table_borders_tl {
     $im->rectangle(
       0,
       (       $HEIGHT_OF_COLUMN_HEADINGS_TL
-            + $count * ( $height_of_image + $EXTRA_FIVE_PIXELS )
-            - 2
+            + $count * ( $height_of_image + $EXTRA_FIVE_PIXELS ) - 2
       ),
       $width,
       (       $HEIGHT_OF_COLUMN_HEADINGS_TL
-            + $count * ( $height_of_image + $EXTRA_FIVE_PIXELS )
-            - 1
+            + $count * ( $height_of_image + $EXTRA_FIVE_PIXELS ) - 1
       ),
       $border_colour
     );

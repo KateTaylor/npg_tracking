@@ -211,7 +211,7 @@ returns inst_format from cgi params, sanitised
   my $sRealName = $oViewer->realname();
 
 =head2 person
- 
+
   returns hash containing name and team of the user
 
   my $person = $oViewer->person();

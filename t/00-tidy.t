@@ -32,6 +32,11 @@ else {
     my $ret = Perl::Tidy::perltidy( argv => "-pbp -nst -i=2 -b $file", stderr => \$std_error_str,);
     my $error = defined $ret ? $ret : 0;
     is($error, 0, "file $file tidied");
+
+      # perl 5.14.2 tidy sometimes adds a space at the end for the line when splitting lines
+      # use this fix until lenny is completely gone for development
+
+      system("sed -i 's/ \$//' $file");     
   }
 
   done_testing( scalar @files );

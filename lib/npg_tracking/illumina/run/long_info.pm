@@ -38,7 +38,7 @@ $LastChangedRevision: 16549 $
 
   package Mypackage;
   use Moose;
-  
+ 
   ... before consuming this role, you need to provide runfolder_path methods ...
 
   with q{npg_tracking::illumina::run::long_info};
@@ -681,6 +681,7 @@ sub _build_tile_count {
   my ($self) = @_;
   my $tcount;
   try {
+
     #    $self->data_intensities_config;
     #    $tcount = $self->tile_count;
     my $lane_el = $self->data_intensities_config_xml_object()

@@ -55,7 +55,7 @@ $Revision: 16549 $
 
 =head1 DESCRIPTION
 
-A message list (queue). 
+A message list (queue).
 
 =head1 SUBROUTINES/METHODS
 

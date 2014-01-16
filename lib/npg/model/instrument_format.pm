@@ -123,7 +123,7 @@ sub is_used_sequencer_type {
 }
 
 sub _obtain_numerical_name_part {
-  my ( $self,    $name )    = @_;
+  my ( $self, $name ) = @_;
   my ( $letters, $numbers ) = $name =~ /\A([A-Z]+)(\d+)\z/ixms;
   return $numbers;
 }

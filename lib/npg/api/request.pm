@@ -217,7 +217,7 @@ sub _create_path {
   my ($extpath) = $url =~ m{\Ahttps?://.*?/(.*?)\z}xms;    # other source path
 
   my $path = $stpath || $npgpath || $extpath;
-  $path =~ s/[ ]/_/gxms;                      # swap spaces for underscores
+  $path =~ s/[ ]/_/gxms;    # swap spaces for underscores
   ($path)
       = $path
       =~ m{([/[:lower:][:digit:]_.]+)}xms;    # get rid of horrible characters

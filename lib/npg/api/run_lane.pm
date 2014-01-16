@@ -58,8 +58,8 @@ sub get {
       %{$self} = %{
         ( grep { $_->position == $self->{position} }
               @{ $self->run()->run_lanes() }
-        )[0]
-      };
+            )[0]
+          };
     }
   }
 
@@ -207,13 +207,13 @@ $Revision: 16046 $
 =head2 get - overridden get accessor from npg::api::base
 
 Uses information in run XML if id_run_lane is unknown but id_run and position are known.
-  
+ 
 =head2 is_spiked_phix - check this lane is spiked phix or not
 
 =head2 contains_nonconsented_human
-  
+ 
 =head2 contains_unconsented_human - (backward omcpat alias for contains_nonconsented_human)
-  
+ 
 =head1 DIAGNOSTICS
 
 =head1 CONFIGURATION AND ENVIRONMENT

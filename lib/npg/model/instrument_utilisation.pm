@@ -128,8 +128,8 @@ sub last_x_days {
   my @data;
   eval {
     @data
-        = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format ) }
-        ;    # reverse, so that when read will be in ascending date order
+        = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format )
+        };    # reverse, so that when read will be in ascending date order
     1;
   } or do {
     croak $EVAL_ERROR;
@@ -251,8 +251,8 @@ sub obtain_graph_data {
   my @data;
   eval {
     @data
-        = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format ) }
-        ;    # reverse, so that when read will be in ascending date order
+        = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format )
+        };    # reverse, so that when read will be in ascending date order
     1;
   } or do {
     croak $EVAL_ERROR;
@@ -454,7 +454,9 @@ sub _instrument_run_times {
   $no_of_days ||= $DEFAULT_INSTRUMENT_UPTIME_INTERVAL;
   $no_of_days++;
   $instrument_model
-      = $instrument_model || $self->{inst_format} || q{HK}; # default to GAIIx
+      = $instrument_model
+      || $self->{inst_format}
+      || q{HK};    # default to GAIIx
 
   my $q = qq{SELECT i.id_instrument AS id_instrument,
                     i.name AS name,
@@ -536,7 +538,7 @@ $Revision: 15357 $
     'util' => $oUtil,
     'date' => $sDate
   });
-  
+ 
 
 =head2 default_num_days - returns the default number of days that is used by other methods
 
