@@ -144,7 +144,7 @@ sub instrument_by_instrument_comp {
       grep {
                $_->instrument_comp()
             && $_->instrument_comp() eq $instrument_comp
-          } @{ $self->instruments() }
+      } @{ $self->instruments() }
     )[0];
   }
 
@@ -380,8 +380,11 @@ sub latest_instrument_annotation {
                                                  annotation a
                                           WHERE  id_instrument    = ?
                                           AND    ia.id_annotation = a.id_annotation)];
-    my $ref = $self->gen_getarray( $pkg, $query, $self->id_instrument(),
-      $self->id_instrument() );
+    my $ref = $self->gen_getarray(
+      $pkg, $query,
+      $self->id_instrument(),
+      $self->id_instrument()
+    );
     if ( scalar @{$ref} ) {
       $self->{latest_instrument_annotation} = $ref->[0];
     }

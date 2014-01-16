@@ -74,8 +74,8 @@ sub get {
 }
 
 sub entity_name {
-  my $self = shift;
-  my $pkg  = ref $self;
+  my $self   = shift;
+  my $pkg    = ref $self;
   my ($name) = $pkg =~ /([^:]+)$/smx;
   return $name;
 }

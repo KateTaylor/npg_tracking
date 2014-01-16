@@ -193,7 +193,7 @@ sub _build__limsreflist {
           id_run   => $self->run->id_run
             )->refs
             || []
-          };
+      };
       my $ref = shift @refs;
       $ref ||= $self->fallback_reference();
       $ref =~ s{(/fasta/).*$}{$1}smgx;

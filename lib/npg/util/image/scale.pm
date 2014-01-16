@@ -368,7 +368,7 @@ Wrapper object to provide a scale image showing the colours in a linear gradient
     bar_width    => $bar_width,
     colours      => [qw(colour1 colour2 colour3...)],
   });
- 
+
 =head2 get_legend - plots the legend image, given an array of colours and the same number of texts
 
 =head2 draw_text - draw text for the legend image

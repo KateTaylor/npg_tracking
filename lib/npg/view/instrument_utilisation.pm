@@ -96,7 +96,8 @@ sub list_graph_png {
       ? 'Daily Percentage Utilisation (Seconds of the Day) - '
       . $instrument_format
       : $type eq 'uptime'
-      ? 'Daily Percentage Uptime (Seconds of the Day) - ' . $instrument_format
+      ? 'Daily Percentage Uptime (Seconds of the Day) - '
+      . $instrument_format
       : 'Utilisation as a Percentage of Uptime - ' . $instrument_format;
 
   my $x_label_skip = round( $num_days / $default_num_days );
@@ -161,7 +162,7 @@ $LastChangedRevision: 15357 $
 =head2 list_graphical_line90 - handler to return the utilisation data in as a line chart for the last 90 days
 
 =head2 list_graph_png - handler to render a PNG image of the instrument_utilisation data for the last X days.  If the number of days argument is not supplied, defaults to the number of days returned by npg::model::instrument_utilisation->default_num_days method.
- 
+
   my $num_days = 90;
   my $png = $oInstrumentUtilisationView->list_graph_png($num_days);
   $png    = $oInstrumentUtilisationView->list_graph_png();

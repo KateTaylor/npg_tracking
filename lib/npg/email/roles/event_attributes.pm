@@ -90,7 +90,9 @@ sub _build_entity {
   my ($self) = @_;
 
   my $entity_obj = $self->event_row->entity_obj();
-  croak q{Constructor argument is not a } . $self->_entity_check() . q{ event}
+  croak q{Constructor argument is not a }
+      . $self->_entity_check()
+      . q{ event}
       if ref $entity_obj ne $self->_entity_check();
 
   return $entity_obj;

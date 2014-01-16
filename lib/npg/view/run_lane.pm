@@ -184,8 +184,7 @@ sub update_tags {
 
   $self->util->transactions(0);
   eval {
-    if ( scalar @tags_to_save )
-    {
+    if ( scalar @tags_to_save ) {
       $self->model->save_tags( \@tags_to_save, $self->util->requestor() );
     }
     if ( scalar @tags_to_remove ) {

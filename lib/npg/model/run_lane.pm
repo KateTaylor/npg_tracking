@@ -115,8 +115,7 @@ sub save_tags {
   my $tr_state = $util->transactions();
   $util->transactions(0);
   eval {
-    for my $tag ( @{$tags_to_save} )
-    {
+    for my $tag ( @{$tags_to_save} ) {
       $tag = npg::model::tag->new(
         { tag  => $tag,
           util => $util,
@@ -176,8 +175,7 @@ sub remove_tags {
   $util->transactions(0);
 
   eval {
-    for my $tag ( @{$tags_to_remove} )
-    {
+    for my $tag ( @{$tags_to_remove} ) {
       $tag = npg::model::tag->new(
         { tag  => $tag,
           util => $util,

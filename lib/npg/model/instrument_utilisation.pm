@@ -128,8 +128,8 @@ sub last_x_days {
   my @data;
   eval {
     @data
-        = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format )
-        };    # reverse, so that when read will be in ascending date order
+        = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format ) }
+        ;    # reverse, so that when read will be in ascending date order
     1;
   } or do {
     croak $EVAL_ERROR;
@@ -251,8 +251,8 @@ sub obtain_graph_data {
   my @data;
   eval {
     @data
-        = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format )
-        };    # reverse, so that when read will be in ascending date order
+        = reverse @{ $dbh->selectall_arrayref( $q, {}, $instrument_format ) }
+        ;    # reverse, so that when read will be in ascending date order
     1;
   } or do {
     croak $EVAL_ERROR;
@@ -538,7 +538,7 @@ $Revision: 15357 $
     'util' => $oUtil,
     'date' => $sDate
   });
- 
+
 
 =head2 default_num_days - returns the default number of days that is used by other methods
 

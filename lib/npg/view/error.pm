@@ -100,8 +100,7 @@ sub render {
         Data    => $email_body,
       );
       eval {
-        if ($to_string)
-        {
+        if ($to_string) {
           $msg->send();
         }
         1;

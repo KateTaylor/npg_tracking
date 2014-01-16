@@ -56,11 +56,11 @@ sub attachment {
     # but we do have an attachment name
     # and we've been assigned an id so presumably exist in the database
     #
-    my $util = $self->util();
+    my $util       = $self->util();
     my ($obj_type) = ( ref $self ) =~ /([^:]+)$/smx;
     my $obj_pk     = $self->primary_key();
     my $obj_pk_val = $self->{$obj_pk};
-    my $obj_uri = sprintf '%s/%s/%s;read_attachment', $util->base_uri(),
+    my $obj_uri    = sprintf '%s/%s/%s;read_attachment', $util->base_uri(),
         $obj_type, $obj_pk_val;
     $self->{'attachment'} = $util->get( $obj_uri, [] );
 

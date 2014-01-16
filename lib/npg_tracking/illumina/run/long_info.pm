@@ -38,7 +38,7 @@ $LastChangedRevision: 16549 $
 
   package Mypackage;
   use Moose;
- 
+
   ... before consuming this role, you need to provide runfolder_path methods ...
 
   with q{npg_tracking::illumina::run::long_info};

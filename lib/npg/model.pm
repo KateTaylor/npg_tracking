@@ -156,7 +156,7 @@ sub ajax_array_cost_group_values {
       { util => $self->util(),
         name => $group,
       }
-        )->group_codes()
+      )->group_codes()
       };
   $return_string .= q{']};
 
