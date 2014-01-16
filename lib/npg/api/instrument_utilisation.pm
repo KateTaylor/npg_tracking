@@ -869,9 +869,11 @@ sub two_days_ago_uptime_in_seconds {
             $last_down     = $s_string;
             $last_up       = undef;
           }
-          elsif ( $state eq 'up'
+          elsif (
+            $state eq 'up'
             && ( $current_state eq 'down'
-              || $current_state eq 'down for repair' ) )
+              || $current_state eq 'down for repair' )
+            )
           { # if we are about to enter a period (going backwards) where it is down
             $current_state = 'up';
             my $seconds_down_til_end_of_day = 0;

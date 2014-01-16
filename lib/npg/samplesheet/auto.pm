@@ -49,6 +49,7 @@ has 'npg_tracking_schema' => (
   'lazy_build' => 1,
   'metaclass'  => 'NoGetopt',
 );
+
 sub _build_npg_tracking_schema {
   my $s = npg_tracking::Schema->connect();
   return $s;

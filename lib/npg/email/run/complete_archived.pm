@@ -51,13 +51,13 @@ has q{_no_run_complete_sent} => (
   isa        => q{ArrayRef[Int]},
   is         => q{ro},
   lazy_build => 1,
-  writer     => q{_set_complete}
+  writer     => q{_set_complete},
 );
 has q{_no_run_archived_sent} => (
   isa        => q{ArrayRef[Int]},
   is         => q{ro},
   lazy_build => 1,
-  writer     => q{_set_archived}
+  writer     => q{_set_archived},
 );
 
 sub _build__no_run_complete_sent {

@@ -23,7 +23,7 @@ has q{_entity_check} => (
   isa      => q{Str},
   init_arg => undef,
   is       => q{ro},
-  default  => q{npg_tracking::Schema::Result::RunLaneAnnotation}
+  default  => q{npg_tracking::Schema::Result::RunLaneAnnotation},
 );
 
 sub _build_template {

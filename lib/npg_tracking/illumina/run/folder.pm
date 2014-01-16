@@ -165,7 +165,7 @@ has q{subpath} => (
   isa       => q{Str},
   is        => q{ro},
   predicate => q{has_subpath},
-  writer    => q{_set_subpath}
+  writer    => q{_set_subpath},
 );
 
 sub _given_path {

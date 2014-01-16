@@ -193,9 +193,11 @@ sub _build__associated_lims {
   else {
     if ( $self->is_pool && !$self->tag_index )
     {    #now use XPath to find tag indexes for lane...:
-      foreach my $tag_index ( sort { $a <=> $b }
-        map { $_->textContent }
-        $self->_lane_xml_element->findnodes(q(*/sample/tag/index)) )
+      foreach my $tag_index (
+        sort { $a <=> $b }
+        map  { $_->textContent }
+        $self->_lane_xml_element->findnodes(q(*/sample/tag/index))
+        )
       {
         my $h = {
           batch_id          => $self->batch_id,
@@ -792,7 +794,7 @@ foreach my $object_type (@LIMS_OBJECTS) {
     isa        => $isa,
     init_arg   => undef,
     lazy_build => 1,
-    handles    => $DELEGATION{$object_type}
+    handles    => $DELEGATION{$object_type},
   );
 
   if ( scalar keys %{ $DELEGATION{$object_type} } == 0 ) { next; }
