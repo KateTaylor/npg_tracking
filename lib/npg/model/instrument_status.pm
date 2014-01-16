@@ -483,8 +483,8 @@ sub gantt_map {
       foreach my $annotation ( @{$a} ) {
         if ($annotation) {
           my $box = shift @temp;
-          @{$box} = ( $box->[0], $box->[3], $box->[1], $box->[2] )
-            ;    ## no critic (ProhibitMagicNumbers)
+          ## no critic (ProhibitMagicNumbers)
+          @{$box} = ( $box->[0], $box->[3], $box->[1], $box->[2] );
           my ( $key, @info ) = split /:/xms, $annotation;
           $annotation = join q{:}, @info;
           push @{$box},
