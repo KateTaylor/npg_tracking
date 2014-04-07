@@ -28,8 +28,6 @@ npg::api::request
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -53,13 +51,9 @@ Readonly::Scalar our $RETRY_DELAY          => 10;
 Readonly::Scalar our $LWP_TIMEOUT          => 60;
 Readonly::Scalar our $DEFAULT_METHOD       => q[GET];
 Readonly::Scalar our $DEFAULT_CONTENT_TYPE => q[text/xml];
-
-
 subtype 'NPG_API_Request_PositiveInt'
       => as Int
       => where { $_ > 0 };
-
-
 =head2 cache_dir_var_name
 
 Name of the environmental variable that defines the location
@@ -185,8 +179,6 @@ sub make {
 
     return $content;
 }
-
-
 sub _create_path {
   my ( $self, $url ) = @_;
 
@@ -219,8 +211,6 @@ sub _create_path {
   }
   return $path;
 }
-
-
 sub _check_cache_dir {
     my ($self, $cache) = @_;
 
@@ -316,8 +306,6 @@ sub _from_web {
 
     return $content;
 }
-
-
 sub _write2cache {
     my ($self, $path, $content, $content_type) = @_;
 
@@ -338,8 +326,6 @@ sub _write2cache {
     close $fh or croak qq[Failed to close a filehandle for $path: $ERRNO];
     return;
 }
-
-
 sub _retry {
     my ($self, $cb, $uri) = @_;
 
@@ -370,8 +356,6 @@ sub _retry {
 
     return $result;
 }
-
-
 sub _extension {
     my ($self, $content_type) = @_;
 
@@ -383,8 +367,6 @@ sub _extension {
     }
     return $extension;
 }
-
-
 sub _personalise_request {
     my ($self, $req) = @_;
 
@@ -395,8 +377,6 @@ sub _personalise_request {
     }
     return;
 }
-
-
 1;
 
 __END__

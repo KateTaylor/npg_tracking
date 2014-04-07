@@ -57,8 +57,6 @@ npg::api::run_status_dict - an interface onto npg.run_status_dict
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

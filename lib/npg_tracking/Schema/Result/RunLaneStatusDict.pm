@@ -98,8 +98,6 @@ __PACKAGE__->has_many(
   },
   { cascade_copy => 0, cascade_delete => 0 },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:43
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:YW44Rtc9qBN/G4r419nMIA
 # Author:        david.jackson@sanger.ac.uk
@@ -112,8 +110,6 @@ __PACKAGE__->has_many(
 our $VERSION = '0';
 
 use Carp;
-
-
 =head2 check_row_validity
 
 Take a single argument and see if it corresponds to a valid row in the
@@ -144,8 +140,6 @@ sub check_row_validity {
 
     return $rs->first();
 }
-
-
 =head2 _insist_on_valid_row
 
 The above method is a general query tool. The user shouldn't have to deal with
@@ -176,8 +170,6 @@ sub _insist_on_valid_row {
     return $row_object;
 }
 1;
-
-
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

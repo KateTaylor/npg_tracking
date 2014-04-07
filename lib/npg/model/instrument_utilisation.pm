@@ -328,8 +328,6 @@ sub _run_time_stripe_across_for_gantt {
   my $stripe = [];
   my $dt = DateTime->now();
   my $dt_less_ninety = DateTime->now()->subtract( days => $DEFAULT_INSTRUMENT_UPTIME_INTERVAL );
-
-
   foreach my $i (sort {$a <=> $b} keys %{$instrument_run_times}) {
     my $array_of_runs = $instrument_run_times->{$i};
 
@@ -459,8 +457,6 @@ __END__
 npg::model::instrument_utilisation
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

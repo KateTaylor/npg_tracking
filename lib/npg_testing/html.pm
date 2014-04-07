@@ -22,8 +22,6 @@ npg_testing::html
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -33,8 +31,6 @@ A collection of test routines for html
 =head1 SUBROUTINES/METHODS
 
 =cut
-
-
 ## no critic (ProhibitExplicitISA)
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(html_tidy_ok);

@@ -73,8 +73,6 @@ st::api::event - an interface to Sample Tracking events
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
  use strict;

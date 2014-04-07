@@ -19,8 +19,6 @@ use POSIX qw(strftime);
 use st::api::event;
 
 our $VERSION = '0';
-
-
 Readonly::Scalar my $TEMPLATE => 'run_status_change.tt2';
 
 Readonly::Scalar my $FAMILIES => {
@@ -40,73 +38,53 @@ Readonly::Scalar my $FAMILIES => {
         'qc complete'              => 'complete',
         'data discarded'           => 'complete',
 };
-
-
 has event_row => (
     isa        => 'npg_tracking::Schema::Result::Event',
     is         => 'ro',
     required   => 1,
     lazy_build => 1,
 );
-
-
 has 'id_event' => (
     isa        => 'Int',
     is         => 'ro',
     required   => 1,
     lazy_build => 1,
 );
-
-
 has id_run => (
     is         => 'ro',
     isa        => 'Int',
     lazy_build => 1,
 );
-
-
 has entity => (
     isa        => 'npg_tracking::Schema::Result::RunStatus',
     is         => 'ro',
     lazy_build => 1,
 );
-
-
 has status_description => (
     is         => 'ro',
     isa        => 'Str',
     lazy_build => 1,
 );
-
-
 has batch_details => (
     is         => 'ro',
     isa        => 'HashRef',
     lazy_build => 1,
 );
-
-
 has watchers => (
     is         => 'ro',
     isa        => 'ArrayRef[Str]',
     lazy_build => 1,
 );
-
-
 has template => (
     is         => 'ro',
     isa        => 'Str',
     lazy_build => 1,
 );
-
-
 has dev => (
     is         => 'ro',
     isa        => 'Str',
     lazy_build => 1,
 );
-
-
 # Check for the pathological case where the user supplies both an event db row
 # AND an event id, but they don't correspond.
 around BUILDARGS => sub {
@@ -122,32 +100,22 @@ around BUILDARGS => sub {
 
     return $class->$orig($args);
 };
-
-
 sub _build_dev {
     my ($self) = @_;
     return ( defined $ENV{dev} ) ? $ENV{dev} : 'live';
 }
-
-
 sub _build_event_row {
     my ($self) = @_;
     return $self->schema_connection->resultset('Event')->find( $self->id_event() );
 }
-
-
 sub _build_id_event {
     my ($self) = @_;
     return $self->event_row->id_event();
 }
-
-
 sub _build_template {
     my ($self) = @_;
     return $TEMPLATE;
 }
-
-
 sub _build_entity {
     my ($self) = @_;
 
@@ -158,8 +126,6 @@ sub _build_entity {
 
     return $entity_obj;
 }
-
-
 sub _build_id_run {
     my ($self) = @_;
     return $self->entity->id_run();
@@ -169,8 +135,6 @@ sub _build_status_description {
     my ($self) = @_;
     return $self->entity->run_status_dict->description();
 }
-
-
 sub _build_watchers {
     my ($self) = @_;
 
@@ -200,8 +164,6 @@ sub _build_watchers {
 
     return $list;
 }
-
-
 sub run {
     my ($self) = @_;
 
@@ -224,8 +186,6 @@ sub run {
 
     return;
 }
-
-
 sub compose_email {
     my ($self) = @_;
 
@@ -247,8 +207,6 @@ sub compose_email {
 
     return $template_obj;
 }
-
-
 sub compose_st_reports {
     my ($self) = @_;
 
@@ -279,21 +237,15 @@ sub compose_st_reports {
 
     return \@reports;
 }
-
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;
 __END__
-
-
 =head1 NAME
 
 npg::email::run::status_change
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

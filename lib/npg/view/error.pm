@@ -87,8 +87,6 @@ sub render {
     foreach my $env_var ( sort keys %ENV ) {
         $email_body .= "\t$env_var: " . ( $ENV{$env_var} || q{} ) . "\n";
     }
-
-
     my $msg = MIME::Lite->new(
           To      => $to_string,
           From    => q[srpipe@].q[sanger.ac.uk],
@@ -139,8 +137,6 @@ __END__
 npg::view::error - subclass of npg::view for error-viewing purposes
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

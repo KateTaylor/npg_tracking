@@ -36,18 +36,12 @@ sub _build__schema {
 }
 
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::Roles::Schema - provide the DBIx npg_tracking schema.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -59,19 +53,13 @@ Monitor::Roles::Schema - provide the DBIx npg_tracking schema.
 Create a DBIx schema.
 
 =head1 SUBROUTINES/METHODS
-
-
 =head1 CONFIGURATION AND ENVIRONMENT
 
 Will decide whether to use live or dev on the basis of, in order, a 'dev'
 constructor attribute, $ENV{dev}, or the default value 'live';
 
 =head1 INCOMPATIBILITIES
-
-
 =head1 BUGS AND LIMITATIONS
-
-
 =head1 AUTHOR
 
 John O'Brien, E<lt>jo3@sanger.ac.ukE<gt>

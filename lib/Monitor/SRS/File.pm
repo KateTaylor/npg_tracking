@@ -25,8 +25,6 @@ has [ 'run_folder', 'runfolder_path' ] => (
 
 with 'npg_tracking::illumina::run::long_info'
     => { -excludes => ['_fetch_recipe', '_fetch_runinfo'] };
-
-
 sub _fetch_recipe {
     my ($self) = @_;
 
@@ -74,18 +72,12 @@ sub _fetch_runinfo {
 no Moose;
 __PACKAGE__->meta->make_immutable();
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::SRS::File - methods to read recipe files and other files.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -123,15 +115,9 @@ Return the contents of the file RunInfo.xml at the runfolder path.
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
-
-
 =head1 INCOMPATIBILITIES
 
-
-
 =head1 BUGS AND LIMITATIONS
-
-
 
 =head1 AUTHOR
 

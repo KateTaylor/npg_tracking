@@ -336,8 +336,6 @@ sub _build_tags {
   if(keys %{$indices}) { return $indices;}
   return;
 }
-
-
 =head2 required_insert_size
 
 Read-only accessor, not possible to set from the constructor.
@@ -663,8 +661,6 @@ sub _list_of_properties {
   my @l = sort keys %{$names_hash};
   return @l;
 }
-
-
 =head2 library_names
 
 A list of library names. if $self->is_pool is true, returns unique library

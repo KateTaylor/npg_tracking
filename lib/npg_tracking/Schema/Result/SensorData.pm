@@ -135,8 +135,6 @@ __PACKAGE__->has_many(
   { "foreign.id_sensor_data" => "self.id_sensor_data" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:44
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:6Mwfk9yLr4QrK0iBOyFoCA
 # You can replace this text with custom content, and it will be preserved on regeneration
@@ -167,11 +165,7 @@ Related object: L<npg_tracking::Schema::Result::Instrument>
 =cut
 
 __PACKAGE__->many_to_many('instruments' => 'sensor_data_instruments', 'instrument');
-
-
 1;
-
-
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

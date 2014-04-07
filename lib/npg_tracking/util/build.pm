@@ -40,7 +40,9 @@ use warnings;
     my $self = shift;
     $self->SUPER::ACTION_code;
 
-    if ( ($self->invoked_action() ne q[install]) && ($self->invoked_action() ne q[webinstall]) ){
+    if ( ($self->invoked_action() ne q[fakeinstall]) 
+       &&($self->invoked_action() ne q[install]) 
+       &&($self->invoked_action() ne q[webinstall]) ){
       return;
     } else {
       my @dirs  = (q[./blib/lib], q[./blib/script]);
@@ -66,22 +68,18 @@ use warnings;
         closedir DIR;
       }
 
+      my $gitver = $self->git_tag();
       foreach my $module (@modules) {
-        my $gitver = $self->git_tag();
-        if (-e $module) {
-          warn "Changing version of $module to $gitver\n";
-          my $backup = '.original';
-          local $^I = $backup;
-          local @ARGV = ($module);
-          while (<>) {
-            s/(\$VERSION\s*=\s*)('?\S+'?)\s*;/${1}'$gitver';/;
-            s/head1 VERSION$/head1  VERSION\n\nVersion $gitver/;
-            print;
-          }
-          unlink "$module$backup";
-        } else {
-          warn "File $module not found\n";
+        warn "Changing version of $module to $gitver\n";
+        my $backup = '.original';
+        local $^I = $backup;
+        local @ARGV = ($module);
+        while (<>) {
+          s/(\$VERSION\s*=\s*)('?\S+'?)\s*;/${1}'$gitver';/;
+          s/head1 VERSION$/head1  VERSION\n\nVersion $gitver/;
+          print;
         }
+        unlink "$module$backup";
       }
     }
   }

@@ -60,8 +60,6 @@ npg::model::tag_frequency
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

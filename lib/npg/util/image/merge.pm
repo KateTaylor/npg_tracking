@@ -48,8 +48,6 @@ Readonly our $DEFAULT_TEXT_BOX_WIDTH => 150;
 Readonly our $DEFAULT_TEXT_BOX_HEIGHT => 25;
 Readonly our $TEXT_BOX_TEXT_POSITION_X_Y => 5;
 Readonly our $TEXT_BOX_POSITION => 3;
-
-
 sub allowed_formats {
   my ($self, $format) = @_;
   my $allowed_formats = {
@@ -94,8 +92,6 @@ sub _text_box {
   my $text       = $arg_refs->{text};
   my $box_width  = $arg_refs->{text_box_width};
   my $box_height = $arg_refs->{text_box_height};
-
-
   my $im = GD::Image->new($box_width,$box_height);
   my $white = $im->colorAllocate($WHITE,$WHITE,$WHITE);
   my $black = $im->colorAllocate(0,0,0);
@@ -656,8 +652,6 @@ __END__
 npg::util::image::merge
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

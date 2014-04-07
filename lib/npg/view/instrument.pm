@@ -194,8 +194,6 @@ sub update_statuses {
 
   return 1;
 }
-
-
 sub read { ## no critic (ProhibitBuiltinHomonyms)
   my $self    = shift;
   my $util    = $self->util();
@@ -658,8 +656,6 @@ __END__
 npg::view::instrument - view handling for instruments
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

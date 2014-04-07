@@ -108,8 +108,6 @@ npg::controller - NPG tracking controller
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -211,8 +209,6 @@ npg::controller - NPG tracking controller
 =item strict
 
 =item warnings
-
-
 =back
 
 =head1 INCOMPATIBILITIES

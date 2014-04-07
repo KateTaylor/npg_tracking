@@ -94,8 +94,6 @@ npg::model::usergroup - data model for user groups
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

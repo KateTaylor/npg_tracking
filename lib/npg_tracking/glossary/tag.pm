@@ -14,8 +14,6 @@ our $VERSION = '0';
 use npg_tracking::util::types;
 
 Readonly::Scalar our $TAG_DELIM      => q[#];
-
-
 has 'tag_index'   => (isa        => 'Maybe[NpgTrackingTagIndex]',
                       is         => 'rw',
                       predicate  => 'has_tag_index',
@@ -37,8 +35,6 @@ __END__
 npg_tracking::glossary::tag
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

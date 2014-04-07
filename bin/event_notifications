@@ -21,8 +21,6 @@ use npg::email;
 use npg::email::event;
 
 our $VERSION = '0';
-
-
 my $schema = npg_tracking::Schema->connect();
 my $templates = "$Bin/../$npg::email::DEFAULT_TEMPLATE_LOCATION";
 
@@ -47,18 +45,12 @@ while ( my $job = $todo_rs->next() ) {
 }
 
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 event_notifications -- send notifications for events
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

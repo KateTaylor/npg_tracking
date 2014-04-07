@@ -286,8 +286,6 @@ sub _process_path {
 
   return 1;
 }
-
-
 sub _find_recalibrated_directory_path {
   my ( $self, $path ) = @_;
   my $recalibrated_path;
@@ -382,8 +380,6 @@ sub _try_to_find_recalibrated_path_from_runfolder_path {
     my $dirs_string = join qq{\n}, @dirs;
     croak $self->id_run() . qq{: found multiple possible bustard level directories\n$dirs_string\n};
   }
-
-
   if (scalar@dirs == 1) {
     return $dirs[0];
   }
@@ -500,8 +496,6 @@ sub lane_qc_paths {
   }
   return \@dirs;
 }
-
-
 1;
 __END__
 
@@ -510,8 +504,6 @@ __END__
 npg_tracking::illumina::run::folder
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

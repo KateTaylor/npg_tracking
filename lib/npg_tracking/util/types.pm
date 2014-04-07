@@ -49,8 +49,6 @@ subtype 'NpgTrackingLaneNumber'
 subtype 'NpgTrackingTagIndex'
       => as 'Int'
       => where { $_ >= $TAG_INDEX_MIN && $_ <= $TAG_INDEX_MAX };
-
-
 no Moose::Util::TypeConstraints;
 
 1;
@@ -61,8 +59,6 @@ __END__
 npg_tracking::util::types
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

@@ -60,8 +60,6 @@ npg::api::instrument_status - An interface onto npg.instrument_status
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -78,8 +76,6 @@ npg::api::instrument_status - An interface onto npg.instrument_status
     'id_instrument_status' => $iIdInstrumentStatus,
     'util'          => $oUtil,
   });
-
-
   my $oInstrumentStatus = npg::api::instrument_status->new({
     'id_instrument'             => $iIdInstrument,
     'id_instrument_status_dict' => $iIdInstrumentStatus,

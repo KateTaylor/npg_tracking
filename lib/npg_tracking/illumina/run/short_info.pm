@@ -75,8 +75,6 @@ sub short_reference {
 ###############
 # builders
 
-
-
 sub _build_id_run {
   my ($self) = @_;
   if ( !( $self->has_run_folder() || $self->has_name() ) ) {
@@ -145,8 +143,6 @@ sub _hs_info {
   if(defined $flowcell_id){ $self->_set_flowcell_id( $flowcell_id );}
   return 1;
 }
-
-
 1;
 __END__
 
@@ -155,8 +151,6 @@ __END__
 npg_tracking::illumina::run::short_info
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

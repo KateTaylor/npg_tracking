@@ -34,8 +34,6 @@ sub _build__config_file {
     $config_file_name =~ s/::/-/gsmx;
     return catfile ($path, $config_file_name);
 }
-
-
 has '_config_data' => (
     is            => 'ro',
     init_arg      => undef,
@@ -97,8 +95,6 @@ sub _no_connection_info {
     if (ref $info[0] eq q[HASH] && !$info[0]->{dsn}) {return 1;}
     return 0;
 }
-
-
 around 'connection' => sub {
 
     my $orig = shift;
@@ -135,8 +131,6 @@ npg_tracking::util::db_connect
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 An example of a schema object consuming this role:
@@ -152,8 +146,6 @@ An example of a schema object consuming this role:
     extends 'DBIx::Class::Schema';
   }
   with qw/npg_tracking::util::db_connect/;
-
-
 =head1 DESCRIPTION
 
 A Moose role that has a modifier method for the connection method of

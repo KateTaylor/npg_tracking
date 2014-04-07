@@ -171,8 +171,6 @@ sub active_runs_over_last_30_days {
   }
   return $self->{'active_runs_over_last_30_days'};
 }
-
-
 sub potentially_stuck_runs {
   my ( $self ) = @_;
   my $return = {};
@@ -232,8 +230,6 @@ __END__
 npg::model::run_status
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

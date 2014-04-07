@@ -15,8 +15,6 @@ extends 'Monitor::Cbot';
 use namespace::autoclean;
 use XML::LibXML;
 our $VERSION = '0';
-
-
 # A new element <Name/> has been added to the XML (26/5/2010) with an
 # attribute, 'i:nil="true"', that breaks this code. Currently not used, will
 # have to fix if we do use it.
@@ -162,21 +160,13 @@ sub current_run_info {
 
 no Moose;
 __PACKAGE__->meta->make_immutable();
-
-
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::Cbot::RunInfo
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -240,8 +230,6 @@ Monitor::Cbot::RunInfo
 =head1 _build_user_name
 
     Extract the user name entry from the xml and return it.
-
-
 =head1 CONFIGURATION AND ENVIRONMENT
 
 =head1 INCOMPATIBILITIES

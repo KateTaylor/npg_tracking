@@ -93,8 +93,6 @@ __PACKAGE__->has_many(
   { "foreign.id_designation" => "self.id_designation" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:41
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:ZE2wjA73jXTH5Bolucxx6g
 # Author:        david.jackson@sanger.ac.uk
@@ -116,11 +114,7 @@ Related object: L<npg_tracking::Schema::Result::Instrument>
 
 __PACKAGE__->many_to_many('instruments' => 'instrument_designations', 'instrument');
 
-
-
 1;
-
-
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

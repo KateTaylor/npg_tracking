@@ -32,8 +32,6 @@ npg_tracking::data::bait
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

@@ -150,8 +150,6 @@ sub save_tags {
   $tr_state and $dbh->commit();
   return;
 }
-
-
 sub remove_tags {
   my ($self, $tags_to_remove, $requestor) = @_;
   my $util        = $self->util();
@@ -202,8 +200,6 @@ __END__
 npg::model::run_lane
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

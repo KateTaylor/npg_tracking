@@ -327,8 +327,6 @@ __PACKAGE__->has_many(
   { "foreign.id_run" => "self.id_run" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07036 @ 2014-02-28 12:00:59
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:30KwQYdLD+H3KvJKLf9OxQ
 # Author:        david.jackson@sanger.ac.uk
@@ -368,8 +366,6 @@ sub _event_type_rs {
 
     return $self->result_source->schema->resultset('EventType')->new( {} );
 }
-
-
 =head2 _rsd_rs
 
 Create a dbic RunStatusDict result set as shorthand and to access the row
@@ -381,8 +377,6 @@ sub _rsd_rs { my ($self) = @_;
 
   return $self->result_source->schema->resultset('RunStatusDict')->new( {} );
 }
-
-
 =head2 _tag_rs
 
 Create a dbic Tag result set as shorthand and to access the row validation
@@ -395,8 +389,6 @@ sub _tag_rs {
 
     return $self->result_source->schema->resultset('Tag')->new( {} );
 }
-
-
 =head2 _user_rs
 
 Create a dbic User result set as shorthand and to access the row validation
@@ -409,8 +401,6 @@ sub _user_rs {
 
      return $self->result_source->schema->resultset('User')->new( {} );
 }
-
-
 =head2 current_run_status_description
 
 Return the current run status description for the row object. Return undef if there is no
@@ -440,8 +430,6 @@ sub current_run_status {
   my ( $self ) = @_;
   return $self->run_statuses()->search({iscurrent => 1})->first(); #not nice - would like this defined by a relationship
 }
-
-
 
 =head2 update_run_status
 
@@ -529,8 +517,6 @@ sub run_status_event {
     croak 'No matching event type found' if !defined $id_event_type;
 
     ( defined $when ) || ( $when =  DateTime->now(time_zone=> DateTime::TimeZone->new(name => q[local])));
-
-
     my $insert = $self->result_source->schema->resultset('Event')->create(
         {
             id_event_type => $id_event_type,
@@ -580,8 +566,6 @@ sub _map_opposed_tags {
 
     return;
 }
-
-
 =head2 _set_mutually_exclusive_tags
 
 Some tags are paired and mutually exclusive (paired_end/single_end,
@@ -604,8 +588,6 @@ sub _set_mutually_exclusive_tags {
                 id_tag => { IN => [ $is_tag_id, $is_not_tag_id ] },
             }
     );
-
-
     my $already_set = 0;
     while ( my $row = $tag_run_rs->next() ) {
         if ( $row->id_tag() eq $is_not_tag_id ) {
@@ -628,12 +610,8 @@ sub _set_mutually_exclusive_tags {
             date    => DateTime->now(time_zone=> DateTime::TimeZone->new(name => q[local])),
         }
     );
-
-
     return;
 }
-
-
 =head2 set_tag
 
 General method for setting/creating TagRun rows.
@@ -675,8 +653,6 @@ sub set_tag {
 
     return;
 }
-
-
 =head2 unset_tag
 
 General method for unsetting TagRun rows. It won't complain if the tag was
@@ -713,8 +689,6 @@ sub unset_tag {
 
     return $record->delete();
 }
-
-
 =head2 is_tag_set
 
 Test whether a suppled tag (db id or text) is set for the run. Returns 0 if
@@ -738,8 +712,6 @@ sub is_tag_set {
             }
         )->count();
 }
-
-
 =head2 forward_read
 
 Get RunRead corresponding to the forward read.
@@ -750,8 +722,6 @@ sub forward_read {
     my ($self) = @_;
     return $self->runs_read->find({read_order=>1});
 }
-
-
 =head2 reverse_read
 
 Get RunRead corresponding to the reverse read.
@@ -762,8 +732,6 @@ sub reverse_read {
     my ($self) = @_;
     return $self->runs_read->find({read_order=>2+$self->is_tag_set(q(multiplex))});
 }
-
-
 =head2 tags
 
 Type: many_to_many
@@ -773,11 +741,7 @@ Related object: L<npg_tracking::Schema::Result::Tag>
 =cut
 
 __PACKAGE__->many_to_many('tags' => 'tag_runs', 'tag');
-
-
 1;
-
-
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

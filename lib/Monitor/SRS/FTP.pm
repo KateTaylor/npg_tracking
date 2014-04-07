@@ -5,11 +5,7 @@
 # Last Modified: $Date: 2012-02-29 14:14:10 +0000 (Wed, 29 Feb 2012) $
 # Id:            $Id: FTP.pm 15265 2012-02-29 14:14:10Z mg8 $
 # $HeadURL: svn+ssh://svn.internal.sanger.ac.uk/repos/svn/new-pipeline-dev/npg-tracking/trunk/lib/Monitor/SRS/FTP.pm $
-
-
 package Monitor::SRS::FTP;
-
-
 use Moose;
 
 use Monitor::RunFolder;
@@ -23,43 +19,31 @@ use IO::All::FTP; #this package is not used explicitly
 use List::Util qw(max);
 
 our $VERSION = '0';
-
-
 Readonly::Scalar my $FTP_LOGIN     => 'ftp:srpipe';
 Readonly::Scalar my $FTP_PORT      => 21;
 Readonly::Scalar my $TOP_DIR       => 'Runs';
 Readonly::Scalar my $LAST_ELEMENT  => -1;
 Readonly::Scalar my $COMPLETE_FLAG => 'Run.complete';
-
-
 has ftp_login => (
     is         => 'ro',
     isa        => 'Str',
     default    => $FTP_LOGIN,
 );
-
-
 has ftp_port => (
     is         => 'ro',
     isa        => 'Int',
     default    => $FTP_PORT,
 );
-
-
 has top_dir => (
     is         => 'ro',
     isa        => 'Str',
     default    => $TOP_DIR,
 );
-
-
 has ftp_root => (
     is         => 'rw',
     isa        => 'Str',
     lazy_build => 1,
 );
-
-
 sub _build_ftp_root {
     my ($self) = @_;
 
@@ -73,8 +57,6 @@ sub _build_ftp_root {
 
     return $address;
 }
-
-
 sub can_contact {
     my ( $self, @try_these ) = @_;
 
@@ -86,8 +68,6 @@ sub can_contact {
 
     return $contact;
 }
-
-
 # IO::All::FTP throws an exception if you try to use IO::All's all_dirs
 # method so we need to roll our own.
 sub get_normal_run_paths {
@@ -109,14 +89,10 @@ sub get_normal_run_paths {
 
     return @run_paths;
 }
-
-
 sub get_latest_cycle {
     my ( $self, $run_path ) = @_;
 
     croak 'Run folder address required as argument' if !$run_path;
-
-
     my $events_latest = 0;
     my $log_file = "$run_path/Events.log";
     my $log_text = q{};
@@ -131,8 +107,6 @@ sub get_latest_cycle {
         last;
         ## use critic
     }
-
-
     my $status_latest = 0;
     my $status_file = "$run_path/Data/reports/StatusUpdate.xml";
     my $status_text = q{};
@@ -141,8 +115,6 @@ sub get_latest_cycle {
     if ( $status_text =~ m{ <ImgCycle> (\d+) </ImgCycle> }msx ) {
         $status_latest = $1;
     }
-
-
     my $image_ls   = io( qq{$run_path/Processed/L001} )->all();
     my $process_ls = io( qq{$run_path/Images/L001} )->all();
     my $intensities_ls = io( qq{$run_path/Data/Intensities/L001} )->all();
@@ -153,8 +125,6 @@ sub get_latest_cycle {
     );
 
     my $dirs_latest = max( 0, map { m{\bC(\d+)[.]1}msx } @cycle_dirs );
-
-
     my $latest_cycle = max( $events_latest, $status_latest, $dirs_latest );
 
     $latest_cycle
@@ -163,8 +133,6 @@ sub get_latest_cycle {
 
     return $latest_cycle;
 }
-
-
 sub is_run_completed {
     my ( $self, $run_path ) = @_;
 
@@ -198,8 +166,6 @@ sub is_run_completed {
          :                                                        0
          ;
 }
-
-
 sub is_rta {
     my ( $self, $run_path ) = @_;
 
@@ -212,8 +178,6 @@ sub is_rta {
 
     return scalar @{ [ $rta_test =~ m/Intensities/gmsx ] };
 }
-
-
 sub update_latest_contact {
     my ($self) = @_;
 
@@ -223,8 +187,6 @@ sub update_latest_contact {
 
     return;
 }
-
-
 sub all_dirs {
     my ( $self, $listing_string ) = @_;
 
@@ -245,24 +207,16 @@ sub all_dirs {
 
     return @dir_list;
 }
-
-
 no Moose;
 __PACKAGE__->meta->make_immutable();
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::SRS::FTP - interrogate the host computer of an Illumina short
 read sequencer via FTP.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -281,8 +235,6 @@ read sequencer via FTP.
        # what IO::All::FTP::all_dirs should do.
        my @dir_list =
             $ftp_poll->all_dirs( "$valid_run_folders_found[3]/Images" );>>
-
-
 =head1 DESCRIPTION
 
 This class gets various bits of information from a GA-II sequencer's host
@@ -324,8 +276,6 @@ path as its sole argument. Returns 1 if the flag is found, 0 otherwise.
 
 Return true if the run is a 'real time analysis' run. The test is whether a
 subdirectory, 'Data/Intensities', exists in the runfolder.
-
-
 =head2 update_latest_contact
 
 A private method. Update the 'latest_contact' field in the database
@@ -337,19 +287,11 @@ IO::All::FTP has some sort of inheritance problem that means that the all_dirs
 method doesn't work properly. This method tries to replace it, taking the
 output of an ftp directory listing as its only argument and returning a list
 of all subdirectories found there.
-
-
 =head1 CONFIGURATION AND ENVIRONMENT
-
-
 
 =head1 INCOMPATIBILITIES
 
-
-
 =head1 BUGS AND LIMITATIONS
-
-
 
 =head1 AUTHOR
 

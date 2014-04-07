@@ -30,8 +30,6 @@ npg_testing::db
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -41,8 +39,6 @@ A Moose role for creating and loading a test sqlite database using an existing D
 =head1 SUBROUTINES/METHODS
 
 =cut
-
-
 =head2 rs_list2fixture
 
 Dumps a list of result sets for a table to a YAML fixture.
@@ -82,8 +78,6 @@ sub rs_list2fixture {
     DumpFile(catfile($path,$tname).$FEATURE_EXTENSION, \@rows);
     return;
 }
-
-
 =head2 load_fixtures
 
 Loads YAML fixtures to the test database. The fixtures files should be
@@ -135,8 +129,6 @@ sub load_fixtures {
     }
     return;
 }
-
-
 =head2 create_test_db
 
 Creates a temp test database and loads data into it.
@@ -208,8 +200,6 @@ sub deploy_test_db {
     }
     return $schema;
 }
-
-
 no Moose::Role;
 1;
 
@@ -273,5 +263,3 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
-
-

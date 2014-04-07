@@ -24,8 +24,6 @@ npg::email::run
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -105,8 +103,6 @@ sub study_lane_followers {
 
   return $return_hash;
 }
-
-
 =head2 id_run
 
 returns the run id from the entity, or stores it on construction
@@ -131,8 +127,6 @@ sub _build_id_run {
 
   return $id_run;
 }
-
-
 =head2 batch details
 
 returns a hashref of details about the batch this run was performed on
@@ -169,8 +163,6 @@ sub _build_batch_details {
 
   return $details;
 }
-
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

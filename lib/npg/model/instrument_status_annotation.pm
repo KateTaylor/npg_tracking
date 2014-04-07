@@ -64,8 +64,6 @@ npg::model::instrument_status_annotation
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

@@ -15,8 +15,6 @@ extends 'Monitor::Cbot';
 use namespace::autoclean;
 use XML::LibXML;
 our $VERSION = '0';
-
-
 has '_url' => (
     reader     => 'url',
     is         => 'ro',
@@ -30,8 +28,6 @@ has '_latest_run_list' => (
     isa        => 'ArrayRef[XML::LibXML::Element]',
     predicate  => 'has_latest_run_list',
 );
-
-
 sub _build__url {
     my ($self) = @_;
     return q{http://} . $self->host_name() . q{/GetRunList};
@@ -52,21 +48,13 @@ sub current_run_list {
 
 no Moose;
 __PACKAGE__->meta->make_immutable();
-
-
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::Cbot::RunList - methods and to retrieve and parse Cbot RunList.xml
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
     C<<use Monitor::Cbot::RunList;

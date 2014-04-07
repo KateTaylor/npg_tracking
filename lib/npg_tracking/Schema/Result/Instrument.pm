@@ -310,8 +310,6 @@ __PACKAGE__->has_many(
   { "foreign.id_instrument" => "self.id_instrument" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:42
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:F7mTaj060i1RggPpHSpfXw
 # Author:        david.jackson@sanger.ac.uk
@@ -374,8 +372,6 @@ Related object: L<npg_tracking::Schema::Result::SensorData>
 =cut
 
 __PACKAGE__->many_to_many('sensor_data' => 'sensor_data_instruments', 'sensor_data');
-
-
 =head2 _isd_rs
 
 Create a dbic InstrumentStatusDict result set as shorthand and to access the
@@ -389,8 +385,6 @@ sub _isd_rs {
     return $self->result_source->schema->resultset('InstrumentStatusDict')
                 ->new( {} );
 }
-
-
 =head2 _user_rs
 
 Create a dbic User result set as shorthand and to access the row validation
@@ -436,8 +430,6 @@ sub current_instrument_status {
     }
     return;
 }
-
-
 =head2 update_instrument_status
 
 Change the instrument_status for an instrument. This means adding a new row to
@@ -689,8 +681,6 @@ sub _runs_with_status {
 =cut
 
 1;
-
-
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

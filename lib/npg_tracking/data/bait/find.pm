@@ -115,15 +115,11 @@ npg_tracking::data::bait::find
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   package MyPackage;
   use Moose;
   with qw{npg_tracking::data::bait::find};
-
-
 =head1 DESCRIPTION
 
 A Moose role for finding the location of bait and target intervals files.

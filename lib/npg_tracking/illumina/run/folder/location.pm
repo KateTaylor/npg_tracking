@@ -104,8 +104,6 @@ sub _build__folder_path_glob_pattern {
   return $test_dir . $FOLDER_PATH_PREFIX_GLOB_PATTERN;
 }
 
-
-
 1;
 __END__
 
@@ -114,8 +112,6 @@ __END__
 npg_tracking::illumina::run::folder::location
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

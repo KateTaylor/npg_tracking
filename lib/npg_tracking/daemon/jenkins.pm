@@ -56,8 +56,6 @@ override 'command'  => sub {
 };
 
 override 'daemon_name'  => sub { return 'npg_jenkins'; };
-
-
 no Moose;
 
 1;
@@ -121,7 +119,3 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
-
-
-
-

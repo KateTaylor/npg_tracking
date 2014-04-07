@@ -56,8 +56,6 @@ sub init {
   }
   return 1;
 }
-
-
 1;
 __END__
 
@@ -66,8 +64,6 @@ __END__
 npg::model::event_type
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

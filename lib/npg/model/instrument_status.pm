@@ -38,8 +38,6 @@ Readonly::Scalar our $DAYS_TO_SUBTRACT                   => 30;
 Readonly::Scalar our $DEFAULT_GANTT_WIDTH  => 1_000;
 Readonly::Scalar our $DEFAULT_GANTT_HEIGHT => 400;
 Readonly::Scalar our $DEFAULT_GANTT_Y_TICK => 9;
-
-
 __PACKAGE__->mk_accessors(fields());
 __PACKAGE__->has_a(['instrument','user']);
 __PACKAGE__->has_many_through('annotation|instrument_status_annotation');
@@ -850,8 +848,6 @@ __END__
 npg::model::instrument_status
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

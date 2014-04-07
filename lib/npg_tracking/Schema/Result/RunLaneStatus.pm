@@ -183,8 +183,6 @@ __PACKAGE__->belongs_to(
   { id_user => "id_user" },
   { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07036 @ 2014-02-20 10:43:38
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:TkFv5J36/M51WwS1WQKs8Q
 # Author:        david.jackson@sanger.ac.uk
@@ -366,11 +364,7 @@ sub _update_run_status {
 
   return 1;
 }
-
-
 1;
-
-
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

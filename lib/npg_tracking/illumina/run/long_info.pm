@@ -32,8 +32,6 @@ npg_tracking::illumina::run::long_info
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   package Mypackage;
@@ -227,8 +225,6 @@ sub _build__recipe_store {
   $self->_set_values_at_end_of_read($rc);
   return $recipe;
 }
-
-
 =head2 runinfo
 
 XML string from runinfo file containing Illumina run config.
@@ -383,8 +379,6 @@ has lane_count => (
   predicate => 'has_lane_count',
   documentation => q{The number of lanes on this run},
 );
-
-
 =head2 read_cycle_counts
 
 List of cycle lengths configured for each read/index in order.
@@ -422,8 +416,6 @@ has _reads_indexed => (
   },
 );
 
-
-
 =head2 indexing_cycle_range
 
 First and last indexing cycles, or nothing returned if not indexed
@@ -443,8 +435,6 @@ has _indexing_cycle_range => (
   },
   #look at before loop lower down
 );
-
-
 =head2 read1_cycle_range
 
 First and last cycles of read 1
@@ -463,8 +453,6 @@ has _read1_cycle_range => (
   },
   #look at before loop lower down
 );
-
-
 =head2 read2_cycle_range
 
 First and last cycles of read 2, or nothing returned if no read 2
@@ -483,8 +471,6 @@ has _read2_cycle_range => (
   },
   #look at before loop lower down
 );
-
-
 =head2 expected_cycle_count
 
 Number of cycles configured for this run and for which the output data (images or intensities or both) can be expected to be found below this folder. This number is extracted from the recipe file. It does not include the cycles for the paired read if that is performed as a separate run - the output data for that will be in a different runfolder.
@@ -551,8 +537,6 @@ has _tilelayout_store  => (
   lazy_build => 1,
   init_arg => undef,
 );
-
-
 sub _build__tilelayout_store {
   my $self = shift;
 
@@ -615,8 +599,6 @@ foreach my $f (qw(tilelayout_rows tilelayout_columns)){
     }
   };
 }
-
-
 =head2 tile_count
 
 =cut
@@ -733,8 +715,6 @@ sub _build_lane_tile_clustercount {
 
   return $lane_tile_clustercount;
 }
-
-
 1;
 __END__
 

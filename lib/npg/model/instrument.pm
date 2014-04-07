@@ -328,8 +328,6 @@ sub utilisation {
                                                   });
   return $root_is->utilisation($type);
 }
-
-
 sub latest_instrument_annotation {
   my $self = shift;
 
@@ -548,8 +546,6 @@ sub possible_next_statuses4status {
   }
   return $STATUS_GRAPH{$status};
 }
-
-
 sub possible_next_statuses {
   my $self = shift;
 
@@ -577,8 +573,6 @@ __END__
 npg::model::instrument
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

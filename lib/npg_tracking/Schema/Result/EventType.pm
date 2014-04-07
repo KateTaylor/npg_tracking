@@ -155,8 +155,6 @@ __PACKAGE__->has_many(
   { "foreign.id_event_type" => "self.id_event_type" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:41
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BkRdBsUGse4wgTcpRHsS3A
 # Author:        david.jackson@sanger.ac.uk
@@ -169,8 +167,6 @@ __PACKAGE__->has_many(
 our $VERSION = '0';
 
 use Carp;
-
-
 =head2 _entity_type_rs
 
 Create a dbic entity_type resultset as shorthand and to access the row
@@ -183,8 +179,6 @@ sub _entity_type_rs {
 
     return $self->result_source->schema->resultset('EntityType')->new( {} );
 }
-
-
 =head2 id_query
 
 Given an event type description and an identifier (id number or description)
@@ -214,8 +208,6 @@ sub id_query {
 
     return $rs->first->id_event_type();
 }
-
-
 =head2
 
 This method exists to be mocked. id_query calls a (similar) method which also
@@ -231,10 +223,6 @@ sub _count {
 }
 
 1;
-
-
-
-
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

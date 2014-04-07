@@ -18,8 +18,6 @@ use npg::email::run::complete_archived;
 
 my $templates = "$Bin/../$npg::email::DEFAULT_TEMPLATE_LOCATION";
 npg::email::run::complete_archived->new(email_templates_location => $templates)->run();
-
-
 0;
 
 __END__
@@ -29,8 +27,6 @@ __END__
 email_project_followers_run_complete_archived
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

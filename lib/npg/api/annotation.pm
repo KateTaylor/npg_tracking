@@ -116,8 +116,6 @@ npg::api::annotation - Annotation base-class, an interface onto npg.annotation
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

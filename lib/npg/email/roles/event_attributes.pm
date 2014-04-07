@@ -23,8 +23,6 @@ npg::email::roles::event_attributes
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   package My::EventEmailer;
@@ -41,8 +39,6 @@ You possibly have to provide the following methods to consume this role:
   default_recipient_host # to provide a default mail host for emails with no @y.com
   schema_connection # to provide a connection to a database
   _entity_check # to provide a string to check the entity's class against
-
-
 =head1 SUBROUTINES/METHODS
 
 =cut
@@ -58,8 +54,6 @@ sub _build_event_row {
   my ($self) = @_;
   return $self->schema_connection->resultset('Event')->find( $self->id_event() );
 }
-
-
 has 'id_event' => (
   isa        => 'Int',
   is         => 'ro',
@@ -71,8 +65,6 @@ sub _build_id_event {
   my ($self) = @_;
   return $self->event_row->id_event();
 }
-
-
 =head2 entity
 
 returns the entity object from the event_row
@@ -194,8 +186,6 @@ has template => (
   isa        => 'Str',
   lazy_build => 1,
 );
-
-
 has dev => (
   is         => 'ro',
   isa        => 'Str',
@@ -223,8 +213,6 @@ around BUILDARGS => sub {
 
   return $class->$orig($args);
 };
-
-
 1;
 __END__
 

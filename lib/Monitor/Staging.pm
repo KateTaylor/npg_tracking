@@ -19,18 +19,12 @@ use English qw(-no_match_vars);
 use MooseX::StrictConstructor;
 
 use npg_tracking::illumina::run::folder::validation;
-
-
 our $VERSION = '0';
-
-
 has known_areas => (
     is      => 'ro',
     isa     => 'ArrayRef',
     default => sub { [ @npg_tracking::illumina::run::folder::location::STAGING_AREAS ] },
 );
-
-
 sub validate_areas {
     my ( $self, @arguments ) = @_;
 
@@ -40,8 +34,6 @@ sub validate_areas {
     my %check;
     foreach (@arguments) {
         my $area = $_;
-
-
         if (m/^ \d+ $/msx) {
 
             if ( !defined $known_areas->[ $_ + 0 ] ) {
@@ -51,8 +43,6 @@ sub validate_areas {
 
             $area = $known_areas->[$_];
         }
-
-
         if ( !-d $area ) {
             carp "Staging directory not found: $area";
             next;
@@ -67,8 +57,6 @@ sub validate_areas {
 
     return @validated;
 }
-
-
 sub find_live_incoming {
     my ( $self, $staging_area ) = @_;
 
@@ -80,8 +68,6 @@ sub find_live_incoming {
     foreach my $run_dir ( glob $staging_area . q{/{IL,HS}*/incoming/*} ) {
 
         next if !-d $run_dir;
-
-
         my $check = Monitor::RunFolder->new( runfolder_path => $run_dir );
         my $run_folder = $check->run_folder();
 
@@ -92,8 +78,6 @@ sub find_live_incoming {
 
         $path_for{ $check->id_run() } = $run_dir;
     }
-
-
     # Remove any folders belonging to cancelled runs.
     my $run_status_rs = $self->schema->resultset('RunStatus')->search(
         {
@@ -116,16 +100,10 @@ sub find_live_incoming {
     return values %path_for;
 }
 
-
-
 no Moose;
 __PACKAGE__->meta->make_immutable();
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::Staging - interrogate the staging area of an Illumina
@@ -133,14 +111,10 @@ short read sequencer.
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
     C<<use Monitor::Staging;
        my $stage_poll = Monitor::Staging->new();>>
-
-
 =head1 DESCRIPTION
 
 This class gets various bits of information from the staging area for a short
@@ -159,19 +133,11 @@ external array.
 Take a staging area path as a required argument and return a list of all run
 directories (no tests or repeats) found in incoming folders below it. I.e.
 they match /staging_area/machine/incoming/run_folder
-
-
 =head1 CONFIGURATION AND ENVIRONMENT
-
-
 
 =head1 INCOMPATIBILITIES
 
-
-
 =head1 BUGS AND LIMITATIONS
-
-
 
 =head1 AUTHOR
 

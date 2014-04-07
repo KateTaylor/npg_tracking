@@ -28,8 +28,6 @@ npg_tracking::data::reference::list
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   my $lister = Moose::Meta::Class->create_anon_class(
@@ -80,8 +78,6 @@ has 'repository' => (isa       =>'NPG_TRACKING_REFERENCE_REPOSITORY',
                      required  => 0,
                      default   => $REP_ROOT,
         );
-
-
 =head2 ref_repository
 
 An absolute path to the reference repository.
@@ -127,8 +123,6 @@ sub _build__ref_repository_name {
 }
 
 =head2 bait_repository
-
-
 =cut
 has 'bait_repository' => (isa       => 'NPG_TRACKING_REFERENCE_REPOSITORY',
                           is        => 'ro',
@@ -268,8 +262,6 @@ sub _build_organisms {
     }
     return \@orgs;
 }
-
-
 =head2 repository_contents
 
 A reference to a hash representing the contents of the reference repository.
@@ -492,8 +484,6 @@ sub report {
 
     return $list;
 }
-
-
 =head2 short_report
 
 Returns a string representation of a short report.

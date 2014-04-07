@@ -758,8 +758,6 @@ npg::api::instrument_utilisation - An interface onto npg.instrument_utilisation
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -776,8 +774,6 @@ npg::api::instrument_utilisation - An interface onto npg.instrument_utilisation
     'id_instrument_utilisation' => $iIdInstrumentUtilisation,
     'util'          => $oUtil,
   });
-
-
   my $oInstrumentUtilisation = npg::api::instrument_utilisation->new({
     <fields> => <values>.
   });

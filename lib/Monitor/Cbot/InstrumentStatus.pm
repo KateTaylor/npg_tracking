@@ -16,8 +16,6 @@ use namespace::autoclean;
 use XML::LibXML;
 
 our $VERSION = '0';
-
-
 has '_url' => (
     reader     => 'url',
     is         => 'ro',
@@ -56,8 +54,6 @@ has '_is_enabled' => (
     isa        => 'Maybe[Bool]',
     lazy_build => 1,
 );
-
-
 sub _build__url {
     my ($self) = @_;
 
@@ -154,20 +150,14 @@ sub current_status {
 no Moose;
 
 __PACKAGE__->meta->make_immutable();
-
-
 1;
 
 __END__
-
-
 =head1 NAME
 
 Monitor::Cbot::InstrumentStatus
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -219,8 +209,6 @@ Extract the percent complete entry from the xml and return it.
 =head1 _build__run_state
 
 Extract the run state entry from the xml and return it.
-
-
 =head1 CONFIGURATION AND ENVIRONMENT
 
 =head1 INCOMPATIBILITIES

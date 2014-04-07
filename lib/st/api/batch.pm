@@ -14,8 +14,6 @@ use warnings;
 __PACKAGE__->mk_accessors(fields());
 
 our $VERSION = '0';
-
-
 sub live {
     my $self = shift;
     return $self->live_url()  . q{/batches};
@@ -36,8 +34,6 @@ __END__
 st::api::batch - an interface to Sample Tracking batches
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

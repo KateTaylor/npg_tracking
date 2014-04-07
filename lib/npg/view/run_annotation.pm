@@ -60,8 +60,6 @@ npg::view::run_annotation - view handling for run_annotations
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

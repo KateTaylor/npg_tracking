@@ -153,8 +153,6 @@ st::api::study - an interface to Sample Tracking studies
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

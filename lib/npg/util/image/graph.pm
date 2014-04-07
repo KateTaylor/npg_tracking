@@ -97,8 +97,6 @@ sub plotter {
 
   return $png;
 }
-
-
 1;
 
 __END__
@@ -108,8 +106,6 @@ __END__
 npg::util::image::graph
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

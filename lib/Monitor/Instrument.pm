@@ -20,8 +20,6 @@ use POSIX qw(strftime);
 use npg_tracking::illumina::run::folder::validation;
 
 our $VERSION = '0';
-
-
 has ident => (
     is         => 'ro',
     isa        => 'Str',
@@ -65,27 +63,19 @@ foreach my $attr ( qw( is_gaii is_hiseq is_cbot is_miseq ) ) {
         lazy_build => 1,
     );
 }
-
-
 sub _build__instr_id {
     my ($self) = @_;
     return ( $self->ident() =~ m/^ (\d+) $/msx ) ? ( $1 + 0 ) : undef;
 }
-
-
 #We only need this if instr_id cannot be set from the --ident argument
 sub _build__instr_name {
     my ($self) = @_;
     return ( $self->instr_id() ? undef : $self->ident() );
 }
-
-
 sub _build__db_entry {
     my ($self) = @_;
 
     my $query;
-
-
     if ( $self->instr_id() ) {
         $query = { id_instrument => $self->instr_id() };
     }
@@ -95,38 +85,26 @@ sub _build__db_entry {
     else {
         croak 'Instrument identifier not supplied';
     }
-
-
     my $instrument_rs =
         $self->schema->resultset('Instrument')->search($query);
-
-
     return ( $instrument_rs->count() == 1 ) ? $instrument_rs->next() : undef;
 }
-
-
 sub _build__label {
     my ($self) = @_;
 
     return sprintf '%s (ID: %d)', $self->db_entry->name(),
             $self->db_entry->id_instrument();
 }
-
-
 sub _build__is_gaii {
     my ($self) = @_;
 
     return ( $self->db_entry->instrument_format->model() eq 'HK' );
 }
-
-
 sub _build__is_hiseq {
     my ($self) = @_;
 
     return ( $self->db_entry->instrument_format->model() eq 'HiSeq' );
 }
-
-
 sub _build__is_miseq {
     my ($self) = @_;
 
@@ -138,29 +116,19 @@ sub _build__is_cbot {
 
     return ( $self->db_entry->instrument_format->model() eq 'cBot' );
 }
-
-
 sub mysql_time_stamp {
     return strftime( '%F %T', localtime );
 }
-
-
 no Moose;
 __PACKAGE__->meta->make_immutable();
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::Instrument - base class for modules that interrogate instruments for run
 information.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -175,8 +143,6 @@ This is the superclass for npg_tracking's Monitor library.
 This class is written to support various scripts that monitor instruments. The
 scripts should be called with the argument --ident, and optionally, the
 argument --dev
-
-
 =head1 SUBROUTINES/METHODS
 
 =head2 _build_db_entry
@@ -202,19 +168,11 @@ Return a boolean indicating if the instrument is a cBot model.
 =head2 mysql_time_stamp
 
 Return the current time in a format that can be inserted into a mysql table.
-
-
 =head1 CONFIGURATION AND ENVIRONMENT
-
-
 
 =head1 INCOMPATIBILITIES
 
-
-
 =head1 BUGS AND LIMITATIONS
-
-
 
 =head1 AUTHOR
 

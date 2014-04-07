@@ -14,8 +14,6 @@ use Moose::Role;
 use Carp qw(croak );
 
 our $VERSION = '0';
-
-
 ##############
 # public methods
 
@@ -48,8 +46,6 @@ __END__
 npg_tracking::illumina::run
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

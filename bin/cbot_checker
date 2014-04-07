@@ -34,13 +34,9 @@ my $mysql_strp    = DateTime::Format::Strptime->new( pattern => '%F %T', );
 my $illumina_strp = DateTime::Format::Strptime->
     new( pattern => '%m/%d/%Y %I:%M %p', );
 
-
-
 my $poll = Monitor::Cbot::InstrumentStatus->new_with_options();
 
 croak $poll->label() . ' is not a cBot' if !$poll->is_cbot();
-
-
 # Get the instrument status - this is the InstrumentStatus.xml served by the
 # cbot rather than the usual sequencer instrument status in the database.
 eval {
@@ -69,8 +65,6 @@ $poll->db_entry->latest_contact($stamp);
 $poll->db_entry->percent_complete($run_progress);
 
 $poll->db_entry->update();
-
-
 sub time_stamp {
     return strftime( '%F %T', localtime );
 }
@@ -84,20 +78,14 @@ sub illumina2mysql_datetime {
     
     return $mysql_strp->format_datetime($date_time);
 }
-
-
 1;
 
 __END__
-
-
 =head1 NAME
 
 cbot_checker - Monitor cBot XML reports and update the database accordingly.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

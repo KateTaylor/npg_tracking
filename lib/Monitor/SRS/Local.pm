@@ -22,15 +22,11 @@ use autodie qw(:all);
 with 'npg_tracking::illumina::run::folder';
 
 our $VERSION = '0';
-
-
 has glob_pattern => (
     is         => 'ro',
     isa        => 'Str',
     lazy_build => 1,
 );
-
-
 sub _build_glob_pattern {
     my ($self) = @_;
 
@@ -42,8 +38,6 @@ sub _build_glob_pattern {
 
     return $pattern;
 }
-
-
 sub get_normal_run_paths {
     my ($self) = @_;
 
@@ -52,8 +46,6 @@ sub get_normal_run_paths {
 
     my %processed;
     foreach my $run_path ( glob $self->glob_pattern() ) {
-
-
         # This is a PBP bug
         ## no critic (RegularExpressions::ProhibitCaptureWithoutTest)
         next if $run_path !~ m{ incoming/ ( [^/]+ _ $name _ .+ ) }msx;
@@ -67,8 +59,6 @@ sub get_normal_run_paths {
 
     return @all_paths;
 }
-
-
 sub is_run_completed {
     my ( $self, $run_path ) = @_;
 
@@ -92,32 +82,22 @@ sub is_run_completed {
     my $run_folder = Monitor::RunFolder->new( runfolder_path => $run_path, _schema => $self->schema );
 
     my $netcopy = 'ImageAnalysis_Netcopy_complete_Read'.scalar $run_folder->read_cycle_counts;
-
-
     return ( $file_string =~ m/\b$netcopy [.]txt\b/msx ) ? 1
          : ( $file_string =~ m/\bRun[.]completed\b/msx )          ? 1
          :                                                        0
          ;
 }
 
-
-
 no Moose;
 __PACKAGE__->meta->make_immutable();
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::SRS::Local - interrogate the local staging area of an
 Illumina short read sequencer.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -130,8 +110,6 @@ Illumina short read sequencer.
        # Find out how far along one of them is.
        my $actual_cycle =
             $local_poll->get_latest_cycle( $valid_run_paths_found[5] );>>
-
-
 =head1 DESCRIPTION
 
 This class gets various bits of information from the local storage area for a
@@ -165,15 +143,9 @@ path as its sole argument. Returns 1 if the flag is found, 0 otherwise.
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
-
-
 =head1 INCOMPATIBILITIES
 
-
-
 =head1 BUGS AND LIMITATIONS
-
-
 
 =head1 AUTHOR
 

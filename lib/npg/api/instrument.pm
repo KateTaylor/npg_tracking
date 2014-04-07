@@ -90,8 +90,6 @@ npg::api::instrument - An interface onto npg.instrument
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -161,8 +159,6 @@ npg::api::instrument - An interface onto npg.instrument
   my $arRuns = $oInstrument->runs();
 
 =head2 new_from_xml - Wrapper for base::new_from_xml. Populates designations for each instrument.
-
-
 
 =head2 designations - Arrayref of designations for this instrument
 

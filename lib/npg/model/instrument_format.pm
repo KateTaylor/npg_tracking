@@ -57,10 +57,6 @@ sub init {
   }
   return 1;
 }
-
-
-
-
 sub current_instrument_formats {
   my $self = shift;
 
@@ -156,8 +152,6 @@ __END__
 npg::model::instrument_format
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

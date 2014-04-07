@@ -52,8 +52,6 @@ npg::email::event::status_change::run
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   use npg::email::event::status_change::run;
@@ -147,8 +145,6 @@ sub compose_email {
 
   return $template_obj;
 }
-
-
 =head2 compose_st_reports
 
 Collect the data required for the sequencescape event update notification.
@@ -187,8 +183,6 @@ sub compose_st_reports {
 
   return \@reports;
 }
-
-
 =head2 understands
 
 This method is used by the npg::email::event factory to determine if it is the correct one to

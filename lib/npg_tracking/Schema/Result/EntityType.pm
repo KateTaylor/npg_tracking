@@ -123,8 +123,6 @@ __PACKAGE__->has_many(
   { "foreign.id_entity_type" => "self.id_entity_type" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:41
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:OsyIngsBFYh3aO8ELbwypw
 # Author:        david.jackson@sanger.ac.uk
@@ -135,8 +133,6 @@ __PACKAGE__->has_many(
 # $HeadURL: svn+ssh://svn.internal.sanger.ac.uk/repos/svn/new-pipeline-dev/npg-tracking/trunk/lib/npg_tracking/Schema/Result/EntityType.pm $
 
 our $VERSION = '0';
-
-
 use Carp;
 
 =head2 check_row_validity
@@ -200,8 +196,6 @@ sub _insist_on_valid_row {
 }
 
 1;
-
-
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

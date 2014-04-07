@@ -20,8 +20,6 @@ npg::email::event
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   use npg:email::event
@@ -61,8 +59,6 @@ This method will go off and run the notification methods required for the type o
 you have specified
 
 =cut
-
-
 sub new {
   my ( $class, $data ) = @_;
   $data ||= {};
@@ -89,8 +85,6 @@ sub new {
   };
   return $wanted_object;
 }
-
-
 1;
 __END__
 

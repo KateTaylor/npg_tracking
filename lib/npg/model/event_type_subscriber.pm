@@ -30,8 +30,6 @@ npg::model::event_type_subscriber
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

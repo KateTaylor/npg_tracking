@@ -14,8 +14,6 @@ extends 'Monitor::Instrument';
 use Carp;
 use MooseX::StrictConstructor;
 our $VERSION = '0';
-
-
 sub validate_run_folder {
     my ( $self, $folder_name ) = @_;
 
@@ -26,8 +24,6 @@ sub validate_run_folder {
 
     return $validation->check();
 }
-
-
 sub is_rta {
     my ( $self, $run_path ) = @_;
 
@@ -40,16 +36,10 @@ sub is_rta {
 
     return scalar @{ [ $rta_test =~ m/Intensities/gmsx ] };
 }
-
-
 no Moose;
 __PACKAGE__->meta->make_immutable();
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::SRS - base class for Illumina short read sequencer specific
@@ -57,14 +47,10 @@ modules.
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
     C<use Moose;
     extends 'Monitor::SRS';>
-
-
 =head1 DESCRIPTION
 
 This is the superclass for Monitor::SRS classes.
@@ -82,14 +68,8 @@ Test a required runpath argument for the presence of directories/files that
 show it is an rta run folder.
 
 =head1 CONFIGURATION AND ENVIRONMENT
-
-
 =head1 INCOMPATIBILITIES
-
-
 =head1 BUGS AND LIMITATIONS
-
-
 =head1 AUTHOR
 
 John O'Brien, E<lt>jo3@sanger.ac.ukE<gt>

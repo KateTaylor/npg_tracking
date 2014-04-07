@@ -21,21 +21,15 @@ has _username => (
     default    => $USERNAME,
     documentation => 'The username to attach to database updates',
 );
-
-
 1;
 
 __END__
-
-
 =head1 NAME
 
 Monitor::Roles::Username - username to use when writing run statuses etc to
 the npg tracking database.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -48,17 +42,9 @@ Right now all it does is return a username. Potentionally SSO stuff could be
 added here.
 
 =head1 SUBROUTINES/METHODS
-
-
 =head1 CONFIGURATION AND ENVIRONMENT
-
-
 =head1 INCOMPATIBILITIES
-
-
 =head1 BUGS AND LIMITATIONS
-
-
 =head1 AUTHOR
 
 John O'Brien, E<lt>jo3@sanger.ac.ukE<gt>

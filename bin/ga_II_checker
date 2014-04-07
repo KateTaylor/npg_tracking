@@ -36,11 +36,7 @@ eval {
      or do {
         $poll = Monitor::SRS::Local->new_with_options();
      };
-
-
 croak $poll->label() . ' is not a GAII' if !$poll->is_gaii();
-
-
 ##
 # Make a list of regular (not repeats, not tests) run folders.
 my @run_paths;
@@ -53,8 +49,6 @@ eval {
     };
 
 croak 'Empty run directory list' if scalar @run_paths == 0;
-
-
 ##
 # Loop through each of them and extract the information we need.
 foreach my $address (@run_paths) {
@@ -63,8 +57,6 @@ foreach my $address (@run_paths) {
     # We only care about runs that the db thinks are running or about to.
     next if $directory->current_run_status_description()
                 !~ m/^ run[ ] (?: pending | in[ ]progress ) $/imsx;
-
-
     my $latest_cycle = $poll->get_latest_cycle($address);
     my $run_complete = $poll->is_run_completed($address);
     $directory->check_cycle_count( $latest_cycle, $run_complete );
@@ -88,20 +80,14 @@ foreach my $address (@run_paths) {
         croak $EVAL_ERROR;
     };
 }
-
-
 exit;
 
 __END__
-
-
 =head1 NAME
 
 ga_II_checker - Monitor GA-II computers for run information.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

@@ -48,8 +48,6 @@ sub _build_snv_file {
    }
    return $snv_files[0];
 }
-
-
 1;
 __END__
 
@@ -59,15 +57,11 @@ npg_tracking::data::snv::find
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   package MyPackage;
   use Moose;
   with qw{npg_tracking::data::snv::find};
-
-
 =head1 DESCRIPTION
 
 A Moose role for finding the location of VCF files.

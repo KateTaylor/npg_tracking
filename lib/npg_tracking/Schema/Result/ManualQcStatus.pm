@@ -167,8 +167,6 @@ __PACKAGE__->belongs_to(
   { id_user => "id_user" },
   { is_deferrable => 1, on_delete => "NO ACTION", on_update => "NO ACTION" },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:42
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Gq4d3X/lqF6rgR5xVNtOUQ
 # Author:        marina.gourtovaia@sanger.ac.uk
@@ -179,8 +177,6 @@ __PACKAGE__->belongs_to(
 # $HeadURL: svn+ssh://svn.internal.sanger.ac.uk/repos/svn/new-pipeline-dev/npg-tracking/branches/prerelease-52.0/lib/npg_tracking/Schema/Result/Run.pm $
 
 1;
-
-
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;
 1;

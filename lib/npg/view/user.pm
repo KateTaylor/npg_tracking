@@ -108,8 +108,6 @@ sub list_rfid_check_ajax {
   return 1;
 }
 
-
-
 1;
 
 __END__
@@ -119,8 +117,6 @@ __END__
 npg::view::user
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -145,8 +141,6 @@ update method to help when updating the rfid, since we need to sha64hex it
 =head2 list_rfid_check_ajax
 
 enable an ajax call to be made, which will check if the person checking in with their rfid is a loader
-
-
 =head1 DIAGNOSTICS
 
 =head1 CONFIGURATION AND ENVIRONMENT

@@ -15,8 +15,6 @@ use npg::api::run;
 use Readonly;
 
 our $VERSION = '0';
-
-
 __PACKAGE__->mk_accessors(fields());
 __PACKAGE__->hasa('run');
 
@@ -32,8 +30,6 @@ __END__
 npg::api::run_status - An interface onto npg.run_status
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -51,8 +47,6 @@ npg::api::run_status - An interface onto npg.run_status
     'id_run_status' => $iIdRunStatus,
     'util'          => $oUtil,
   });
-
-
   my $oRunStatus = npg::api::run_status->new({
     'id_run'             => $iIdRun,
     'id_run_status_dict' => $iIdRunStatus,

@@ -51,8 +51,6 @@ sub plot_scale {
   $arg_refs->{start_text}     ||= $DEFAULT_TEXT->{START};
   $arg_refs->{end_text}       ||= $DEFAULT_TEXT->{END};
   $arg_refs->{gradient_steps} ||= q{};
-
-
   my $defaults = $arg_refs->{orientation} eq 'vertical' ? $VERTICAL_DEFAULTS
                :                                          $HORIZONTAL_DEFAULTS
                ;
@@ -89,8 +87,6 @@ sub plot_scale {
   my $gap_height = $arg_refs->{orientation} eq 'vertical' ? sprintf '%.00f', (($image_height - $bar_height) / $HALF_DIVISION)
                  :                                          sprintf '%.00f', (($image_height - $bar_height) / $QUARTER_DIVISION)
                  ;
-
-
   if ($arg_refs->{orientation} eq 'vertical') {
 
     $im->string(gdSmallFont,(2 * $gap_width), $gap_height,$arg_refs->{start_text}, $text_colour);
@@ -311,8 +307,6 @@ __END__
 npg::util::image::scale
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

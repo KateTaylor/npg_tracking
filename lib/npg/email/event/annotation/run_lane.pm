@@ -32,8 +32,6 @@ npg::email::event::annotation::run_lane
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -130,8 +128,6 @@ sub understands {
 
   return;
 }
-
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 1;

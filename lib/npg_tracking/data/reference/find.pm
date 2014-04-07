@@ -35,8 +35,6 @@ npg_tracking::data::reference::find
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 An example of a class that implements this role
@@ -68,8 +66,6 @@ a list of samples.
 =head1 SUBROUTINES/METHODS
 
 =cut
-
-
 Readonly::Scalar our $ALIGNER          => q[bwa];
 Readonly::Scalar our $STRAIN           => q[default];
 Readonly::Scalar our $SUBSET           => q[all];
@@ -278,8 +274,6 @@ sub single_ref_found {
   if (!@refs || scalar @refs > 1) { return 0; }
   return 1;
 }
-
-
 =head2 reset_strain
 
 Reset the strain value to default.
@@ -290,8 +284,6 @@ sub reset_strain {
   $self->_set_strain($STRAIN);
   return;
 }
-
-
 =head2 ref_info
 
 An npg_tracking::data::reference::info object or undef
@@ -337,8 +329,6 @@ sub ref_info {
   carp 'No reference found';
   return;
 }
-
-
 =head2 _get_reference_path
 
 Returns a path to a binary reference (with a prefix of the reference itself). The organism should be one of the listed in our repository.

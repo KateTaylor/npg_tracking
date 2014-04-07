@@ -30,8 +30,6 @@ has 'netcopy_complete_wait' => (isa          => 'Int',
                                 is           => 'ro',
                                 default      => $NETCOPY_COMPLETE,
                                );
-
-
 sub cycle_lag {
     my ($self) = @_;
 
@@ -43,8 +41,6 @@ sub cycle_lag {
 
     return ( $self->delay() > $MAXIMUM_CYCLE_LAG ) ? 1 : 0;
 }
-
-
 sub validate_run_complete {
     my ($self) = @_;
     my $path = $self->runfolder_path();
@@ -61,8 +57,6 @@ sub validate_run_complete {
     # What else goes here?
     return 1;
 }
-
-
 sub mirroring_complete {
     my ($self) = @_;
 
@@ -75,8 +69,6 @@ sub mirroring_complete {
     # The trailing slash forces IO::All to cope with symlinks.
     eval { @file_list = io("$run_path/")->all_files(); 1; }
         or do { carp $EVAL_ERROR; return 0; };
-
-
     my $netcopy = 'Basecalling_Netcopy_complete_Read'.scalar $self->read_cycle_counts;
 
     my @markers = map {q().$_} grep { $_ =~ m/ $netcopy /msx } @file_list;
@@ -90,14 +82,10 @@ sub mirroring_complete {
     my $events_log   = ( -e $events_file ) ? slurp($events_file) : q{};
     my $events_regex =
         qr{Copying[ ]logs[ ]to[ ]network[ ]run[ ]folder\s* \Z }msx;
-
-
     return ( $last_modified > $self->netcopy_complete_wait ) ? 1
          : ( $events_log =~ $events_regex )       ? 1
          :                                          0;
 }
-
-
 sub monitor_stats {
     my ($self) = @_;
 
@@ -114,8 +102,6 @@ sub monitor_stats {
 
     return ( $total_size, $latest_mod );
 }
-
-
 sub check_tiles {
     my ($self) = @_;
 
@@ -174,8 +160,6 @@ sub check_tiles {
 
     return 1;
 }
-
-
 sub mark_as_mirrored {
     my ($self) = @_;
 
@@ -192,8 +176,6 @@ sub mark_as_mirrored {
 
     return;
 }
-
-
 sub move_to_analysis {
     my ($self) = @_;
 
@@ -203,8 +185,6 @@ sub move_to_analysis {
     $destination =~ s{/incoming/}{/analysis/}msx;
 
     croak "$destination already exists" if -e $destination;
-
-
     # This is a PBP bug
     ## no critic (RegularExpressions::ProhibitCaptureWithoutTest)
     croak 'Source is not an \'incoming\' path'
@@ -223,8 +203,6 @@ sub move_to_analysis {
 
     return;
 }
-
-
 sub fallback_update {
     my ($self) = @_;
 
@@ -239,8 +217,6 @@ sub fallback_update {
 
     return;
 }
-
-
 sub _get_folder_path_glob {
    my ($self) = @_;
    my $p = $self->runfolder_path;
@@ -266,16 +242,12 @@ __PACKAGE__->meta->make_immutable();
 1;
 
 __END__
-
-
 =head1 NAME
 
 Monitor::RunFolder::Staging - additional runfolder information specific to
 local staging
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -346,11 +318,7 @@ tags the run with
 Ensure DB has updated runfolder name and a suitable glob for quickly finding the folder
 
 =head1 CONFIGURATION AND ENVIRONMENT
-
-
 =head1 INCOMPATIBILITIES
-
-
 =head1 BUGS AND LIMITATIONS
 
 Please inform the author of any found.

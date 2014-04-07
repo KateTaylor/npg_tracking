@@ -22,8 +22,6 @@ Readonly our $RETURN_FROM_GD_GRAPH_X2 => 2;
 Readonly our $RETURN_FROM_GD_GRAPH_Y2 => 3;
 
 __PACKAGE__->mk_accessors(qw(image_refs));
-
-
 sub new {
   my ($class, $ref) = @_;
   $ref ||= {};
@@ -148,8 +146,6 @@ __END__
 npg::util::image::image_map
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

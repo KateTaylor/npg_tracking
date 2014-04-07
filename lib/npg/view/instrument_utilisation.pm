@@ -58,14 +58,10 @@ sub list_text90 {
   my ($self) = @_;
   return 1;
 }
-
-
 sub list_graphical_line90 {
   my ($self) = @_;
   return 1;
 }
-
-
 sub list_graph_png {
 
   my ($self) = @_;
@@ -96,8 +92,6 @@ sub list_graph_png {
             ;
 
   my $x_label_skip = round($num_days/$default_num_days);
-
-
   return $graph->plotter($data, {
          width             => $PLOTTER_WIDTH,
          height            => $PLOTTER_HEIGHT,
@@ -133,8 +127,6 @@ __END__
 npg::view::instrument_utilisation - view handling for instrument_utilisation
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

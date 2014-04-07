@@ -106,8 +106,6 @@ sub plot_illumina_map {
       }
 
     }
-
-
     my $tile_count = 0;
     foreach my $tile (@{$row}) {
 
@@ -292,8 +290,6 @@ sub array_to_chip {
   my $tile_layout_info = $TILE_LAYOUTS{$tiles};
 
   my $odd_lane = 1;
-
-
   foreach my $lane (@{$data_array}) {
 
     my $count = 1;
@@ -371,8 +367,6 @@ sub give_datum_a_range_gradient {
     push @bin_starts, [$bin_start, $linear_gradient->[$i]];
     $bin_start += $group_count;
   }
-
-
   foreach my $tile_value (sort { $a <=> $b } keys %{$all_data_points}) {
 
     foreach my $i (0..$gradients) {
@@ -405,8 +399,6 @@ sub get_movez_heatmap_color{
                             );
   return \%movez_heatmap_color;
 }
-
-
 1;
 
 __END__
@@ -416,8 +408,6 @@ __END__
 npg::util::image::heatmap
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

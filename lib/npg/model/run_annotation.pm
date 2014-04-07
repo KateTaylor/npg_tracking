@@ -83,8 +83,6 @@ sub create {
   if ( $cgi->param( q{switch_to_lanes} ) ) {
     return $self->_lane_annotation_create();
   }
-
-
   my $annotation = $self->annotation();
   my $tr_state   = $util->transactions();
 
@@ -109,8 +107,6 @@ sub create {
   } else {
     $self->_single_run_annotation_create( { annotation => $annotation } );
   }
-
-
   #########
   # re-enable transactions for final create
   #
@@ -235,8 +231,6 @@ __END__
 npg::model::run_annotation
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

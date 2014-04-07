@@ -124,8 +124,6 @@ sub results {
                        AND    comment LIKE ?
                        ORDER BY date DESC
                        LIMIT 100), "%$term%"];
-
-
   #########
   # search tags
   #
@@ -443,8 +441,6 @@ __END__
 npg::model::search
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

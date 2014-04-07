@@ -126,8 +126,6 @@ __PACKAGE__->has_many(
   { "foreign.id_usergroup" => "self.id_usergroup" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:44
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fWkhaUn/pPyRoLyYXBI80w
 # Author:        david.jackson@sanger.ac.uk
@@ -150,11 +148,7 @@ Related object: L<npg_tracking::Schema::Result::User>
 __PACKAGE__->many_to_many(
   'users' => 'user2usergroups', 'user'
 );
-
-
 1;
-
-
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable;

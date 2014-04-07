@@ -23,8 +23,6 @@ npg::view::manufacturer - view handling for manufacturers
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

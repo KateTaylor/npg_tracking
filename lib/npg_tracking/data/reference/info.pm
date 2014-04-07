@@ -17,8 +17,6 @@ npg_tracking::data::reference::info
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -56,15 +54,11 @@ has 'aligner_options' => (isa             => 'Maybe[Str]',
                           is              => 'rw',
                           required        => 0,
                          );
-
-
 __PACKAGE__->meta->make_immutable;
 no Moose;
 
 1;
 __END__
-
-
 =head1 DIAGNOSTICS
 
 =head1 CONFIGURATION AND ENVIRONMENT

@@ -860,8 +860,6 @@ sub _create_lanes {
   }
   return 1;
 }
-
-
 sub loader_info {
   my ($self, $full_date) = @_;
 
@@ -1179,8 +1177,6 @@ __END__
 npg::model::run
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

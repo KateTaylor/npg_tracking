@@ -48,16 +48,12 @@ has file_obj => (
     isa        => 'Monitor::SRS::File',
     lazy_build => 1,
 );
-
-
 sub _build_run_folder {
     my ($self) = @_;
     my $path = $self->runfolder_path();
 
     return substr $path, 1 + rindex( $path, q{/} );
 }
-
-
 sub _build_run_db_row {
     my ($self) = @_;
 
@@ -68,8 +64,6 @@ sub _build_run_db_row {
 
     return $run_rs;
 }
-
-
 sub current_run_status_description {
     my ($self) = @_;
 
@@ -91,8 +85,6 @@ sub current_run_status {
     carp 'DO NOT USE THIS Monitor::RunFolder::current_run_status METHOD - IMPENDING RETURN VALUE CHANGE';
     return $self->current_run_status_description();
 }
-
-
 sub _build_file_obj {
     my ($self) = @_;
 
@@ -103,8 +95,6 @@ sub _build_file_obj {
 
     return $file;
 }
-
-
 sub check_cycle_count {
     my ( $self, $latest_cycle, $run_complete ) = @_;
 
@@ -127,8 +117,6 @@ sub check_cycle_count {
 
     return;
 }
-
-
 sub read_long_info {
     my ( $self, $run_is_rta ) = @_;
 
@@ -212,15 +200,11 @@ sub delay {
 1;
 
 __END__
-
-
 =head1 NAME
 
 Monitor::RunFolder - provide methods to get run details from a folder path
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -277,11 +261,7 @@ The number of cycles that are delayed coming across from the instrument
   actual last cycle recorded - higest cycle found on staging
 
 =head1 CONFIGURATION AND ENVIRONMENT
-
-
 =head1 INCOMPATIBILITIES
-
-
 =head1 BUGS AND LIMITATIONS
 
 Please inform the author of any found.

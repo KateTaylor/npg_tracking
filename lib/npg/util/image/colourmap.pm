@@ -26,8 +26,6 @@ npg::util::image::colourmap
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   my $oColourMap = npg::util::image::colourmap->new();

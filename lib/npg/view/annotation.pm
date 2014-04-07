@@ -124,8 +124,6 @@ npg::view::annotation - view superclass for handling various types of X_annotati
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION
@@ -175,8 +173,6 @@ npg::view::annotation - view superclass for handling various types of X_annotati
 Roger Pettett, E<lt>rmp@sanger.ac.ukE<gt>
 
 =head1 LICENSE AND COPYRIGHT
-
-
 Copyright (C) 2008 GRL, by Roger Pettett
 
 This file is part of NPG.

@@ -13,8 +13,6 @@ use Moose::Role;
 use Carp;
 use List::Util qw(max);
 use Perl6::Slurp;
-
-
 # The transfer of Events.log can lag far behind actual image transfer.
 sub get_latest_cycle {
     my ( $self, $run_path ) = @_;
@@ -105,19 +103,13 @@ sub _cycle_numbers {
 }
 
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::Roles::Cycle - establish the lastest run cycle from a run folder on
 local staging.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -145,8 +137,6 @@ Goes through all the cycle directories present for lane 1, and then returns any 
   my @MissingCycles = $oClass->missing_cycles( $run_path );
 
 =head1 CONFIGURATION AND ENVIRONMENT
-
-
 =head1 INCOMPATIBILITIES
 
 Do not use with Monitor::IlluminaSRS::FTP

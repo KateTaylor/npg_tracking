@@ -9,8 +9,6 @@ use MooseX::MarkAsMethods autoclean => 1;
 extends 'DBIx::Class::Schema';
 
 __PACKAGE__->load_namespaces;
-
-
 # Created by DBIx::Class::Schema::Loader v0.07035 @ 2013-07-23 16:11:41
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Q1r19LhirPv0eU8pL62qKQ
 
@@ -36,8 +34,6 @@ __END__
 npg_tracking::Schema
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 
@@ -101,10 +97,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 =cut
-
-
-
-
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 __PACKAGE__->meta->make_immutable(inline_constructor => 0);

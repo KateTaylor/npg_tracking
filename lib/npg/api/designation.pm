@@ -18,8 +18,6 @@ __PACKAGE__->mk_accessors(fields());
 sub fields {
   return qw(id_designation description);
 }
-
-
 1;
 __END__
 
@@ -28,8 +26,6 @@ __END__
 npg::api::designation - Designation base-class, an interface onto npg.designation
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

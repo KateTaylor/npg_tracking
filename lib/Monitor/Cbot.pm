@@ -75,8 +75,6 @@ sub _fetch {
 
     return $response;
 }
-
-
 sub get_element_content {
     my ( $self, $xml, $tagname ) = @_;
 
@@ -94,21 +92,13 @@ sub get_element_content {
 
 no Moose;
 __PACKAGE__->meta->make_immutable();
-
-
 1;
-
-
 __END__
-
-
 =head1 NAME
 
 Monitor::Cbot - base class for cBot XML interrogation
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

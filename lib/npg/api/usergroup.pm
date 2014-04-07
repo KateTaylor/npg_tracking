@@ -41,8 +41,6 @@ npg::api::usergroup
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
 =head1 DESCRIPTION

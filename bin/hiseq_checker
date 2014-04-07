@@ -44,14 +44,10 @@ eval {
         $poll = Monitor::SRS::Local->new_with_options();
         main();
      };
-
-
 sub main {
 
     # It's clumsy that this is called twice for ftp polls.
     croak $poll->label() . ' is not a HiSeq' if !$poll->is_hiseq();
-
-
     ##
     # Make a list of regular (not repeats, not tests) run folders.
     my @run_paths;
@@ -64,8 +60,6 @@ sub main {
         };
 
     carp 'Empty run directory list for '.$poll->top_dir if scalar @run_paths == 0;
-
-
     ##
     # Loop through each of them and extract the information we need.
     my $run_db;
@@ -75,14 +69,10 @@ sub main {
         # We only care about runs that the db thinks are running or about to.
         next if $directory->current_run_status_description()
                     !~ m/^ run[ ] (?: pending | in[ ]progress ) $/imsx;
-
-
         my $latest_cycle = $poll->get_latest_cycle($address);
 
         my $run_complete = $poll->is_run_completed($address);
         $directory->check_cycle_count( $latest_cycle, $run_complete );
-
-
         # If $poll isa Monitor::SRS::FTP we can't use long_info for this.
         my $run_is_rta;
 
@@ -105,21 +95,13 @@ sub main {
     }
 
 }
-
-
 exit;
-
-
 __END__
-
-
 =head1 NAME
 
 hiseq_checker - Monitor HiSeq instruments for run information.
 
 =head1 VERSION
-
-
 
 =head1 SYNOPSIS
 

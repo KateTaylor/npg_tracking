@@ -27,8 +27,6 @@ npg::samplesheet::auto
 
 =head1 VERSION
 
-
-
 =head1 SYNOPSIS
 
   use npg::samplesheet::auto;
@@ -43,8 +41,6 @@ Class for creating  MiSeq samplesheets automatically for runs which are pending.
 =head1 SUBROUTINES/METHODS
 
 =cut
-
-
 has 'npg_tracking_schema' => (
   'isa' => 'npg_tracking::Schema',
   'is' => 'ro',
@@ -98,8 +94,6 @@ sub process {
   }
   return;
 }
-
-
 no Moose;
 1;
 __END__

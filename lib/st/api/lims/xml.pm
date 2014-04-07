@@ -832,8 +832,6 @@ sub children {
   my $self = shift;
   return @{$self->_associated_lims};
 }
-
-
 =head2 method_list
 
 Method returning a sorted list of useful accessors and methods.

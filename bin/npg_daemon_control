@@ -89,8 +89,6 @@ if (defined $request && $request) {
 }
 
 exit 0;
-
-
 sub help {
   my @opts = @_;
   print fileparse($PROGRAM_NAME) . qq[ options:\n];
